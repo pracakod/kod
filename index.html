@@ -20,9 +20,8 @@
     --shadow:0 10px 30px rgba(0,0,0,.35);
   }
   *{box-sizing:border-box}
-  html,body{height:100%}
+  html,body{height:100%; margin:0; padding:0}
   body{
-    margin:0;
     font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
     color:var(--ink);
     background:
@@ -31,6 +30,9 @@
       linear-gradient(180deg,var(--bg1),var(--bg2));
     overflow:hidden;
     -webkit-tap-highlight-color: transparent;
+    touch-action: none;
+    position: fixed;
+    inset: 0;
   }
   .fog{
     position:fixed; inset:-10vmax; pointer-events:none; opacity:.14; filter:blur(20px);
@@ -48,47 +50,52 @@
   /* HUD */
   .hud{
     position:fixed; left:0; right:0; top:0;
-    display:flex; gap:12px; align-items:center; justify-content:space-between;
-    padding:14px clamp(14px,3vw,26px);
+    display:flex; gap:3px; align-items:center; justify-content:space-between;
+    padding:3px;
     background:linear-gradient(180deg, rgba(8,12,22,.65), rgba(8,12,22,0));
     pointer-events:none;
+    z-index:10;
+    flex-wrap: wrap;
   }
   .hud .panel{
-    pointer-events:auto;display:flex;align-items:center;gap:14px;
-    padding:10px 14px;border-radius:14px;background:var(--glass);backdrop-filter: blur(8px);
-    box-shadow: var(--shadow);border:1px solid rgba(255,255,255,.06);
+    pointer-events:auto;display:flex;align-items:center;gap:3px;
+    padding:3px 5px;border-radius:5px;background:var(--glass);backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);border:1px solid rgba(255,255,255,.05);
+    max-width: 48%;
   }
-  .stat{display:flex;align-items:center;gap:8px;color:var(--muted)}
-  .stat .v{color:var(--ink);font-weight:700;min-width:3ch;text-align:right}
-  .lives{display:flex;gap:6px}
-  .life{width:18px;height:18px;display:inline-block}
+  .stat{display:flex;align-items:center;gap:2px;color:var(--muted);white-space:nowrap;font-size:9px}
+  .stat .v{color:var(--ink);font-weight:700;min-width:2ch;text-align:right;font-size:9px}
+  .lives{display:flex;gap:1px}
+  .life{width:10px;height:10px;display:inline-block}
   .life svg{width:100%;height:100%}
   .life.dead{opacity:.25;filter:grayscale(1)}
-  .btns{display:flex;gap:8px}
+  .btns{display:flex;gap:2px}
   .btn{
     pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;
-    min-width:40px;height:40px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);
+    min-width:20px;height:20px;padding:0 3px;border-radius:4px;border:1px solid rgba(255,255,255,.07);
     background:var(--hud);color:var(--ink);
     cursor:pointer;user-select:none;transition:transform .1s ease, background .2s ease;
+    font-size:9px;
   }
   .btn:active{transform:translateY(1px)}
   .btn[aria-pressed="true"]{background:#0f1a30}
-  .btn svg{width:20px;height:20px;fill:currentColor}
-  .separator{width:1px;height:24px;background:rgba(255,255,255,.08)}
+  .btn svg{width:10px;height:10px;fill:currentColor}
+  .separator{width:1px;height:12px;background:rgba(255,255,255,.07)}
 
   /* Efekty – chipy statusu */
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chips{display:flex;gap:2px;flex-wrap:wrap;max-width:75px}
   .chip{
-    display:inline-flex;align-items:center;gap:6px;
-    height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);
-    background:#0d1527aa;color:#e5edff;font-weight:700;font-size:12px;
+    display:inline-flex;align-items:center;gap:1px;
+    height:14px;padding:0 3px;border-radius:999px;border:1px solid rgba(255,255,255,.07);
+    background:#0d1527aa;color:#e5edff;font-weight:700;font-size:7px;
+    white-space:nowrap;
   }
   .chip .t{opacity:.85;font-weight:600;font-variant-numeric:tabular-nums}
 
   /* Maszyna */
   #machineWrap{
-    position:absolute;bottom:10px;left:0;
-    width:clamp(240px, 38vw, 540px);height:auto;
+    position:absolute;bottom:5px;left:0;
+    width:clamp(140px, 30vw, 380px);height:auto;
     transform:translateX(0);will-change:transform;touch-action:none;
   }
   #machine{width:100%;height:auto;display:block;pointer-events:none;filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))}
@@ -127,32 +134,65 @@
   @keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}100%{transform:translateX(0)}}
 
   /* Nakładki */
-  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(9,13,22,.85), rgba(9,13,22,.78));backdrop-filter:blur(8px);z-index:3}
-  .card{width:min(92vw,820px);padding:22px 22px 18px;border-radius:16px;background:var(--glass);border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
-  .card h1{margin:0 0 10px;font-size:clamp(20px,3.8vw,28px)}
-  .card p{margin:0 0 12px;color:var(--muted);line-height:1.5}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-  .card .btn{height:46px;min-width:46px;border-radius:12px;font-weight:700}
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(9,13,22,.85), rgba(9,13,22,.78));backdrop-filter:blur(8px);z-index:20}
+  .card{width:min(84vw,740px);padding:10px;border-radius:7px;background:var(--glass);border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
+  .card h1{margin:0 0 4px;font-size:clamp(13px,2.6vw,18px)}
+  .card p{margin:0 0 4px;color:var(--muted);line-height:1.15;font-size:10px}
+  .actions{display:flex;gap:3px;flex-wrap:wrap;margin-top:4px}
+  .card .btn{height:32px;min-width:32px;border-radius:4px;font-weight:700;font-size:10px}
   .card .btn.primary{background:linear-gradient(180deg,#1d2a47,#0f1730);border-color:#334166}
-  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  .grid2{display:grid;grid-template-columns:1fr;gap:3px}
   @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}}
-  .kbd{display:inline-block;padding:.1em .5em;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:#0c1322;color:#dfe7ff;font-weight:700}
+  .kbd{display:inline-block;padding:.1em .15em;border-radius:2px;border:1px solid rgba(255,255,255,.12);background:#0c1322;color:#dfe7ff;font-weight:700;font-size:9px}
 
   /* Przyciski mobilne */
-  .controls{position:fixed;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:14px;z-index:2;pointer-events:none}
-  .controls .btn{pointer-events:auto;width:64px;height:64px;border-radius:14px;background:linear-gradient(180deg,#0f172a,#0a1120)}
+  .controls{position:fixed;bottom:4px;left:0;right:0;display:flex;justify-content:center;gap:5px;z-index:15;pointer-events:none}
+  .controls .btn{pointer-events:auto;width:44px;height:44px;border-radius:6px;background:linear-gradient(180deg,#0f172a,#0a1120)}
   .controls .btn:active{transform:scale(.98)}
   .hidden{display:none !important}
 
   /* Baner COMBO */
   .banner{
     position:fixed;left:50%;top:18%;transform:translateX(-50%);
-    padding:10px 16px;border-radius:12px;background:#0e182dba;border:1px solid rgba(255,255,255,.1);
+    padding:3px 6px;border-radius:4px;background:#0e182dba;border:1px solid rgba(255,255,255,.1);
     color:#f7fbff;font-weight:900;letter-spacing:.06em;text-align:center;
-    text-shadow:0 2px 12px rgba(0,0,0,.6);z-index:4;font-size:clamp(18px,4vw,28px);
+    text-shadow:0 2px 12px rgba(0,0,0,.6);z-index:25;font-size:clamp(11px,2.4vw,18px);
     animation:banner .9s ease-out forwards
   }
   @keyframes banner{0%{opacity:0;transform:translate(-50%,-8px) scale(.98)}20%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-12px) scale(.98)}}
+  
+  /* Przycisk pełnoekranowy */
+  #fullscreenBtn{
+    position:fixed;top:6px;right:6px;z-index:15;
+    width:24px;height:24px;background:var(--hud);
+    border-radius:4px;border:1px solid rgba(255,255,255,.07);
+    cursor:pointer;display:flex;align-items:center;justify-content:center;
+  }
+  #fullscreenBtn svg{width:14px;height:14px;fill:var(--ink)}
+  
+  /* Media queries dla małych ekranów */
+  @media (max-width: 400px) {
+    .hud .panel { max-width: 45%; padding: 2px 4px; }
+    .stat { font-size: 8px; }
+    .stat .v { font-size: 8px; }
+    .chips { max-width: 65px; }
+    .chip { height: 12px; font-size: 6px; padding: 0 2px; }
+    .btn { min-width: 18px; height: 18px; font-size: 8px; }
+    .btn svg { width: 8px; height: 8px; }
+    .separator { height: 10px; }
+    .life { width: 9px; height: 9px; }
+    #machineWrap { width: clamp(130px, 28vw, 350px); }
+    .controls .btn { width: 40px; height: 40px; }
+    #fullscreenBtn { width: 22px; height: 22px; top: 5px; right: 5px; }
+    #fullscreenBtn svg { width: 12px; height: 12px; }
+  }
+  
+  @media (max-width: 350px) {
+    .hud .panel { max-width: 42%; }
+    .chips { display: none; } /* Ukryj efekty na bardzo małych ekranach */
+    .stat span { display: none; } /* Ukryj nazwy statystyk */
+    .controls .btn { width: 36px; height: 36px; }
+  }
 </style>
 </head>
 <body>
@@ -187,18 +227,17 @@
       <div id="chips" class="chips" aria-live="polite" aria-atomic="true"></div>
       <div class="separator"></div>
       <div class="btns">
-        <button class="btn" id="pauseBtn" aria-pressed="false" aria-label="Pauza / Wznów" title="Pauza / Wznów">
-          <svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
-        </button>
-        <button class="btn" id="muteBtn" aria-pressed="false" aria-label="Dźwięk włączony/wyciszony" title="Dźwięk">
-          <svg viewBox="0 0 24 24"><path d="M5 10v4h3l4 4V6L8 10H5zm11.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"/></svg>
-        </button>
-        <button class="btn" id="restartBtn" aria-label="Restart" title="Restart">
-          <svg viewBox="0 0 24 24"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 11-5-5z"/></svg>
+        <button class="btn" id="settingsBtn" aria-label="Ustawienia" title="Ustawienia">
+          <svg viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
         </button>
       </div>
     </div>
   </div>
+
+  <!-- Przycisk pełnoekranowy -->
+  <button id="fullscreenBtn" aria-label="Pełny ekran" title="Pełny ekran">
+    <svg viewBox="0 0 24 24"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+  </button>
 
   <!-- Maszyna -->
   <div id="machineWrap" aria-label="ARJES – rozdrabniacz">
@@ -306,6 +345,19 @@
       <svg viewBox="0 0 24 24"><path d="m10 6 1.41 1.41L7.83 11H20v2H7.83l3.58 3.59L10 18l-6-6z"/></svg>
     </button>
   </div>
+  
+  <!-- Panel ustawień -->
+  <div class="overlay hidden" id="settingsOverlay">
+    <div class="card">
+      <h1>Ustawienia</h1>
+      <div class="actions">
+        <button class="btn" id="pauseSettingsBtn">Pauza</button>
+        <button class="btn" id="muteSettingsBtn">Dźwięk</button>
+        <button class="btn" id="restartSettingsBtn">Restart</button>
+        <button class="btn primary" id="closeSettingsBtn">Zamknij</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -316,6 +368,9 @@
   const catchZone = document.getElementById('catchZone');
   const trail = document.getElementById('trail');
   const magnetFX = document.getElementById('magnetFX');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
+  const settingsBtn = document.getElementById('settingsBtn');
+  const settingsOverlay = document.getElementById('settingsOverlay');
 
   const scoreEl = document.getElementById('score');
   const streakEl = document.getElementById('streak');
@@ -327,21 +382,22 @@
   const gameOverOverlay = document.getElementById('gameOverOverlay');
   const finalText = document.getElementById('finalText');
 
-  const pauseBtn = document.getElementById('pauseBtn');
-  const muteBtn = document.getElementById('muteBtn');
-  const restartBtn = document.getElementById('restartBtn');
+  const pauseBtn = document.getElementById('pauseSettingsBtn');
+  const muteBtn = document.getElementById('muteSettingsBtn');
+  const restartBtn = document.getElementById('restartSettingsBtn');
   const startBtn = document.getElementById('startBtn');
   const muteOnStart = document.getElementById('muteOnStart');
   const againBtn = document.getElementById('againBtn');
   const shareBtn = document.getElementById('shareBtn');
+  const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
   const leftBtn = document.getElementById('leftBtn');
   const rightBtn = document.getElementById('rightBtn');
   const touchControls = document.getElementById('touchControls');
 
   // Rozmiar sceny i maszyny
-  let W = gameEl.clientWidth;
-  let H = gameEl.clientHeight;
+  let W = window.innerWidth;
+  let H = window.innerHeight;
   let mW = 0, mH = 0, mX = 0, mMinX = 0, mMaxX = 0;
   let catchRect = {x:0,y:0,w:0,h:0};
 
@@ -404,16 +460,64 @@
   const clamp = (v,min,max)=> v<min?min: v>max?max : v;
   const rnd = (a,b)=> a + Math.random()*(b-a);
 
+  // Pełny ekran
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      if (gameEl.requestFullscreen) {
+        gameEl.requestFullscreen();
+      } else if (gameEl.webkitRequestFullscreen) {
+        gameEl.webkitRequestFullscreen();
+      } else if (gameEl.msRequestFullscreen) {
+        gameEl.msRequestFullscreen();
+      }
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  }
+
+  // Ustawienia
+  function toggleSettings() {
+    if (settingsOverlay.classList.contains('hidden')) {
+      settingsOverlay.classList.remove('hidden');
+      paused = true;
+      pauseBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      settingsOverlay.classList.add('hidden');
+      if (running) {
+        paused = false;
+        pauseBtn.setAttribute('aria-pressed', 'false');
+      }
+    }
+  }
+
   function resize(){
-    W = gameEl.clientWidth; H = gameEl.clientHeight;
+    W = window.innerWidth;
+    H = window.innerHeight;
+    
+    // Aktualizacja rozmiarów maszyny
     const mb = machineWrap.getBoundingClientRect();
-    mW = mb.width; mH = mb.height || (mW*360/600);
-    mMinX = 6; mMaxX = W - mW - 6;
+    mW = mb.width || (W * 0.30);
+    mH = mb.height || (mW * 360/600);
+    
+    // Poprawione granice ruchu maszyny - zapobiega wychodzeniu poza ekran
+    mMinX = -10; // Zwiększone marginesy
+    mMaxX = W - mW + 10;
     mX = clamp(mX, mMinX, mMaxX);
+    
     applyMachineX();
     updateCatchRect();
   }
-  function applyMachineX(){ machineWrap.style.transform = `translateX(${mX}px)`; }
+  
+  function applyMachineX(){ 
+    machineWrap.style.transform = `translateX(${Math.round(mX)}px)`; 
+  }
+  
   function updateCatchRect(){
     const fieldBox = field.getBoundingClientRect();
     const cz = catchZone.getBoundingClientRect();
@@ -428,12 +532,11 @@
     const div = document.createElement('div');
     const variant = Math.random()<.5 ? 'scrap' : 'scrap2';
     div.className = `item scrap ${variant}`;
-    const scale = rnd(0.85, 1.35); // umiarkowane rozmiary
+    const scale = rnd(0.85, 1.35);
     const baseW = 34, baseH = 26;
     const w = Math.round(baseW*scale), h = Math.round(baseH*scale);
     div.style.width = w+'px'; div.style.height = h+'px';
     div.innerHTML = scrapSVG(variant);
-    // Waga proporcjonalna do skali, zaokrąglona (1–4 kg bazowe)
     const baseWeight = (Math.random()<.22) ? 2 : 1;
     const weight = Math.max(1, Math.min(4, Math.round(baseWeight*scale + (Math.random()<.18 ? 1 : 0))));
     const s = {
@@ -443,7 +546,7 @@
       r: Math.random()*Math.PI, vr: (Math.random()<.5?-1:1)*rnd(20,60)*(prefersReduced()?0:.5),
       w, h, weight
     };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`;
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0) rotate(${s.r}rad)`;
     field.appendChild(div); items.push(s);
   }
   function scrapSVG(variant){
@@ -480,75 +583,74 @@
       r:0, vr:(Math.random()<.5?-1:1)*rnd(15,30)*(prefersReduced()?0:.5),
       w:30, h:44
     };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`;
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0) rotate(${s.r}rad)`;
     field.appendChild(s.el); items.push(s);
   }
 
-  // Bonusy
+  // Bonusy - zmniejszone rozmiary
   function createPlus(){
     const div = document.createElement('div');
     div.className = 'item bonus';
-    div.style.width='26px'; div.style.height='26px';
+    div.style.width='18px'; div.style.height='18px'; // Zmniejszone o 10%
     div.innerHTML = `<svg viewBox="0 0 26 26" aria-label="Bonus +kg +seria">
       <defs><linearGradient id="b0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
       <circle cx="13" cy="13" r="12" fill="url(#b0)" stroke="#0f3b2d" stroke-width="1.2"/>
       <path d="M7 13l4 4 8-9" stroke="#0f3b2d" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
-    const s = { el:div, type:'plus', x:Math.random()*(W-40)+10, y:-30, vy:fallBase + 90 + level*10, r:0, vr:(Math.random()<.5?-1:1)*rnd(10,18), w:26, h:26 };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`; field.appendChild(s.el); items.push(s);
+    const s = { el:div, type:'plus', x:Math.random()*(W-40)+10, y:-22, vy:fallBase + 90 + level*10, r:0, vr:(Math.random()<.5?-1:1)*rnd(10,18), w:18, h:18 };
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0) rotate(${s.r}rad)`; field.appendChild(s.el); items.push(s);
   }
   function createTurbo(){
     const div = document.createElement('div');
-    div.className = 'item bonus'; div.style.width='26px'; div.style.height='30px';
+    div.className = 'item bonus'; div.style.width='18px'; div.style.height='22px'; // Zmniejszone o 10%
     div.innerHTML = `<svg viewBox="0 0 26 30" aria-label="Turbo">
       <defs><linearGradient id="t0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd38a"/><stop offset="1" stop-color="#ff9a4d"/></linearGradient></defs>
       <polygon points="12,1 4,17 13,17 7,29 22,11 13,11" fill="url(#t0)" stroke="#8a4a09" stroke-width="1.2"/>
     </svg>`;
-    const s = { el:div, type:'turbo', x:Math.random()*(W-40)+10, y:-34, vy:fallBase + 110 + level*12, r:0, vr:rnd(-20,20), w:26, h:30 };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}deg)`; field.appendChild(s.el); items.push(s);
+    const s = { el:div, type:'turbo', x:Math.random()*(W-40)+10, y:-26, vy:fallBase + 110 + level*12, r:0, vr:rnd(-20,20), w:18, h:22 };
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0) rotate(${s.r}deg)`; field.appendChild(s.el); items.push(s);
   }
   function createMagnet(){
     const div = document.createElement('div');
-    div.className = 'item bonus'; div.style.width='28px'; div.style.height='28px';
+    div.className = 'item bonus'; div.style.width='20px'; div.style.height='20px'; // Zmniejszone o 10%
     div.innerHTML = `<svg viewBox="0 0 28 28" aria-label="Magnes">
       <defs><linearGradient id="mg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa6ff"/><stop offset="1" stop-color="#3464d3"/></linearGradient></defs>
       <path d="M6 16a8 8 0 0 1 16 0v6h-5v-6a3 3 0 0 0-6 0v6H6z" fill="url(#mg0)" stroke="#1a366b" stroke-width="1.2" />
       <rect x="6" y="16" width="5" height="4" fill="#ff6b6b"/><rect x="17" y="16" width="5" height="4" fill="#ffd45b"/>
     </svg>`;
-    const s = { el:div, type:'magnet', x:Math.random()*(W-40)+10, y:-32, vy:fallBase + 100 + level*10, r:0, vr:rnd(-18,18), w:28, h:28 };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+    const s = { el:div, type:'magnet', x:Math.random()*(W-40)+10, y:-24, vy:fallBase + 100 + level*10, r:0, vr:rnd(-18,18), w:20, h:20 };
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0)`; field.appendChild(s.el); items.push(s);
   }
   function createShield(){
     const div = document.createElement('div');
-    div.className = 'item bonus'; div.style.width='28px'; div.style.height='28px';
+    div.className = 'item bonus'; div.style.width='20px'; div.style.height='20px'; // Zmniejszone o 10%
     div.innerHTML = `<svg viewBox="0 0 28 28" aria-label="Tarcza">
       <defs><linearGradient id="sh0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a2b6ff"/><stop offset="1" stop-color="#6b7dd6"/></linearGradient></defs>
       <path d="M14 3l8 3v7c0 7-8 12-8 12S6 20 6 13V6l8-3z" fill="url(#sh0)" stroke="#2a3a88" stroke-width="1.2"/>
       <path d="M10 13l3 3 5-6" stroke="#e9efff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
     </svg>`;
-    const s = { el:div, type:'shield', x:Math.random()*(W-40)+10, y:-32, vy:fallBase + 95 + level*8, r:0, vr:rnd(-16,16), w:28, h:28 };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+    const s = { el:div, type:'shield', x:Math.random()*(W-40)+10, y:-24, vy:fallBase + 95 + level*8, r:0, vr:rnd(-16,16), w:20, h:20 };
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0)`; field.appendChild(s.el); items.push(s);
   }
   function createComboGem(){
     const div = document.createElement('div');
-    div.className = 'item bonus'; div.style.width='26px'; div.style.height='26px';
+    div.className = 'item bonus'; div.style.width='18px'; div.style.height='18px'; // Zmniejszone o 10%
     div.innerHTML = `<svg viewBox="0 0 26 26" aria-label="Klejnot Combo">
       <defs><linearGradient id="cg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd2f2"/><stop offset="1" stop-color="#ff79c6"/></linearGradient></defs>
       <path d="M13 2l9 7-9 15L4 9z" fill="url(#cg0)" stroke="#8a2a6b" stroke-width="1.2"/>
     </svg>`;
-    const s = { el:div, type:'combogem', x:Math.random()*(W-40)+10, y:-30, vy:fallBase + 105 + level*10, r:0, vr:rnd(-18,18), w:26, h:26 };
-    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+    const s = { el:div, type:'combogem', x:Math.random()*(W-40)+10, y:-22, vy:fallBase + 105 + level*10, r:0, vr:rnd(-18,18), w:18, h:18 };
+    div.style.transform = `translate3d(${Math.round(s.x)}px, ${Math.round(s.y)}px, 0)`; field.appendChild(s.el); items.push(s);
   }
 
   // Losowanie nowych elementów
   function spawn(dt){
-    spawnTimer -= dt * (slowT>0 ? 0.75 : 1); // lekko rzadszy spawn przy spowolnieniu
+    spawnTimer -= dt * (slowT>0 ? 0.75 : 1);
     if (spawnTimer > 0) return;
 
-    // Prawdopodobieństwa
     const pGas = Math.min(.18 + level*0.01, .35);
     const pPlus = Math.min(.06 + level*0.004, .12);
-    const pTurbo = .05; // niewielkie
+    const pTurbo = .05;
     const pMagnet = .045;
     const pShield = .035;
     const pComboGem = .04;
@@ -612,7 +714,7 @@
     return el;
   }
 
-  // Kolizja AABB
+  // Kolizja AABB - poprawiona szerokość catch zone
   function intersects(a,b){
     return !(a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y);
   }
@@ -645,7 +747,7 @@
     if (turboT>0) turboT = Math.max(0, turboT - dtRaw);
     if (magnetT>0) magnetT = Math.max(0, magnetT - dtRaw);
     if (slowT>0) slowT = Math.max(0, slowT - dtRaw);
-    boostStack = Math.max(0, boostStack - 320*dtRaw); // wolny zjazd
+    boostStack = Math.max(0, boostStack - 320*dtRaw);
 
     machineWrap.classList.toggle('turbo', turboT>0 || boostStack>60);
     machineWrap.classList.toggle('magnet', magnetT>0);
@@ -666,10 +768,10 @@
     level = 1 + Math.floor(timeFactor/15);
     gravity = 240 + level*20;
 
-    // Obszary trafienia
+    // Obszary trafienia - poprawiona strefa catch (węższa ale wyższa)
     const perfectZone = {
-      x: catchRect.x + catchRect.w*0.18, y: catchRect.y + catchRect.h*0.2,
-      w: catchRect.w*0.64, h: catchRect.h*0.6
+      x: catchRect.x + catchRect.w*0.3, y: catchRect.y + catchRect.h*0.1,
+      w: catchRect.w*0.4, h: catchRect.h*0.8
     };
     const machineCenterX = mX + mW/2;
 
@@ -677,22 +779,20 @@
     for (let i=items.length-1; i>=0; i--){
       const it = items[i];
 
-      // Magnes – lekkie przyciąganie złomu (tylko scrap)
       if (magnetT>0 && it.type==='scrap'){
         const targetX = machineCenterX - it.w/2;
         const dx = targetX - it.x;
-        const influence = 0.07; // miękko
-        it.x += dx * influence * (dtRaw*60/1); // normalizacja klatkowa
+        const influence = 0.07;
+        it.x += dx * influence * (dtRaw*60/1);
         it.vy += 20 * (dtRaw*60/1);
       }
 
       it.y += it.vy * dt;
       it.r += (it.vr||0) * Math.PI/180 * dt;
-      it.el.style.transform = `translate3d(${it.x}px, ${it.y}px, 0) rotate(${it.r}rad)`;
+      it.el.style.transform = `translate3d(${Math.round(it.x)}px, ${Math.round(it.y)}px, 0) rotate(${it.r}rad)`;
 
       const bb = {x: it.x, y: it.y, w: it.w, h: it.h};
 
-      // Kolizja z lejem
       if (intersects(bb, catchRect)){
         handleCatch(it, perfectZone);
         it.el.remove();
@@ -701,7 +801,6 @@
         continue;
       }
 
-      // Poza ekranem
       if (it.y > H + 80){
         if (it.type === 'scrap' || it.type === 'plus' || it.type==='turbo' || it.type==='magnet' || it.type==='shield' || it.type==='combogem'){
           if (streak>0 && (it.type==='scrap' || it.type==='plus')) labelText(mX + mW/2, H-120, 'SERIA PRZERWANA', '#9fb0d1');
@@ -712,7 +811,6 @@
       }
     }
 
-    // Spawn
     spawn(dt);
   }
 
@@ -721,7 +819,6 @@
     const cy = it.y + it.h/2;
 
     if (it.type === 'scrap'){
-      // Seria, mnożnik i Perfect
       streak += 1;
       checkComboTier();
       const mult = 1 + Math.floor(streak/5);
@@ -734,8 +831,6 @@
       labelText(cx, it.y, `+${add} kg`, '#ffd59e');
       beep('ok', .15, .07, 820);
       burst(cx, cy, getComputedStyle(document.documentElement).getPropertyValue('--accent-2'));
-
-      // Mikroprzyspieszenie po złapaniu – rośnie i łagodnie opada
       boostStack = clamp(boostStack + 90, 0, 300);
 
     } else if (it.type === 'gas'){
@@ -797,6 +892,7 @@
     el.style.fontWeight='700';
     el.style.textShadow='0 2px 6px rgba(0,0,0,.5)';
     el.style.pointerEvents='none';
+    el.style.zIndex='5';
     el.textContent=txt;
     field.appendChild(el);
     el.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-18px)',opacity:0}],{duration:700,easing:'ease-out'});
@@ -809,7 +905,6 @@
     if (lives <= 0){ gameOver(); }
   }
 
-  // Combo progi i banery
   function checkComboTier(fromGem=false){
     const tier = (streak>=comboSteps[2]) ? 3 : (streak>=comboSteps[1]) ? 2 : (streak>=comboSteps[0]) ? 1 : 0;
     if (tier > lastComboTier){
@@ -820,7 +915,6 @@
     lastComboTier = tier;
   }
 
-  // Start/Stop
   function startGame(){
     setupAudio();
     running = true; paused = false;
@@ -841,7 +935,6 @@
     gameOverOverlay.classList.remove('hidden');
   }
 
-  // Preferencje ruchu
   function prefersReduced(){ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
 
   // Zdarzenia
@@ -850,6 +943,7 @@
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ keyL = true; }
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ keyR = true; }
     if (e.key === 'p' || e.key === 'P'){ pauseToggle(); }
+    if (e.key === 'f' || e.key === 'F'){ toggleFullscreen(); }
   });
   document.addEventListener('keyup', (e)=>{
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ keyL = false; }
@@ -864,8 +958,7 @@
   field.addEventListener('pointerup', endDrag); field.addEventListener('pointercancel', endDrag);
   function endDrag(e){ if (e.pointerId===pointerId){ touchDrag=false; pointerId=null; } }
   function moveMachineTo(clientX){
-    const rect = field.getBoundingClientRect();
-    const x = clientX - rect.left - mW/2;
+    const x = clientX - mW/2;
     mX = clamp(x, mMinX, mMaxX); applyMachineX(); updateCatchRect();
   }
 
@@ -880,15 +973,21 @@
   rightBtn.addEventListener('pointerleave', ()=> rightHold=false);
 
   // HUD przyciski
+  settingsBtn.addEventListener('click', toggleSettings);
+  fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+  // Przyciski w panelu ustawień
   pauseBtn.addEventListener('click', ()=> pauseToggle());
   muteBtn.addEventListener('click', ()=>{
     audio.enabled = !audio.enabled; muteBtn.setAttribute('aria-pressed', String(!audio.enabled));
     if (audio.enabled) setupAudio();
   });
   restartBtn.addEventListener('click', ()=>{
+    settingsOverlay.classList.add('hidden');
     gameOverOverlay.classList.add('hidden');
     startGame();
   });
+  closeSettingsBtn.addEventListener('click', ()=> settingsOverlay.classList.add('hidden'));
 
   // Start overlay
   startBtn.addEventListener('click', ()=>{
@@ -919,14 +1018,40 @@
     }
   });
 
-  // Pauza przy utracie fokusu
   window.addEventListener('blur', ()=> { if (running){ paused = true; pauseBtn.setAttribute('aria-pressed','true'); }});
 
   // Inicjalizacja
   resize();
 
+  // Poprawki dla mobilnych
+  document.addEventListener('touchmove', function(e) {
+    if (running) e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gesturestart', function(e) {
+    e.preventDefault();
+  });
+
+  let resizeTimeout;
+  window.addEventListener('orientationchange', function() {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 300);
+  });
+
+  // Zapobieganie przewijaniu strony
+  document.body.addEventListener('touchmove', function(e) {
+    if (e.target === document.body) {
+      e.preventDefault();
+    }
+  }, { passive: false });
+
+  // Obsługa zmiany trybu pełnoekranowego
+  document.addEventListener('fullscreenchange', resize);
+  document.addEventListener('webkitfullscreenchange', resize);
+  document.addEventListener('mozfullscreenchange', resize);
+  document.addEventListener('MSFullscreenChange', resize);
+
 })();
 </script>
 </body>
 </html>
-

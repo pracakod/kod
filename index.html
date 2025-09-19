@@ -1,347 +1,932 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Python Bundler — połącz wiele .py w jeden tekst</title>
-  <style>
-    :root {
-      --bg: #f7f7fb;
-      --fg: #111;
-      --muted: #666;
-      --brand: #3b82f6;
-      --ok: #16a34a;
-      --warn: #d97706;
-      --danger: #ef4444;
-      --card: #fff;
-      --border: #e5e7eb;
-      --mono-bg: #0f172a;
-      --mono-fg: #e2e8f0;
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--fg);
-      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
-    }
-    .container {
-      max-width: 1100px;
-      margin: 32px auto;
-      padding: 0 16px 48px;
-    }
-    h1 { margin: 0 0 8px; font-size: 24px; }
-    .sub { margin: 0 0 16px; color: var(--muted); }
-    .toolbar, .actions {
-      display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
-      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
-      padding: 12px; margin: 16px 0;
-    }
-    .toolbar label { display: inline-flex; align-items: center; gap: 8px; }
-    .toolbar .spacer { flex: 1; }
-    .btn {
-      appearance: none; border: 1px solid var(--border); background: #fff; color: var(--fg);
-      padding: 8px 12px; border-radius: 8px; cursor: pointer;
-    }
-    .btn.brand { background: var(--brand); color: #fff; border-color: transparent; }
-    .btn.ok { background: var(--ok); color: #fff; border-color: transparent; }
-    .btn.warn { background: var(--warn); color: #fff; border-color: transparent; }
-    .btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
-    .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
-    input[type="file"] { display: none; }
-    .file-label {
-      border: 1px dashed var(--brand); color: var(--brand); padding: 8px 12px; border-radius: 8px; cursor: pointer;
-      background: #f0f7ff;
-    }
-    #dropZone {
-      border: 2px dashed var(--border); background: #fff; color: var(--muted);
-      padding: 18px; border-radius: 10px; text-align: center; margin: 12px 0;
-    }
-    #dropZone.dragover {
-      border-color: var(--brand); background: #f0f7ff; color: var(--brand);
-    }
-    #entries { display: grid; gap: 12px; }
-    .entry {
-      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px;
-    }
-    .entry-head {
-      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px;
-    }
-    .name-row { display: flex; gap: 8px; align-items: center; }
-    .name-row .idx {
-      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 6px; background: #eef2ff; color: #3730a3; font-weight: 600;
-    }
-    .name-row input[type="text"] {
-      flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
-    }
-    .entry-actions { display: inline-flex; gap: 6px; }
-    .entry-actions .icon {
-      border: 1px solid var(--border); background: #fff; width: 32px; height: 32px;
-      border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
-    }
-    .code {
-      width: 100%; min-height: 140px; max-height: 480px; resize: vertical;
-      padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
-      background: #0b1020; color: #e6edf3; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-      tab-size: 4;
-    }
-    .actions { justify-content: flex-start; gap: 10px 12px; }
-    #stats { margin-left: auto; color: var(--muted); }
-    #output {
-      width: 100%; min-height: 220px; resize: vertical; margin-top: 8px;
-      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
-      background: var(--mono-bg); color: var(--mono-fg); font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    }
-    footer { margin-top: 24px; color: var(--muted); font-size: 13px; }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ARJES – Złom • Bonusy • Combo</title>
+<meta name="color-scheme" content="dark light">
+<style>
+  :root{
+    --bg1:#0b0f18;
+    --bg2:#121a2a;
+    --hud:#0e1422cc;
+    --glass:#10182a9f;
+    --accent:#ff9a4d;
+    --accent-2:#ffc977;
+    --ok:#57d29c;
+    --warn:#ff6b6b;
+    --ink:#e8eefc;
+    --muted:#9fb0d1;
+    --shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Apple Color Emoji","Segoe UI Emoji";
+    color:var(--ink);
+    background:
+      radial-gradient(1200px 60vh at 80% -10%,#1a2340 0%,transparent 60%),
+      radial-gradient(900px 50vh at 20% -10%,#1a2033 0%,transparent 60%),
+      linear-gradient(180deg,var(--bg1),var(--bg2));
+    overflow:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .fog{
+    position:fixed; inset:-10vmax; pointer-events:none; opacity:.14; filter:blur(20px);
+    background:
+      radial-gradient(150px 60px at 15% 25%,#7aa0ff 0%,transparent 70%),
+      radial-gradient(220px 90px at 70% 20%,#a08bff 0%,transparent 70%),
+      radial-gradient(160px 80px at 45% 12%,#77d4ff 0%,transparent 70%);
+    animation:fog 30s linear infinite alternate;
+  }
+  @keyframes fog{50%{transform:translate3d(3vw,2vh,0)} 100%{transform:translate3d(-2vw,-1vh,0)}}
+
+  #game{position:relative;width:100vw;height:100vh;overflow:hidden}
+  #field{position:absolute;inset:0}
+
+  /* HUD */
+  .hud{
+    position:fixed; left:0; right:0; top:0;
+    display:flex; gap:12px; align-items:center; justify-content:space-between;
+    padding:14px clamp(14px,3vw,26px);
+    background:linear-gradient(180deg, rgba(8,12,22,.65), rgba(8,12,22,0));
+    pointer-events:none;
+  }
+  .hud .panel{
+    pointer-events:auto;display:flex;align-items:center;gap:14px;
+    padding:10px 14px;border-radius:14px;background:var(--glass);backdrop-filter: blur(8px);
+    box-shadow: var(--shadow);border:1px solid rgba(255,255,255,.06);
+  }
+  .stat{display:flex;align-items:center;gap:8px;color:var(--muted)}
+  .stat .v{color:var(--ink);font-weight:700;min-width:3ch;text-align:right}
+  .lives{display:flex;gap:6px}
+  .life{width:18px;height:18px;display:inline-block}
+  .life svg{width:100%;height:100%}
+  .life.dead{opacity:.25;filter:grayscale(1)}
+  .btns{display:flex;gap:8px}
+  .btn{
+    pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;
+    min-width:40px;height:40px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.08);
+    background:var(--hud);color:var(--ink);
+    cursor:pointer;user-select:none;transition:transform .1s ease, background .2s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn[aria-pressed="true"]{background:#0f1a30}
+  .btn svg{width:20px;height:20px;fill:currentColor}
+  .separator{width:1px;height:24px;background:rgba(255,255,255,.08)}
+
+  /* Efekty – chipy statusu */
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    display:inline-flex;align-items:center;gap:6px;
+    height:28px;padding:0 10px;border-radius:999px;border:1px solid rgba(255,255,255,.08);
+    background:#0d1527aa;color:#e5edff;font-weight:700;font-size:12px;
+  }
+  .chip .t{opacity:.85;font-weight:600;font-variant-numeric:tabular-nums}
+
+  /* Maszyna */
+  #machineWrap{
+    position:absolute;bottom:10px;left:0;
+    width:clamp(240px, 38vw, 540px);height:auto;
+    transform:translateX(0);will-change:transform;touch-action:none;
+  }
+  #machine{width:100%;height:auto;display:block;pointer-events:none;filter:drop-shadow(0 14px 24px rgba(0,0,0,.35))}
+  #shadow{position:absolute;width:52%;height:14px;left:24%;bottom:0;background:radial-gradient(50% 50% at 50% 50%,rgba(0,0,0,.45),transparent 70%);transform:translateY(9px);pointer-events:none}
+  #catchZone{position:absolute;pointer-events:none;left:22.5%;width:55%;top:31%;height:16%}
+
+  /* Efekty przy maszynie */
+  #trail{
+    position:absolute;left:6%;right:6%;bottom:24%;height:12px;border-radius:8px;
+    background:linear-gradient(90deg, transparent, rgba(255,210,140,.55), transparent);
+    filter:blur(6px);opacity:0;pointer-events:none
+  }
+  #magnetFX{
+    position:absolute;left:15%;width:70%;top:14%;height:42%;
+    border-radius:20px;background:radial-gradient(50% 50% at 50% 40%,rgba(100,190,255,.25),transparent 70%);
+    opacity:0;pointer-events:none;transform:scale(1)
+  }
+  .turbo #trail{opacity:.9;animation:trail 0.28s linear infinite}
+  @keyframes trail{50%{transform:translateY(-2px)} 100%{transform:translateY(0)}}
+  .turbo #machine{filter:drop-shadow(0 0 18px rgba(255,180,90,.65)) drop-shadow(0 14px 24px rgba(0,0,0,.35))}
+  .magnet #magnetFX{opacity:.85;animation:mag 1.2s ease-in-out infinite}
+  @keyframes mag{50%{transform:scale(1.04)}}
+
+  /* Spadające elementy */
+  .item{position:absolute;will-change:transform;transform:translate3d(0,0,0) rotate(0);pointer-events:none}
+  /* Wymiary elementów nadajemy inline (różne rozmiary) */
+
+  .metal{filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+  .gas svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.35))}
+  .bonus svg{filter:drop-shadow(0 2px 4px rgba(0,0,0,.3))}
+
+  /* Particles i wstrząs */
+  .particle{position:absolute;width:6px;height:6px;border-radius:50%;background:var(--accent);pointer-events:none;opacity:.95;animation:pop .55s ease-out forwards}
+  @keyframes pop{0%{transform:translate(0,0) scale(1);opacity:.95}100%{transform:translate(var(--dx),var(--dy)) scale(.6);opacity:0}}
+  .shake{animation:shake .3s ease}
+  @keyframes shake{0%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}100%{transform:translateX(0)}}
+
+  /* Nakładki */
+  .overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg, rgba(9,13,22,.85), rgba(9,13,22,.78));backdrop-filter:blur(8px);z-index:3}
+  .card{width:min(92vw,820px);padding:22px 22px 18px;border-radius:16px;background:var(--glass);border:1px solid rgba(255,255,255,.08);box-shadow:var(--shadow)}
+  .card h1{margin:0 0 10px;font-size:clamp(20px,3.8vw,28px)}
+  .card p{margin:0 0 12px;color:var(--muted);line-height:1.5}
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+  .card .btn{height:46px;min-width:46px;border-radius:12px;font-weight:700}
+  .card .btn.primary{background:linear-gradient(180deg,#1d2a47,#0f1730);border-color:#334166}
+  .grid2{display:grid;grid-template-columns:1fr;gap:10px}
+  @media (min-width:720px){.grid2{grid-template-columns:1fr 1fr}}
+  .kbd{display:inline-block;padding:.1em .5em;border-radius:6px;border:1px solid rgba(255,255,255,.12);background:#0c1322;color:#dfe7ff;font-weight:700}
+
+  /* Przyciski mobilne */
+  .controls{position:fixed;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:14px;z-index:2;pointer-events:none}
+  .controls .btn{pointer-events:auto;width:64px;height:64px;border-radius:14px;background:linear-gradient(180deg,#0f172a,#0a1120)}
+  .controls .btn:active{transform:scale(.98)}
+  .hidden{display:none !important}
+
+  /* Baner COMBO */
+  .banner{
+    position:fixed;left:50%;top:18%;transform:translateX(-50%);
+    padding:10px 16px;border-radius:12px;background:#0e182dba;border:1px solid rgba(255,255,255,.1);
+    color:#f7fbff;font-weight:900;letter-spacing:.06em;text-align:center;
+    text-shadow:0 2px 12px rgba(0,0,0,.6);z-index:4;font-size:clamp(18px,4vw,28px);
+    animation:banner .9s ease-out forwards
+  }
+  @keyframes banner{0%{opacity:0;transform:translate(-50%,-8px) scale(.98)}20%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-12px) scale(.98)}}
+</style>
 </head>
 <body>
-  <div class="container">
-    <h1>Python Bundler</h1>
-    <p class="sub">Wklej/załaduj wiele plików .py → połączenie w jeden tekst z nagłówkami “# path: …”.</p>
+<div class="fog" aria-hidden="true"></div>
 
-    <div class="toolbar">
-      <button id="addBtn" class="btn">+ Dodaj pole</button>
-      <label class="file-label">
-        <input type="file" id="fileInput" multiple accept=".py,.txt,.cfg,.ini" />
-        Załaduj pliki .py
-      </label>
-      <div class="spacer"></div>
-      <label><input type="checkbox" id="sortByName" /> Sortuj po nazwie (A→Z)</label>
-      <label title="Zamień CRLF/CR na LF"><input type="checkbox" id="normalize" checked /> Normalizuj końce linii (LF)</label>
-      <label title="Usuń spacje na końcach linii"><input type="checkbox" id="trim" /> Przytnij końcowe spacje</label>
-      <label>Separator (puste linie): <input type="number" id="separator" min="0" max="5" value="2" style="width:64px" /></label>
-      <label title="Otocz wynik blokiem ``` dla łatwego wklejenia na chat">
-        <input type="checkbox" id="wrapFences" /> Zawijaj wyniki w ```txt … ```
-      </label>
+<div id="game" aria-label="Gra zręcznościowa: łap złom do leja, unikaj butli z gazem">
+  <div id="field"></div>
+
+  <!-- HUD -->
+  <div class="hud" role="toolbar" aria-label="Panel gry">
+    <div class="panel">
+      <div class="stat" aria-live="polite" aria-atomic="true"><span>Wynik</span><b class="v" id="score">0</b><span>kg</span></div>
+      <div class="separator"></div>
+      <div class="stat"><span>Seria</span><b class="v" id="streak">0</b></div>
+      <div class="separator"></div>
+      <div class="stat"><span>Poziom</span><b class="v" id="level">1</b></div>
     </div>
-
-    <div id="dropZone">Przeciągnij tu pliki .py lub użyj przycisku “Załaduj pliki”. Możesz też dodać puste pola i wkleić ręcznie.</div>
-
-    <div id="entries"></div>
-
-    <div class="actions">
-      <button id="generateBtn" class="btn brand">Generuj</button>
-      <button id="copyBtn" class="btn ok" disabled>Kopiuj do schowka</button>
-      <button id="downloadBtn" class="btn" disabled>Pobierz bundle.txt</button>
-      <button id="clearBtn" class="btn danger" title="Usuń wszystkie pola">Wyczyść</button>
-      <span id="stats">Pliki: 0 • Linie: 0 • Bajty: 0</span>
+    <div class="panel">
+      <div class="lives" aria-label="Życia">
+        <span class="life" id="life1" title="Życie 1">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff6464" d="M12 21s-6.716-3.693-9.193-8.02C1.283 10.3 2.42 7.3 5.194 6.52 7.083 6 8.7 6.9 9.6 8c.9-1.1 2.517-2 4.406-1.48 2.773.78 3.91 3.78 2.387 6.46C18.716 17.307 12 21 12 21z"/></svg>
+        </span>
+        <span class="life" id="life2" title="Życie 2">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff6464" d="M12 21s-6.716-3.693-9.193-8.02C1.283 10.3 2.42 7.3 5.194 6.52 7.083 6 8.7 6.9 9.6 8c.9-1.1 2.517-2 4.406-1.48 2.773.78 3.91 3.78 2.387 6.46C18.716 17.307 12 21 12 21z"/></svg>
+        </span>
+        <span class="life" id="life3" title="Życie 3">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#ff6464" d="M12 21s-6.716-3.693-9.193-8.02C1.283 10.3 2.42 7.3 5.194 6.52 7.083 6 8.7 6.9 9.6 8c.9-1.1 2.517-2 4.406-1.48 2.773.78 3.91 3.78 2.387 6.46C18.716 17.307 12 21 12 21z"/></svg>
+        </span>
+      </div>
+      <div class="separator"></div>
+      <div class="stat"><span>Efekty</span></div>
+      <div id="chips" class="chips" aria-live="polite" aria-atomic="true"></div>
+      <div class="separator"></div>
+      <div class="btns">
+        <button class="btn" id="pauseBtn" aria-pressed="false" aria-label="Pauza / Wznów" title="Pauza / Wznów">
+          <svg viewBox="0 0 24 24"><path d="M7 5h3v14H7zM14 5h3v14h-3z"/></svg>
+        </button>
+        <button class="btn" id="muteBtn" aria-pressed="false" aria-label="Dźwięk włączony/wyciszony" title="Dźwięk">
+          <svg viewBox="0 0 24 24"><path d="M5 10v4h3l4 4V6L8 10H5zm11.5 2c0-1.77-1.02-3.29-2.5-4.03v8.06c1.48-.74 2.5-2.26 2.5-4.03z"/></svg>
+        </button>
+        <button class="btn" id="restartBtn" aria-label="Restart" title="Restart">
+          <svg viewBox="0 0 24 24"><path d="M12 6V3L8 7l4 4V8c2.76 0 5 2.24 5 5a5 5 0 11-5-5z"/></svg>
+        </button>
+      </div>
     </div>
-
-    <textarea id="output" placeholder="Tutaj pojawi się wynik…"></textarea>
-
-    <footer>
-      W nagłówku każdego pliku dodawane jest: <code># path: NAZWA</code>. Ustal kolejność ręcznie (strzałki) lub zaznacz sortowanie.
-    </footer>
   </div>
 
-  <script>
-    const entriesEl = document.getElementById('entries');
-    const addBtn = document.getElementById('addBtn');
-    const fileInput = document.getElementById('fileInput');
-    const generateBtn = document.getElementById('generateBtn');
-    const copyBtn = document.getElementById('copyBtn');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const clearBtn = document.getElementById('clearBtn');
-    const sortByName = document.getElementById('sortByName');
-    const normalizeCb = document.getElementById('normalize');
-    const trimCb = document.getElementById('trim');
-    const sepInput = document.getElementById('separator');
-    const wrapFencesCb = document.getElementById('wrapFences');
-    const outputEl = document.getElementById('output');
-    const statsEl = document.getElementById('stats');
-    const dropZone = document.getElementById('dropZone');
+  <!-- Maszyna -->
+  <div id="machineWrap" aria-label="ARJES – rozdrabniacz">
+    <div id="shadow" aria-hidden="true"></div>
+    <div id="catchZone" aria-hidden="true"></div>
+    <div id="trail" aria-hidden="true"></div>
+    <div id="magnetFX" aria-hidden="true"></div>
+    <svg id="machine" viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ARJES Rozdrabniacz">
+      <defs>
+        <filter id="drop"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity=".28"/></filter>
+        <linearGradient id="gBody" x1="0" y1="135" x2="0" y2="245" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#ff9a4d"/><stop offset=".55" stop-color="#f06800"/><stop offset="1" stop-color="#944000"/>
+        </linearGradient>
+        <linearGradient id="gSteel" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#5d6982"/><stop offset="1" stop-color="#232934"/>
+        </linearGradient>
+        <pattern id="pHaz" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <rect width="8" height="8" fill="#0f1420"/><rect width="4" height="8" fill="#ffc400"/>
+        </pattern>
+        <pattern id="pTread" width="11" height="7" patternUnits="userSpaceOnUse">
+          <rect width="11" height="7" fill="#0d1220"/><rect x="2" y="1.5" width="5" height="4" rx="1" fill="#1a2133"/>
+        </pattern>
+      </defs>
+      <ellipse cx="303" cy="302.5" rx="235" ry="14" fill="rgba(0,0,0,0.08)"/>
+      <g filter="url(#drop)">
+          <g>
+            <rect x="122.5" y="267" width="344" height="38" rx="19" fill="#0b0f18" stroke="#101522" stroke-width="1.5"/>
+            <rect x="135" y="279.5" width="319" height="13" rx="4" fill="url(#pTread)"/>
+            <g fill="#262f42">
+              <circle cx="162.5" cy="286" r="8.36"/>
+              <circle cx="242.9" cy="286" r="7"/>
+              <circle cx="328.9" cy="286" r="7"/>
+              <circle cx="414.9" cy="286" r="8.36"/>
+            </g>
+          </g>
+          <rect x="110.5" y="253" width="360" height="19" rx="4" fill="url(#gSteel)" stroke="#101522" stroke-width="1.5"/>
+          <rect x="145" y="231" width="310" height="25.5" rx="4" fill="url(#gSteel)" stroke="#101522" stroke-width="1.5"/>
+          <g>
+            <polygon points="146.5,124.5 446.5,124.5 426,183 167,183" fill="url(#gBody)"/>
+            <polygon points="141.5,117.5 451.5,117.5 446.5,124.5 146.5,124.5" fill="url(#pHaz)" stroke="#101522" stroke-width="1.5"/>
+          </g>
+          <path d="M224.75,245 L224.75,183 L426,183 L473.25,182.5 L473.25,245 Z" fill="url(#gBody)" />
+          <path d="M110.5,189 L224.75,183 L426,183 L468.25,179 L224.75,187 L120.5,195 Z" fill="rgba(255,255,255,.12)" />
+          <path d="M108,245 L108,185 L167,183 L224.75,183 L224.75,245 L118,245 Z" fill="url(#gBody)" />
+          <g>
+            <rect x="344" y="190" width="60" height="40" rx="4" fill="#1b2233" stroke="#101522" stroke-width="1.5"/>
+            <rect x="344" y="184" width="60" height="7" rx="2" fill="url(#pHaz)" stroke="#101522" stroke-width="1.5"/>
+            <g stroke="#2e3852" stroke-width="1.5">
+              <line x1="352" y1="197" x2="396" y2="223"/>
+              <line x1="352" y1="223" x2="396" y2="197"/>
+            </g>
+          </g>
+          <g style="paint-order: stroke fill">
+            <text x="180" y="218" fill="#ffffff" stroke="rgba(0,0,0,.28)" stroke-width="1.5"
+                  font-weight="900" font-size="17" text-anchor="middle" letter-spacing=".04em">
+              ARJES
+            </text>
+          </g>
+      </g>
+    </svg>
+  </div>
 
-    function addEntry(name = '', content = '') {
-      const entry = document.createElement('div');
-      entry.className = 'entry';
-      entry.innerHTML = `
-        <div class="entry-head">
-          <div class="name-row">
-            <span class="idx">#</span>
-            <input class="name" type="text" placeholder="np. main.py" value="${escapeHtmlAttr(name)}" />
-          </div>
-          <div class="entry-actions">
-            <button class="icon" title="Przenieś w górę" data-action="up">▲</button>
-            <button class="icon" title="Przenieś w dół" data-action="down">▼</button>
-            <button class="icon" title="Usuń" data-action="delete">🗑</button>
-          </div>
-        </div>
-        <textarea class="code" spellcheck="false" placeholder="# wklej tutaj zawartość pliku">${escapeHtml(content)}</textarea>
-      `;
-      entriesEl.appendChild(entry);
-      updateIndices();
+  <!-- Nakładka startowa -->
+  <div class="overlay" id="startOverlay">
+    <div class="card">
+      <h1>ARJES – zbieraj złom, unikaj butli</h1>
+      <div class="grid2">
+        <p>
+          • Poruszaj maszyną w lewo i prawo, łap złom do leja i zdobywaj punkty (kg).<br>
+          • Bonusy: Turbo (przyspiesza ruch), Magnes (przyciąga złom), Tarcza (blokuje butlę), Klejnot Combo (zwiększa serię).<br>
+          • „Perfect” za precyzyjne trafienia. Wysoka seria odblokowuje COMBO, SUPER COMBO, ULTRA COMBO.
+        </p>
+        <p>
+          Sterowanie:<br>
+          – Klawiatura: <span class="kbd">←</span>/<span class="kbd">→</span> lub <span class="kbd">A</span>/<span class="kbd">D</span><br>
+          – Ekran dotykowy: przeciągnij lub użyj przycisków<br>
+          – Pauza: <span class="kbd">P</span>
+        </p>
+      </div>
+      <div class="actions">
+        <button class="btn primary" id="startBtn">Rozpocznij</button>
+        <button class="btn" id="muteOnStart">Wycisz</button>
+      </div>
+    </div>
+  </div>
 
-      entry.querySelector('.entry-actions').addEventListener('click', (e) => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const action = btn.dataset.action;
-        if (action === 'delete') {
-          entry.remove(); updateIndices();
-        } else if (action === 'up') {
-          const prev = entry.previousElementSibling;
-          if (prev) entriesEl.insertBefore(entry, prev);
-          updateIndices();
-        } else if (action === 'down') {
-          const next = entry.nextElementSibling;
-          if (next) entriesEl.insertBefore(next, entry);
-          updateIndices();
+  <!-- Nakładka „Koniec gry” -->
+  <div class="overlay hidden" id="gameOverOverlay">
+    <div class="card">
+      <h1>Koniec gry</h1>
+      <p id="finalText">Wynik: 0 kg • Rekord: 0 kg</p>
+      <div class="actions">
+        <button class="btn primary" id="againBtn">Zagraj ponownie</button>
+        <button class="btn" id="shareBtn" title="Kopiuj wynik do schowka">Udostępnij wynik</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Przyciski mobilne -->
+  <div class="controls" id="touchControls">
+    <button class="btn" id="leftBtn" aria-label="Lewo">
+      <svg viewBox="0 0 24 24"><path d="M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+    </button>
+    <button class="btn" id="rightBtn" aria-label="Prawo">
+      <svg viewBox="0 0 24 24"><path d="m10 6 1.41 1.41L7.83 11H20v2H7.83l3.58 3.59L10 18l-6-6z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+(function(){
+  const field = document.getElementById('field');
+  const gameEl = document.getElementById('game');
+  const machineWrap = document.getElementById('machineWrap');
+  const catchZone = document.getElementById('catchZone');
+  const trail = document.getElementById('trail');
+  const magnetFX = document.getElementById('magnetFX');
+
+  const scoreEl = document.getElementById('score');
+  const streakEl = document.getElementById('streak');
+  const levelEl = document.getElementById('level');
+  const chipsEl = document.getElementById('chips');
+  const livesEls = [document.getElementById('life1'),document.getElementById('life2'),document.getElementById('life3')];
+
+  const startOverlay = document.getElementById('startOverlay');
+  const gameOverOverlay = document.getElementById('gameOverOverlay');
+  const finalText = document.getElementById('finalText');
+
+  const pauseBtn = document.getElementById('pauseBtn');
+  const muteBtn = document.getElementById('muteBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const startBtn = document.getElementById('startBtn');
+  const muteOnStart = document.getElementById('muteOnStart');
+  const againBtn = document.getElementById('againBtn');
+  const shareBtn = document.getElementById('shareBtn');
+
+  const leftBtn = document.getElementById('leftBtn');
+  const rightBtn = document.getElementById('rightBtn');
+  const touchControls = document.getElementById('touchControls');
+
+  // Rozmiar sceny i maszyny
+  let W = gameEl.clientWidth;
+  let H = gameEl.clientHeight;
+  let mW = 0, mH = 0, mX = 0, mMinX = 0, mMaxX = 0;
+  let catchRect = {x:0,y:0,w:0,h:0};
+
+  // Stan gry
+  let running = false;
+  let paused = false;
+  let lives = 3;
+  let score = 0;
+  let streak = 0;
+  let level = 1;
+  let high = Number(localStorage.getItem('arjes_best')||0);
+
+  // Sterowanie
+  let keyL = false, keyR = false;
+  let touchDrag = false, pointerId = null;
+  let leftHold = false, rightHold = false;
+
+  // Pętla
+  let raf = 0, tPrev = 0;
+
+  // Spadanie
+  let items = [];
+  let spawnTimer = 0;
+  let spawnEvery = 1.05; // s
+  const minSpawn = .32;
+
+  // Prędkości
+  const baseSpeed = 560; // px/s
+  let boostStack = 0;    // chwilowe przyspieszenie po złapaniu złomu
+  let turboT = 0;        // sekundy trwania Turbo
+  let magnetT = 0;       // Magnes
+  let shieldCount = 0;   // Tarcze
+  let slowT = 0;         // opcjonalne spowolnienie (rzadkie)
+  let gravity = 0;
+  let fallBase = 210;
+
+  // Combo progi
+  const comboSteps = [5, 12, 20];
+  let lastComboTier = 0;
+
+  // Audio – proste efekty
+  const audio = { enabled: true, ctx: null };
+  function setupAudio(){
+    if (audio.ctx) return;
+    try{ audio.ctx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ audio.enabled = false; }
+  }
+  function beep(type='ok', vol=.2, dur=.08, freq= type==='ok'? 740 : type==='warn' ? 180 : 420){
+    if (!audio.enabled || !audio.ctx) return;
+    const ctx = audio.ctx, t = ctx.currentTime;
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type==='warn' ? 'square' : 'sine';
+    o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t + 0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(ctx.destination); o.start(t); o.stop(t + dur);
+  }
+
+  // Narzędzia
+  const clamp = (v,min,max)=> v<min?min: v>max?max : v;
+  const rnd = (a,b)=> a + Math.random()*(b-a);
+
+  function resize(){
+    W = gameEl.clientWidth; H = gameEl.clientHeight;
+    const mb = machineWrap.getBoundingClientRect();
+    mW = mb.width; mH = mb.height || (mW*360/600);
+    mMinX = 6; mMaxX = W - mW - 6;
+    mX = clamp(mX, mMinX, mMaxX);
+    applyMachineX();
+    updateCatchRect();
+  }
+  function applyMachineX(){ machineWrap.style.transform = `translateX(${mX}px)`; }
+  function updateCatchRect(){
+    const fieldBox = field.getBoundingClientRect();
+    const cz = catchZone.getBoundingClientRect();
+    catchRect.x = cz.left - fieldBox.left;
+    catchRect.y = cz.top - fieldBox.top;
+    catchRect.w = cz.width;
+    catchRect.h = cz.height;
+  }
+
+  // Elementy – złom (2 warianty, różne skale i wagi)
+  function createScrap(){
+    const div = document.createElement('div');
+    const variant = Math.random()<.5 ? 'scrap' : 'scrap2';
+    div.className = `item scrap ${variant}`;
+    const scale = rnd(0.85, 1.35); // umiarkowane rozmiary
+    const baseW = 34, baseH = 26;
+    const w = Math.round(baseW*scale), h = Math.round(baseH*scale);
+    div.style.width = w+'px'; div.style.height = h+'px';
+    div.innerHTML = scrapSVG(variant);
+    // Waga proporcjonalna do skali, zaokrąglona (1–4 kg bazowe)
+    const baseWeight = (Math.random()<.22) ? 2 : 1;
+    const weight = Math.max(1, Math.min(4, Math.round(baseWeight*scale + (Math.random()<.18 ? 1 : 0))));
+    const s = {
+      el: div, type: 'scrap',
+      x: Math.random()*(W-40)+10, y: -h-10,
+      vy: fallBase + rnd(80, 140) + level*12,
+      r: Math.random()*Math.PI, vr: (Math.random()<.5?-1:1)*rnd(20,60)*(prefersReduced()?0:.5),
+      w, h, weight
+    };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`;
+    field.appendChild(div); items.push(s);
+  }
+  function scrapSVG(variant){
+    if (variant==='scrap'){
+      return `<svg viewBox="0 0 34 26" class="metal" aria-hidden="true">
+        <defs><linearGradient id="m1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a7b3c7"/><stop offset="1" stop-color="#55607a"/></linearGradient></defs>
+        <path d="M2 16 L10 4 L28 3 L32 10 L25 23 L7 22 Z" fill="url(#m1)" stroke="#2b3448" stroke-width="1.2" />
+        <circle cx="12" cy="10" r="1.4" fill="#2b3448"/><circle cx="22.5" cy="8.5" r="1.4" fill="#2b3448"/>
+      </svg>`;
+    } else {
+      return `<svg viewBox="0 0 34 26" class="metal" aria-hidden="true">
+        <defs><linearGradient id="m2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#c2ccd9"/><stop offset="1" stop-color="#6b768f"/></linearGradient></defs>
+        <rect x="3" y="6" width="26" height="14" rx="2" fill="url(#m2)" stroke="#2b3448" stroke-width="1.2"/>
+        <rect x="10" y="3.5" width="20" height="6" rx="1.5" fill="#7d8aa3" opacity=".9"/>
+      </svg>`;
+    }
+  }
+
+  // Butla
+  function createGas(){
+    const div = document.createElement('div');
+    div.className = 'item gas';
+    div.style.width='30px'; div.style.height='44px';
+    div.innerHTML = `<svg viewBox="0 0 30 44" aria-label="Butla z gazem">
+      <defs><linearGradient id="g0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#b63434"/></linearGradient></defs>
+      <rect x="6" y="1" width="18" height="6" rx="2" fill="#a22a2a"/>
+      <rect x="3" y="6" width="24" height="34" rx="6" fill="url(#g0)" stroke="#611a1a" stroke-width="1.2"/>
+      <polygon points="8,22 22,22 15,33" fill="#ffdd55" stroke="#111" stroke-width=".8"/>
+    </svg>`;
+    const s = {
+      el: div, type: 'gas',
+      x: Math.random()*(W-40)+10, y: -46,
+      vy: fallBase + 140 + level*18,
+      r:0, vr:(Math.random()<.5?-1:1)*rnd(15,30)*(prefersReduced()?0:.5),
+      w:30, h:44
+    };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`;
+    field.appendChild(s.el); items.push(s);
+  }
+
+  // Bonusy
+  function createPlus(){
+    const div = document.createElement('div');
+    div.className = 'item bonus';
+    div.style.width='26px'; div.style.height='26px';
+    div.innerHTML = `<svg viewBox="0 0 26 26" aria-label="Bonus +kg +seria">
+      <defs><linearGradient id="b0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6ee7b7"/><stop offset="1" stop-color="#34d399"/></linearGradient></defs>
+      <circle cx="13" cy="13" r="12" fill="url(#b0)" stroke="#0f3b2d" stroke-width="1.2"/>
+      <path d="M7 13l4 4 8-9" stroke="#0f3b2d" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    const s = { el:div, type:'plus', x:Math.random()*(W-40)+10, y:-30, vy:fallBase + 90 + level*10, r:0, vr:(Math.random()<.5?-1:1)*rnd(10,18), w:26, h:26 };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}rad)`; field.appendChild(s.el); items.push(s);
+  }
+  function createTurbo(){
+    const div = document.createElement('div');
+    div.className = 'item bonus'; div.style.width='26px'; div.style.height='30px';
+    div.innerHTML = `<svg viewBox="0 0 26 30" aria-label="Turbo">
+      <defs><linearGradient id="t0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd38a"/><stop offset="1" stop-color="#ff9a4d"/></linearGradient></defs>
+      <polygon points="12,1 4,17 13,17 7,29 22,11 13,11" fill="url(#t0)" stroke="#8a4a09" stroke-width="1.2"/>
+    </svg>`;
+    const s = { el:div, type:'turbo', x:Math.random()*(W-40)+10, y:-34, vy:fallBase + 110 + level*12, r:0, vr:rnd(-20,20), w:26, h:30 };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0) rotate(${s.r}deg)`; field.appendChild(s.el); items.push(s);
+  }
+  function createMagnet(){
+    const div = document.createElement('div');
+    div.className = 'item bonus'; div.style.width='28px'; div.style.height='28px';
+    div.innerHTML = `<svg viewBox="0 0 28 28" aria-label="Magnes">
+      <defs><linearGradient id="mg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6aa6ff"/><stop offset="1" stop-color="#3464d3"/></linearGradient></defs>
+      <path d="M6 16a8 8 0 0 1 16 0v6h-5v-6a3 3 0 0 0-6 0v6H6z" fill="url(#mg0)" stroke="#1a366b" stroke-width="1.2" />
+      <rect x="6" y="16" width="5" height="4" fill="#ff6b6b"/><rect x="17" y="16" width="5" height="4" fill="#ffd45b"/>
+    </svg>`;
+    const s = { el:div, type:'magnet', x:Math.random()*(W-40)+10, y:-32, vy:fallBase + 100 + level*10, r:0, vr:rnd(-18,18), w:28, h:28 };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+  }
+  function createShield(){
+    const div = document.createElement('div');
+    div.className = 'item bonus'; div.style.width='28px'; div.style.height='28px';
+    div.innerHTML = `<svg viewBox="0 0 28 28" aria-label="Tarcza">
+      <defs><linearGradient id="sh0" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#a2b6ff"/><stop offset="1" stop-color="#6b7dd6"/></linearGradient></defs>
+      <path d="M14 3l8 3v7c0 7-8 12-8 12S6 20 6 13V6l8-3z" fill="url(#sh0)" stroke="#2a3a88" stroke-width="1.2"/>
+      <path d="M10 13l3 3 5-6" stroke="#e9efff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    const s = { el:div, type:'shield', x:Math.random()*(W-40)+10, y:-32, vy:fallBase + 95 + level*8, r:0, vr:rnd(-16,16), w:28, h:28 };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+  }
+  function createComboGem(){
+    const div = document.createElement('div');
+    div.className = 'item bonus'; div.style.width='26px'; div.style.height='26px';
+    div.innerHTML = `<svg viewBox="0 0 26 26" aria-label="Klejnot Combo">
+      <defs><linearGradient id="cg0" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd2f2"/><stop offset="1" stop-color="#ff79c6"/></linearGradient></defs>
+      <path d="M13 2l9 7-9 15L4 9z" fill="url(#cg0)" stroke="#8a2a6b" stroke-width="1.2"/>
+    </svg>`;
+    const s = { el:div, type:'combogem', x:Math.random()*(W-40)+10, y:-30, vy:fallBase + 105 + level*10, r:0, vr:rnd(-18,18), w:26, h:26 };
+    div.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`; field.appendChild(s.el); items.push(s);
+  }
+
+  // Losowanie nowych elementów
+  function spawn(dt){
+    spawnTimer -= dt * (slowT>0 ? 0.75 : 1); // lekko rzadszy spawn przy spowolnieniu
+    if (spawnTimer > 0) return;
+
+    // Prawdopodobieństwa
+    const pGas = Math.min(.18 + level*0.01, .35);
+    const pPlus = Math.min(.06 + level*0.004, .12);
+    const pTurbo = .05; // niewielkie
+    const pMagnet = .045;
+    const pShield = .035;
+    const pComboGem = .04;
+
+    const r = Math.random();
+    let acc = 0;
+
+    if ((acc += pGas) && r < acc) { createGas(); }
+    else if ((acc += pShield) && r < acc) { createShield(); }
+    else if ((acc += pTurbo) && r < acc) { createTurbo(); }
+    else if ((acc += pMagnet) && r < acc) { createMagnet(); }
+    else if ((acc += pComboGem) && r < acc) { createComboGem(); }
+    else if ((acc += pPlus) && r < acc) { createPlus(); }
+    else { createScrap(); }
+
+    const target = Math.max(minSpawn, spawnEvery - level*0.02);
+    spawnEvery = .85*spawnEvery + .15*target;
+    spawnTimer = spawnEvery * (0.7 + Math.random()*0.6);
+  }
+
+  // Particles
+  function burst(x,y,color=getComputedStyle(document.documentElement).getPropertyValue('--accent')){
+    for(let i=0;i<8;i++){
+      const p = document.createElement('i');
+      p.className='particle';
+      p.style.left=(x-3)+'px'; p.style.top=(y-3)+'px';
+      p.style.setProperty('--dx', (Math.random()*80-40)+'px');
+      p.style.setProperty('--dy', (Math.random()*-60-20)+'px');
+      p.style.background = color;
+      field.appendChild(p); setTimeout(()=> p.remove(), 600);
+    }
+  }
+
+  // HUD
+  function updateHUD(){
+    scoreEl.textContent = Math.floor(score);
+    streakEl.textContent = streak;
+    levelEl.textContent = level;
+    livesEls.forEach((el,i)=> el.classList.toggle('dead', i >= lives));
+    updateChips();
+  }
+  function updateChips(){
+    chipsEl.innerHTML = '';
+    if (turboT>0 || boostStack>40){
+      chipsEl.appendChild(chip('Turbo', turboT>0? turboT : 0));
+    }
+    if (magnetT>0){
+      chipsEl.appendChild(chip('Magnes', magnetT));
+    }
+    if (shieldCount>0){
+      chipsEl.appendChild(chip('Tarcza ×'+shieldCount));
+    }
+    if (slowT>0){
+      chipsEl.appendChild(chip('Slow-mo', slowT));
+    }
+  }
+  function chip(label, t){
+    const el = document.createElement('span');
+    el.className='chip';
+    el.innerHTML = `<span>${label}</span>${t? `<span class="t">${t.toFixed(0)}s</span>`:''}`;
+    return el;
+  }
+
+  // Kolizja AABB
+  function intersects(a,b){
+    return !(a.x > b.x + b.w || a.x + a.w < b.x || a.y > b.y + b.h || a.y + a.h < b.y);
+  }
+
+  // Baner
+  function banner(txt, color='#ffd59e'){
+    const el = document.createElement('div');
+    el.className='banner';
+    el.style.borderColor='rgba(255,255,255,.12)';
+    el.style.boxShadow='0 10px 30px rgba(0,0,0,.35)';
+    el.style.color=color;
+    el.textContent=txt;
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 900);
+  }
+
+  // Pętla gry
+  function tick(t){
+    if (!running){ cancelAnimationFrame(raf); return; }
+    raf = requestAnimationFrame(tick);
+    if (paused){ tPrev = t; return; }
+
+    const dtRaw = Math.min(0.033, (t - tPrev)/1000 || 0.016);
+    tPrev = t;
+
+    const timeScale = slowT>0 ? 0.65 : 1;
+    const dt = dtRaw * timeScale;
+
+    // Aktualizacja czasu trwania efektów
+    if (turboT>0) turboT = Math.max(0, turboT - dtRaw);
+    if (magnetT>0) magnetT = Math.max(0, magnetT - dtRaw);
+    if (slowT>0) slowT = Math.max(0, slowT - dtRaw);
+    boostStack = Math.max(0, boostStack - 320*dtRaw); // wolny zjazd
+
+    machineWrap.classList.toggle('turbo', turboT>0 || boostStack>60);
+    machineWrap.classList.toggle('magnet', magnetT>0);
+    magnetFX.style.opacity = magnetT>0 ? '0.85' : '0';
+
+    // Ruch maszyny
+    const extraSpeed = boostStack + (turboT>0 ? 420 : 0);
+    const machineSpeed = baseSpeed + extraSpeed;
+    let dir = 0;
+    if (keyL || leftHold) dir -= 1;
+    if (keyR || rightHold) dir += 1;
+    mX = clamp(mX + dir * machineSpeed * dt, mMinX, mMaxX);
+    applyMachineX();
+    if (dir!==0) updateCatchRect();
+
+    // Poziom trudności
+    const timeFactor = t/1000;
+    level = 1 + Math.floor(timeFactor/15);
+    gravity = 240 + level*20;
+
+    // Obszary trafienia
+    const perfectZone = {
+      x: catchRect.x + catchRect.w*0.18, y: catchRect.y + catchRect.h*0.2,
+      w: catchRect.w*0.64, h: catchRect.h*0.6
+    };
+    const machineCenterX = mX + mW/2;
+
+    // Spadanie
+    for (let i=items.length-1; i>=0; i--){
+      const it = items[i];
+
+      // Magnes – lekkie przyciąganie złomu (tylko scrap)
+      if (magnetT>0 && it.type==='scrap'){
+        const targetX = machineCenterX - it.w/2;
+        const dx = targetX - it.x;
+        const influence = 0.07; // miękko
+        it.x += dx * influence * (dtRaw*60/1); // normalizacja klatkowa
+        it.vy += 20 * (dtRaw*60/1);
+      }
+
+      it.y += it.vy * dt;
+      it.r += (it.vr||0) * Math.PI/180 * dt;
+      it.el.style.transform = `translate3d(${it.x}px, ${it.y}px, 0) rotate(${it.r}rad)`;
+
+      const bb = {x: it.x, y: it.y, w: it.w, h: it.h};
+
+      // Kolizja z lejem
+      if (intersects(bb, catchRect)){
+        handleCatch(it, perfectZone);
+        it.el.remove();
+        items.splice(i,1);
+        updateHUD();
+        continue;
+      }
+
+      // Poza ekranem
+      if (it.y > H + 80){
+        if (it.type === 'scrap' || it.type === 'plus' || it.type==='turbo' || it.type==='magnet' || it.type==='shield' || it.type==='combogem'){
+          if (streak>0 && (it.type==='scrap' || it.type==='plus')) labelText(mX + mW/2, H-120, 'SERIA PRZERWANA', '#9fb0d1');
+          if (it.type==='scrap' || it.type==='plus') { streak = 0; checkComboTier(); updateHUD(); }
         }
-      });
-    }
-
-    function updateIndices() {
-      const items = [...entriesEl.children];
-      items.forEach((el, i) => {
-        el.querySelector('.idx').textContent = i + 1;
-      });
-      updateStats();
-    }
-
-    function getEntries() {
-      const items = [...entriesEl.querySelectorAll('.entry')].map(el => {
-        const name = el.querySelector('.name').value.trim() || '';
-        const code = el.querySelector('.code').value;
-        return { name, code };
-      }).filter(e => e.name || e.code.trim().length);
-      return items;
-    }
-
-    function normalizeText(text) {
-      let t = text;
-      if (normalizeCb.checked) t = t.replace(/\r\n?/g, '\n');
-      if (trimCb.checked) t = t.split('\n').map(line => line.replace(/\s+$/,'')).join('\n');
-      return t;
-    }
-
-    function generate() {
-      let items = getEntries();
-
-      // Auto-assign placeholder names if empty
-      items = items.map((e, idx) => {
-        const name = e.name || `file_${String(idx + 1).padStart(2,'0')}.py`;
-        return { name, code: e.code };
-      });
-
-      if (sortByName.checked) {
-        items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
-      }
-
-      const sepCount = Math.max(0, Math.min(5, parseInt(sepInput.value || '2', 10)));
-      const between = '\n'.repeat(sepCount + 1); // co najmniej jedna nowa linia
-
-      const parts = items.map(({ name, code }) => {
-        let text = normalizeText(code);
-        if (!text.endsWith('\n')) text += '\n';
-        return `# path: ${name}\n${text}`;
-      });
-
-      let result = parts.join(between);
-      if (wrapFencesCb.checked) {
-        result = '```txt\n' + result + '\n```';
-      }
-
-      outputEl.value = result;
-      copyBtn.disabled = result.length === 0;
-      downloadBtn.disabled = result.length === 0;
-      updateStats();
-      return result;
-    }
-
-    function updateStats() {
-      const files = entriesEl.children.length;
-      const text = outputEl.value || '';
-      const lines = text.length ? (text.match(/\r\n?|\n/g)?.length || 0) + 1 : 0;
-      const bytes = new Blob([text], { type: 'text/plain' }).size;
-      statsEl.textContent = `Pliki: ${files} • Linie: ${lines} • Bajty: ${bytes}`;
-    }
-
-    function copyToClipboard() {
-      const text = outputEl.value;
-      if (!text) return;
-      navigator.clipboard?.writeText(text).then(() => {
-        flash(copyBtn, 'Skopiowano!');
-      }).catch(async () => {
-        // Fallback
-        outputEl.select();
-        document.execCommand('copy');
-        flash(copyBtn, 'Skopiowano (fallback)!');
-      });
-    }
-
-    function downloadBundle() {
-      const text = outputEl.value;
-      if (!text) return;
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'bundle.txt';
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    }
-
-    function flash(btn, msg) {
-      const original = btn.textContent;
-      btn.textContent = msg;
-      setTimeout(() => { btn.textContent = original; }, 1200);
-    }
-
-    function handleFiles(files) {
-      const arr = Array.from(files);
-      for (const f of arr) {
-        // Accept text-like files
-        const isText = f.type.startsWith('text/') || /\.(py|txt|cfg|ini|toml|yaml|yml)$/i.test(f.name);
-        if (!isText) continue;
-        f.text().then((txt) => addEntry(f.name, txt));
+        it.el.remove();
+        items.splice(i,1);
       }
     }
 
-    // Drag & drop
-    ;['dragenter','dragover'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
-    });
-    ;['dragleave','drop'].forEach(evt => {
-      dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
-    });
-    dropZone.addEventListener('drop', (e) => {
-      const dt = e.dataTransfer;
-      if (dt?.files?.length) {
-        handleFiles(dt.files);
+    // Spawn
+    spawn(dt);
+  }
+
+  function handleCatch(it, perfectZone){
+    const cx = it.x + it.w/2;
+    const cy = it.y + it.h/2;
+
+    if (it.type === 'scrap'){
+      // Seria, mnożnik i Perfect
+      streak += 1;
+      checkComboTier();
+      const mult = 1 + Math.floor(streak/5);
+      let add = (it.weight || 1) * mult;
+      if (intersects({x:it.x,y:it.y,w:it.w,h:it.h}, perfectZone)){
+        add += 2;
+        labelText(cx, cy, 'PERFECT +2', '#a6f1c6');
       }
-    });
+      score += add;
+      labelText(cx, it.y, `+${add} kg`, '#ffd59e');
+      beep('ok', .15, .07, 820);
+      burst(cx, cy, getComputedStyle(document.documentElement).getPropertyValue('--accent-2'));
 
-    // Events
-    addBtn.addEventListener('click', () => addEntry());
-    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
-    generateBtn.addEventListener('click', generate);
-    copyBtn.addEventListener('click', copyToClipboard);
-    downloadBtn.addEventListener('click', downloadBundle);
-    clearBtn.addEventListener('click', () => {
-      entriesEl.innerHTML = '';
-      outputEl.value = '';
-      copyBtn.disabled = true;
-      downloadBtn.disabled = true;
-      updateIndices();
-    });
-    outputEl.addEventListener('input', updateStats);
-    window.addEventListener('keydown', (e) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
-    });
+      // Mikroprzyspieszenie po złapaniu – rośnie i łagodnie opada
+      boostStack = clamp(boostStack + 90, 0, 300);
 
-    // Helpers
-    function escapeHtml(str='') {
-      return str.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    } else if (it.type === 'gas'){
+      if (shieldCount>0){
+        shieldCount -= 1;
+        labelText(cx, it.y, 'Tarcza: BLOK', '#a2b6ff');
+        beep('ok', .18, .09, 560);
+        burst(cx, cy, '#a2b6ff');
+      } else {
+        damage();
+        labelText(cx, it.y, 'BUTLA!', '#ff6b6b');
+        beep('warn', .22, .12, 160);
+        burst(cx, cy, '#ff6b6b');
+      }
+
+    } else if (it.type === 'plus'){
+      streak += 2;
+      score += 3;
+      checkComboTier();
+      labelText(cx, it.y, '+3 kg • SERIA +2', '#8ee8c5');
+      beep('ok', .18, .12, 980);
+      burst(cx, cy, '#7ee4bd');
+
+    } else if (it.type === 'turbo'){
+      turboT = Math.min(turboT + 4.5, 7.5);
+      labelText(cx, it.y, 'TURBO', '#ffd59e');
+      beep('ok', .22, .14, 920);
+      burst(cx, cy, '#ffd59e');
+
+    } else if (it.type === 'magnet'){
+      magnetT = Math.min(magnetT + 6, 10);
+      labelText(cx, it.y, 'MAGNES', '#8fc5ff');
+      beep('ok', .2, .12, 700);
+      burst(cx, cy, '#8fc5ff');
+
+    } else if (it.type === 'shield'){
+      shieldCount = Math.min(2, shieldCount + 1);
+      labelText(cx, it.y, 'TARCZA +1', '#c9d2ff');
+      beep('ok', .2, .1, 600);
+      burst(cx, cy, '#c9d2ff');
+
+    } else if (it.type === 'combogem'){
+      streak += 5;
+      score += 4;
+      checkComboTier(true);
+      labelText(cx, it.y, 'KOMBO +5 • +4 kg', '#ff9bd6');
+      beep('ok', .22, .12, 980);
+      burst(cx, cy, '#ff9bd6');
     }
-    function escapeHtmlAttr(str='') {
-      return escapeHtml(str).replace(/"/g, '&quot;');
-    }
+  }
 
-    // Start with one empty field
-    addEntry('main.py', '');
-  </script>
+  function labelText(x,y,txt,color='#fff'){
+    const el = document.createElement('div');
+    el.style.position='absolute';
+    el.style.left=(x-40)+'px';
+    el.style.top=(y-8)+'px';
+    el.style.fontSize='12px';
+    el.style.color=color;
+    el.style.fontWeight='700';
+    el.style.textShadow='0 2px 6px rgba(0,0,0,.5)';
+    el.style.pointerEvents='none';
+    el.textContent=txt;
+    field.appendChild(el);
+    el.animate([{transform:'translateY(0)',opacity:1},{transform:'translateY(-18px)',opacity:0}],{duration:700,easing:'ease-out'});
+    setTimeout(()=> el.remove(), 720);
+  }
+
+  function damage(){
+    lives -= 1; updateHUD();
+    gameEl.classList.remove('shake'); void gameEl.offsetWidth; gameEl.classList.add('shake');
+    if (lives <= 0){ gameOver(); }
+  }
+
+  // Combo progi i banery
+  function checkComboTier(fromGem=false){
+    const tier = (streak>=comboSteps[2]) ? 3 : (streak>=comboSteps[1]) ? 2 : (streak>=comboSteps[0]) ? 1 : 0;
+    if (tier > lastComboTier){
+      if (tier===1){ banner('COMBO', '#ffe6b9'); beep('ok', .22, .1, 880); }
+      if (tier===2){ banner('SUPER COMBO', '#b7ffdf'); beep('ok', .24, .12, 980); }
+      if (tier===3){ banner('ULTRA COMBO', '#ffb0e5'); beep('ok', .26, .14, 1060); }
+    }
+    lastComboTier = tier;
+  }
+
+  // Start/Stop
+  function startGame(){
+    setupAudio();
+    running = true; paused = false;
+    items.forEach(i=> i.el.remove()); items = [];
+    spawnTimer = .5; spawnEvery = 1.05;
+    score = 0; streak = 0; level = 1; lives = 3;
+    boostStack = 0; turboT = 0; magnetT = 0; shieldCount = 0; slowT = 0; lastComboTier = 0;
+    updateHUD();
+    resize(); mX = (W - mW)/2; applyMachineX(); updateCatchRect();
+    tPrev = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick);
+  }
+  function pauseToggle(){ if (!running) return; paused = !paused; pauseBtn.setAttribute('aria-pressed', String(paused)); }
+  function gameOver(){
+    running = false; paused = false;
+    high = Math.max(high, Math.floor(score));
+    localStorage.setItem('arjes_best', String(high));
+    finalText.textContent = `Wynik: ${Math.floor(score)} kg • Rekord: ${high} kg`;
+    gameOverOverlay.classList.remove('hidden');
+  }
+
+  // Preferencje ruchu
+  function prefersReduced(){ return window.matchMedia('(prefers-reduced-motion: reduce)').matches; }
+
+  // Zdarzenia
+  window.addEventListener('resize', resize);
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ keyL = true; }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ keyR = true; }
+    if (e.key === 'p' || e.key === 'P'){ pauseToggle(); }
+  });
+  document.addEventListener('keyup', (e)=>{
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A'){ keyL = false; }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D'){ keyR = false; }
+  });
+
+  // Dotyk / drag
+  field.addEventListener('pointerdown', (e)=>{
+    pointerId = e.pointerId; touchDrag = true; field.setPointerCapture(pointerId); moveMachineTo(e.clientX);
+  });
+  field.addEventListener('pointermove', (e)=>{ if (!touchDrag || e.pointerId!==pointerId) return; moveMachineTo(e.clientX); });
+  field.addEventListener('pointerup', endDrag); field.addEventListener('pointercancel', endDrag);
+  function endDrag(e){ if (e.pointerId===pointerId){ touchDrag=false; pointerId=null; } }
+  function moveMachineTo(clientX){
+    const rect = field.getBoundingClientRect();
+    const x = clientX - rect.left - mW/2;
+    mX = clamp(x, mMinX, mMaxX); applyMachineX(); updateCatchRect();
+  }
+
+  leftBtn.addEventListener('pointerdown', ()=> leftHold=true);
+  leftBtn.addEventListener('pointerup', ()=> leftHold=false);
+  leftBtn.addEventListener('pointercancel', ()=> leftHold=false);
+  leftBtn.addEventListener('pointerleave', ()=> leftHold=false);
+
+  rightBtn.addEventListener('pointerdown', ()=> rightHold=true);
+  rightBtn.addEventListener('pointerup', ()=> rightHold=false);
+  rightBtn.addEventListener('pointercancel', ()=> rightHold=false);
+  rightBtn.addEventListener('pointerleave', ()=> rightHold=false);
+
+  // HUD przyciski
+  pauseBtn.addEventListener('click', ()=> pauseToggle());
+  muteBtn.addEventListener('click', ()=>{
+    audio.enabled = !audio.enabled; muteBtn.setAttribute('aria-pressed', String(!audio.enabled));
+    if (audio.enabled) setupAudio();
+  });
+  restartBtn.addEventListener('click', ()=>{
+    gameOverOverlay.classList.add('hidden');
+    startGame();
+  });
+
+  // Start overlay
+  startBtn.addEventListener('click', ()=>{
+    startOverlay.classList.add('hidden');
+    touchControls.classList.remove('hidden');
+    startGame();
+  });
+  muteOnStart.addEventListener('click', ()=>{
+    audio.enabled = !audio.enabled;
+    muteOnStart.textContent = audio.enabled ? 'Wycisz' : 'Dźwięk włączony';
+    muteBtn.setAttribute('aria-pressed', String(!audio.enabled));
+    if (audio.enabled) setupAudio();
+  });
+
+  // Game over overlay
+  againBtn.addEventListener('click', ()=>{
+    gameOverOverlay.classList.add('hidden');
+    startGame();
+  });
+  shareBtn.addEventListener('click', async ()=>{
+    const text = `Mój wynik w ARJES: ${Math.floor(score)} kg • Rekord: ${high} kg`;
+    if (navigator.share){
+      try{ await navigator.share({text}); }catch{}
+    } else {
+      try{ await navigator.clipboard.writeText(text);
+        shareBtn.textContent = 'Skopiowano'; setTimeout(()=> shareBtn.textContent='Udostępnij wynik', 1200);
+      }catch{}
+    }
+  });
+
+  // Pauza przy utracie fokusu
+  window.addEventListener('blur', ()=> { if (running){ paused = true; pauseBtn.setAttribute('aria-pressed','true'); }});
+
+  // Inicjalizacja
+  resize();
+
+})();
+</script>
 </body>
 </html>
+

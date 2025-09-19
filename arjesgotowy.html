@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARJES Rozdrabniacz</title>
+<style>
+body{margin:0;background:#f5f5f5;display:flex;justify-content:center;align-items:center;min-height:100vh;padding:20px}
+svg{max-width:400px;height:auto;filter:drop-shadow(0 4px 8px rgba(0,0,0,0.1))}
+text{user-select:none;cursor:default;pointer-events:none}
+</style>
+</head>
+<body><svg viewBox="0 0 600 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ARJES Rozdrabniacz">
+  
+    <defs>
+      <filter id="drop"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#000" flood-opacity=".28"/></filter>
+      <linearGradient id="gBody" x1="0" y1="135" x2="0" y2="245" gradientUnits="userSpaceOnUse">
+        <stop offset="0" stop-color="#ff9a4d"/><stop offset=".55" stop-color="#f06800"/><stop offset="1" stop-color="#944000"/>
+      </linearGradient>
+      <linearGradient id="gSteel" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#5d6982"/><stop offset="1" stop-color="#232934"/>
+      </linearGradient>
+      <linearGradient id="gBelt" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#1a1f2c"/><stop offset="1" stop-color="#0f131e"/>
+      </linearGradient>
+      <pattern id="pHaz" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="8" height="8" fill="#0f1420"/><rect width="4" height="8" fill="#ffc400"/>
+      </pattern>
+      <pattern id="pTread" width="11" height="7" patternUnits="userSpaceOnUse">
+        <rect width="11" height="7" fill="#0d1220"/><rect x="2" y="1.5" width="5" height="4" rx="1" fill="#1a2133"/>
+      </pattern>
+    </defs>
+  <ellipse id="dragShadow" cx="303" cy="302.5" rx="235" ry="14" fill="rgba(0,0,0,0.15)"/>
+  <g filter="url(#drop)">
+      <g id="dragTrack">
+        <rect x="122.5" y="267" width="344" height="38" rx="19" fill="#0b0f18" stroke="#101522" stroke-width="1.5"/>
+        <rect x="135" y="279.5" width="319" height="13" rx="4" fill="url(#pTread)"/>
+        <g fill="#262f42">
+          <circle cx="162.5" cy="286" r="8.36"/>
+          <circle cx="242.9" cy="286" r="7"/>
+          <circle cx="328.9" cy="286" r="7"/>
+          <circle cx="414.9" cy="286" r="8.36"/>
+        </g>
+      </g>
+      <rect id="dragFrame" x="110.5" y="253" width="360" height="19" rx="4" fill="url(#gSteel)" stroke="#101522" stroke-width="1.5"/>
+      <rect id="dragBase" x="145" y="231" width="310" height="25.5" rx="4" fill="url(#gSteel)" stroke="#101522" stroke-width="1.5"/>
+      
+      <g id="dragHopper">
+        <polygon points="146.5,124.5 446.5,124.5 426,183 167,183" fill="url(#gBody)"/>
+        <polygon points="141.5,117.5 451.5,117.5 446.5,124.5 146.5,124.5" fill="url(#pHaz)" stroke="#101522" stroke-width="1.5"/>
+      </g>
+      
+      <path d="M224.75,245 L224.75,183 L426,183 L473.25,182.5 L473.25,245 Z" fill="url(#gBody)" />
+      <path d="M110.5,189 L224.75,183 L426,183 L468.25,179 L224.75,187 L120.5,195 Z" fill="rgba(255,255,255,.12)" />
+      <path id="dragBodyLeft" d="M108,245 L108,185 L167,183 L224.75,183 L224.75,245 L118,245 Z" fill="url(#gBody)" />
+      
+      <g id="dragChamber">
+        <rect x="344" y="190" width="60" height="40" rx="4" fill="#1b2233" stroke="#101522" stroke-width="1.5"/>
+        <rect x="344" y="184" width="60" height="7" rx="2" fill="url(#pHaz)" stroke="#101522" stroke-width="1.5"/>
+        <g stroke="#2e3852" stroke-width="1.5">
+          <line x1="352" y1="197" x2="396" y2="223"/>
+          <line x1="352" y1="223" x2="396" y2="197"/>
+        </g>
+      </g>
+      
+      <g id="dragBrand" style="paint-order: stroke fill">
+        <text x="180" y="218" fill="#ffffff" stroke="rgba(0,0,0,.28)" stroke-width="1.5"
+              font-weight="900" font-size="17" text-anchor="middle" letter-spacing=".04em">
+          Arjes 🦖
+        </text>
+      </g>
+  </g>
+</svg></body>
+</html>

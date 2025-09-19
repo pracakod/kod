@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Python Bundler — połącz wiele .py w jeden tekst</title>
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --fg: #111;
+      --muted: #666;
+      --brand: #3b82f6;
+      --ok: #16a34a;
+      --warn: #d97706;
+      --danger: #ef4444;
+      --card: #fff;
+      --border: #e5e7eb;
+      --mono-bg: #0f172a;
+      --mono-fg: #e2e8f0;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--fg);
+      font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 32px auto;
+      padding: 0 16px 48px;
+    }
+    h1 { margin: 0 0 8px; font-size: 24px; }
+    .sub { margin: 0 0 16px; color: var(--muted); }
+    .toolbar, .actions {
+      display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center;
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px; margin: 16px 0;
+    }
+    .toolbar label { display: inline-flex; align-items: center; gap: 8px; }
+    .toolbar .spacer { flex: 1; }
+    .btn {
+      appearance: none; border: 1px solid var(--border); background: #fff; color: var(--fg);
+      padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    }
+    .btn.brand { background: var(--brand); color: #fff; border-color: transparent; }
+    .btn.ok { background: var(--ok); color: #fff; border-color: transparent; }
+    .btn.warn { background: var(--warn); color: #fff; border-color: transparent; }
+    .btn.danger { background: var(--danger); color: #fff; border-color: transparent; }
+    .btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+    input[type="file"] { display: none; }
+    .file-label {
+      border: 1px dashed var(--brand); color: var(--brand); padding: 8px 12px; border-radius: 8px; cursor: pointer;
+      background: #f0f7ff;
+    }
+    #dropZone {
+      border: 2px dashed var(--border); background: #fff; color: var(--muted);
+      padding: 18px; border-radius: 10px; text-align: center; margin: 12px 0;
+    }
+    #dropZone.dragover {
+      border-color: var(--brand); background: #f0f7ff; color: var(--brand);
+    }
+    #entries { display: grid; gap: 12px; }
+    .entry {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 10px;
+    }
+    .entry-head {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-bottom: 8px;
+    }
+    .name-row { display: flex; gap: 8px; align-items: center; }
+    .name-row .idx {
+      width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center;
+      border-radius: 6px; background: #eef2ff; color: #3730a3; font-weight: 600;
+    }
+    .name-row input[type="text"] {
+      flex: 1; padding: 8px 10px; border: 1px solid var(--border); border-radius: 8px;
+    }
+    .entry-actions { display: inline-flex; gap: 6px; }
+    .entry-actions .icon {
+      border: 1px solid var(--border); background: #fff; width: 32px; height: 32px;
+      border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    }
+    .code {
+      width: 100%; min-height: 140px; max-height: 480px; resize: vertical;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px;
+      background: #0b1020; color: #e6edf3; font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      tab-size: 4;
+    }
+    .actions { justify-content: flex-start; gap: 10px 12px; }
+    #stats { margin-left: auto; color: var(--muted); }
+    #output {
+      width: 100%; min-height: 220px; resize: vertical; margin-top: 8px;
+      padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+      background: var(--mono-bg); color: var(--mono-fg); font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    footer { margin-top: 24px; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Python Bundler</h1>
+    <p class="sub">Wklej/załaduj wiele plików .py → połączenie w jeden tekst z nagłówkami “# path: …”.</p>
+
+    <div class="toolbar">
+      <button id="addBtn" class="btn">+ Dodaj pole</button>
+      <label class="file-label">
+        <input type="file" id="fileInput" multiple accept=".py,.txt,.cfg,.ini" />
+        Załaduj pliki .py
+      </label>
+      <div class="spacer"></div>
+      <label><input type="checkbox" id="sortByName" /> Sortuj po nazwie (A→Z)</label>
+      <label title="Zamień CRLF/CR na LF"><input type="checkbox" id="normalize" checked /> Normalizuj końce linii (LF)</label>
+      <label title="Usuń spacje na końcach linii"><input type="checkbox" id="trim" /> Przytnij końcowe spacje</label>
+      <label>Separator (puste linie): <input type="number" id="separator" min="0" max="5" value="2" style="width:64px" /></label>
+      <label title="Otocz wynik blokiem ``` dla łatwego wklejenia na chat">
+        <input type="checkbox" id="wrapFences" /> Zawijaj wyniki w ```txt … ```
+      </label>
+    </div>
+
+    <div id="dropZone">Przeciągnij tu pliki .py lub użyj przycisku “Załaduj pliki”. Możesz też dodać puste pola i wkleić ręcznie.</div>
+
+    <div id="entries"></div>
+
+    <div class="actions">
+      <button id="generateBtn" class="btn brand">Generuj</button>
+      <button id="copyBtn" class="btn ok" disabled>Kopiuj do schowka</button>
+      <button id="downloadBtn" class="btn" disabled>Pobierz bundle.txt</button>
+      <button id="clearBtn" class="btn danger" title="Usuń wszystkie pola">Wyczyść</button>
+      <span id="stats">Pliki: 0 • Linie: 0 • Bajty: 0</span>
+    </div>
+
+    <textarea id="output" placeholder="Tutaj pojawi się wynik…"></textarea>
+
+    <footer>
+      W nagłówku każdego pliku dodawane jest: <code># path: NAZWA</code>. Ustal kolejność ręcznie (strzałki) lub zaznacz sortowanie.
+    </footer>
+  </div>
+
+  <script>
+    const entriesEl = document.getElementById('entries');
+    const addBtn = document.getElementById('addBtn');
+    const fileInput = document.getElementById('fileInput');
+    const generateBtn = document.getElementById('generateBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const sortByName = document.getElementById('sortByName');
+    const normalizeCb = document.getElementById('normalize');
+    const trimCb = document.getElementById('trim');
+    const sepInput = document.getElementById('separator');
+    const wrapFencesCb = document.getElementById('wrapFences');
+    const outputEl = document.getElementById('output');
+    const statsEl = document.getElementById('stats');
+    const dropZone = document.getElementById('dropZone');
+
+    function addEntry(name = '', content = '') {
+      const entry = document.createElement('div');
+      entry.className = 'entry';
+      entry.innerHTML = `
+        <div class="entry-head">
+          <div class="name-row">
+            <span class="idx">#</span>
+            <input class="name" type="text" placeholder="np. main.py" value="${escapeHtmlAttr(name)}" />
+          </div>
+          <div class="entry-actions">
+            <button class="icon" title="Przenieś w górę" data-action="up">▲</button>
+            <button class="icon" title="Przenieś w dół" data-action="down">▼</button>
+            <button class="icon" title="Usuń" data-action="delete">🗑</button>
+          </div>
+        </div>
+        <textarea class="code" spellcheck="false" placeholder="# wklej tutaj zawartość pliku">${escapeHtml(content)}</textarea>
+      `;
+      entriesEl.appendChild(entry);
+      updateIndices();
+
+      entry.querySelector('.entry-actions').addEventListener('click', (e) => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const action = btn.dataset.action;
+        if (action === 'delete') {
+          entry.remove(); updateIndices();
+        } else if (action === 'up') {
+          const prev = entry.previousElementSibling;
+          if (prev) entriesEl.insertBefore(entry, prev);
+          updateIndices();
+        } else if (action === 'down') {
+          const next = entry.nextElementSibling;
+          if (next) entriesEl.insertBefore(next, entry);
+          updateIndices();
+        }
+      });
+    }
+
+    function updateIndices() {
+      const items = [...entriesEl.children];
+      items.forEach((el, i) => {
+        el.querySelector('.idx').textContent = i + 1;
+      });
+      updateStats();
+    }
+
+    function getEntries() {
+      const items = [...entriesEl.querySelectorAll('.entry')].map(el => {
+        const name = el.querySelector('.name').value.trim() || '';
+        const code = el.querySelector('.code').value;
+        return { name, code };
+      }).filter(e => e.name || e.code.trim().length);
+      return items;
+    }
+
+    function normalizeText(text) {
+      let t = text;
+      if (normalizeCb.checked) t = t.replace(/\r\n?/g, '\n');
+      if (trimCb.checked) t = t.split('\n').map(line => line.replace(/\s+$/,'')).join('\n');
+      return t;
+    }
+
+    function generate() {
+      let items = getEntries();
+
+      // Auto-assign placeholder names if empty
+      items = items.map((e, idx) => {
+        const name = e.name || `file_${String(idx + 1).padStart(2,'0')}.py`;
+        return { name, code: e.code };
+      });
+
+      if (sortByName.checked) {
+        items.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+      }
+
+      const sepCount = Math.max(0, Math.min(5, parseInt(sepInput.value || '2', 10)));
+      const between = '\n'.repeat(sepCount + 1); // co najmniej jedna nowa linia
+
+      const parts = items.map(({ name, code }) => {
+        let text = normalizeText(code);
+        if (!text.endsWith('\n')) text += '\n';
+        return `# path: ${name}\n${text}`;
+      });
+
+      let result = parts.join(between);
+      if (wrapFencesCb.checked) {
+        result = '```txt\n' + result + '\n```';
+      }
+
+      outputEl.value = result;
+      copyBtn.disabled = result.length === 0;
+      downloadBtn.disabled = result.length === 0;
+      updateStats();
+      return result;
+    }
+
+    function updateStats() {
+      const files = entriesEl.children.length;
+      const text = outputEl.value || '';
+      const lines = text.length ? (text.match(/\r\n?|\n/g)?.length || 0) + 1 : 0;
+      const bytes = new Blob([text], { type: 'text/plain' }).size;
+      statsEl.textContent = `Pliki: ${files} • Linie: ${lines} • Bajty: ${bytes}`;
+    }
+
+    function copyToClipboard() {
+      const text = outputEl.value;
+      if (!text) return;
+      navigator.clipboard?.writeText(text).then(() => {
+        flash(copyBtn, 'Skopiowano!');
+      }).catch(async () => {
+        // Fallback
+        outputEl.select();
+        document.execCommand('copy');
+        flash(copyBtn, 'Skopiowano (fallback)!');
+      });
+    }
+
+    function downloadBundle() {
+      const text = outputEl.value;
+      if (!text) return;
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bundle.txt';
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function flash(btn, msg) {
+      const original = btn.textContent;
+      btn.textContent = msg;
+      setTimeout(() => { btn.textContent = original; }, 1200);
+    }
+
+    function handleFiles(files) {
+      const arr = Array.from(files);
+      for (const f of arr) {
+        // Accept text-like files
+        const isText = f.type.startsWith('text/') || /\.(py|txt|cfg|ini|toml|yaml|yml)$/i.test(f.name);
+        if (!isText) continue;
+        f.text().then((txt) => addEntry(f.name, txt));
+      }
+    }
+
+    // Drag & drop
+    ;['dragenter','dragover'].forEach(evt => {
+      dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+    });
+    ;['dragleave','drop'].forEach(evt => {
+      dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', (e) => {
+      const dt = e.dataTransfer;
+      if (dt?.files?.length) {
+        handleFiles(dt.files);
+      }
+    });
+
+    // Events
+    addBtn.addEventListener('click', () => addEntry());
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+    generateBtn.addEventListener('click', generate);
+    copyBtn.addEventListener('click', copyToClipboard);
+    downloadBtn.addEventListener('click', downloadBundle);
+    clearBtn.addEventListener('click', () => {
+      entriesEl.innerHTML = '';
+      outputEl.value = '';
+      copyBtn.disabled = true;
+      downloadBtn.disabled = true;
+      updateIndices();
+    });
+    outputEl.addEventListener('input', updateStats);
+    window.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') generate();
+    });
+
+    // Helpers
+    function escapeHtml(str='') {
+      return str.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    }
+    function escapeHtmlAttr(str='') {
+      return escapeHtml(str).replace(/"/g, '&quot;');
+    }
+
+    // Start with one empty field
+    addEntry('main.py', '');
+  </script>
+</body>
+</html>

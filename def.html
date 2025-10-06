@@ -1,0 +1,1608 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+<title>Bloom: Plant Warfare Clicker TD</title>
+<style>
+  :root{
+    --bg:#0f1220;
+    --panel:#171a2b;
+    --panel2:#1e2340;
+    --text:#e7eaf6;
+    --acc:#6cf0a7;
+    --warn:#ffb24c;
+    --danger:#ff597a;
+    --muted:#b8c0e0;
+    --good:#37e28a;
+    --btn:#2a2f54;
+    --btnH:#343a66;
+    --active:#3d5bd1;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    background:linear-gradient(180deg,#0e1120,#0b0e19);
+    color:var(--text);
+    font:500 14px/1.4 system-ui,Segoe UI,Roboto,Inter,Arial;
+  }
+  .wrap{max-width:1300px; margin:0 auto; padding:10px;}
+  header{
+    display:flex; gap:10px; align-items:center; justify-content:space-between;
+    background:var(--panel); border:1px solid #202646; border-radius:10px; padding:10px 12px; flex-wrap:wrap;
+    position:sticky; top:0; z-index:5;
+  }
+  .stat{
+    display:flex; align-items:center; gap:8px; background:var(--panel2);
+    border:1px solid #28305b; padding:6px 10px; border-radius:8px; white-space:nowrap;
+  }
+  .stat b{color:var(--acc)}
+  .bar{display:grid; grid-template-columns:1fr 380px; gap:10px; margin-top:10px;}
+  @media (max-width: 1100px){ .bar{grid-template-columns:1fr} }
+  .board{
+    background:radial-gradient(1200px 600px at 50% 0%, rgba(120,160,255,0.08), transparent 70%) , var(--panel);
+    border:1px solid #202646; border-radius:12px; position:relative; overflow:hidden; padding:8px;
+  }
+  canvas{display:block; width:100%; height:auto; border-radius:8px; background:#0d1020}
+  .sidebar{
+    background:var(--panel); border:1px solid #202646; border-radius:12px; padding:10px; display:flex; flex-direction:column; gap:10px;
+  }
+  .row{display:flex; gap:10px; flex-wrap:wrap}
+  button{
+    appearance:none; border:none; border-radius:10px; background:var(--btn); color:var(--text);
+    padding:10px 12px; cursor:pointer; transition:transform .05s ease, background .15s ease, box-shadow .15s ease;
+    box-shadow:0 2px 0 rgba(0,0,0,.25) inset, 0 2px 10px rgba(0,0,0,.2);
+    font-weight:700;
+  }
+  button:hover{background:var(--btnH)}
+  button:disabled{opacity:.5; filter:grayscale(0.3); cursor:not-allowed}
+  button.active{outline:2px solid var(--active); box-shadow:0 0 0 2px rgba(61,91,209,.25)}
+  .tool{flex:1}
+  .upgrade{
+    display:flex; justify-content:space-between; align-items:center; gap:8px; background:var(--panel2); border:1px solid #28305b; border-radius:10px; padding:10px;
+  }
+  .upgrade small{color:var(--muted)}
+  .good{color:var(--good)}
+  .warn{color:var(--warn)}
+  .danger{color:var(--danger)}
+  .muted{color:var(--muted)}
+  .footer{display:flex; gap:8px; flex-wrap:wrap; justify-content:space-between; align-items:center; color:var(--muted);}
+  .legend{display:flex; gap:8px; flex-wrap:wrap}
+  .pill{padding:2px 6px; background:#2a2f54; border:1px solid #28305b; border-radius:8px}
+  .overlay{
+    position:absolute; inset:8px; background:rgba(6,8,16,.72); display:none; align-items:center; justify-content:center; text-align:center; border-radius:8px;
+  }
+  .overlay.show{display:flex}
+  .card{
+    background:var(--panel2); border:1px solid #28305b; padding:16px; border-radius:12px; max-width:420px;
+    box-shadow:0 10px 40px rgba(0,0,0,.35);
+  }
+  .title{font-size:20px; font-weight:800}
+  .shopTitle{margin-top:4px}
+  .shopGrid{display:flex; flex-direction:column; gap:8px}
+  .plantBtn.active{outline:2px solid var(--active); box-shadow:0 0 0 2px rgba(61,91,209,.25)}
+  .hr{height:1px; background:#28305b; margin:4px 0}
+  .speed-controls{display:flex; gap:4px; margin-left:auto;}
+  .speed-btn{font-size:12px; padding:4px 8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="row">
+      <div class="stat">💰 Monety: <b id="coins">0</b> <span class="muted">( +<span id="cps">0</span>/s )</span></div>
+      <div class="stat">🌊 Fala: <b id="wave">1</b></div>
+      <div class="stat">🏰 Baza: <b id="basehp">20</b> HP</div>
+      <div class="stat">🖱️ Klik DMG: <b id="cdmg">5</b></div>
+      <div class="speed-controls">
+        <button id="btnSpeed1" class="speed-btn active">1x</button>
+        <button id="btnSpeed2" class="speed-btn">2x</button>
+        <button id="btnSpeed3" class="speed-btn">3x</button>
+      </div>
+    </div>
+    <div class="row">
+      <button id="btnStatue" class="tool">🗿 Posąg (<span id="statueCost">0</span>)</button>
+      <button id="btnSell">♻️ Sprzedaj (50% zwrotu)</button>
+      <button id="btnCancel">❌ Anuluj</button>
+    </div>
+  </header>
+
+  <div class="bar">
+    <div class="board">
+      <canvas id="game" width="1120" height="720"></canvas>
+      <div id="overlay" class="overlay">
+        <div class="card">
+          <div class="title">Koniec gry</div>
+          <p>Potwory zniszczyły bazę. Fala: <b id="ovWave"></b> | Monety: <b id="ovCoins"></b></p>
+          <div class="row">
+            <button id="btnRestart">🔁 Restart</button>
+            <button id="btnContinue">▶️ Kontynuuj (z 5 HP)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="title shopTitle">Sklep roślin</div>
+      <div class="shopGrid">
+        <div class="upgrade">
+          <div>
+            <div>🌿 Strzelacz (uniwersalny)</div>
+            <small>Dobre tempo i zasięg</small>
+          </div>
+          <button id="btnPlant_basic" class="plantBtn">Sadź (<span id="cost_basic">0</span>)</button>
+        </div>
+        <div class="upgrade">
+          <div>
+            <div>❄️ Mroźna (spowalnia)</div>
+            <small>Spowalnia trafione cele</small>
+          </div>
+          <button id="btnPlant_frost" class="plantBtn">Sadź (<span id="cost_frost">0</span>)</button>
+        </div>
+        <div class="upgrade">
+          <div>
+            <div>💥 Bomba (obrażenia obszarowe)</div>
+            <small>Wybuch zadaje AoE</small>
+          </div>
+          <button id="btnPlant_bomb" class="plantBtn">Sadź (<span id="cost_bomb">0</span>)</button>
+        </div>
+        <div class="upgrade">
+          <div>
+            <div>🎯 Snajper (długi zasięg)</div>
+            <small>Wysokie DMG, przebija</small>
+          </div>
+          <button id="btnPlant_sniper" class="plantBtn">Sadź (<span id="cost_sniper">0</span>)</button>
+        </div>
+
+        <!-- NOWE ROŚLINY -->
+        <div class="upgrade">
+          <div>
+            <div>⚡ Piorun (łańcuchy)</div>
+            <small>Odbija się do kolejnych celów</small>
+          </div>
+          <button id="btnPlant_chain" class="plantBtn">Sadź (<span id="cost_chain">0</span>)</button>
+        </div>
+        <div class="upgrade">
+          <div>
+            <div>🍄 Zarodnik (trucizna)</div>
+            <small>Nakłada truciznę (DoT)</small>
+          </div>
+          <button id="btnPlant_spore" class="plantBtn">Sadź (<span id="cost_spore">0</span>)</button>
+        </div>
+        <div class="upgrade">
+          <div>
+            <div>🌻 Słonecznik (dochód)</div>
+            <small>Generuje monety / s</small>
+          </div>
+          <button id="btnPlant_sun" class="plantBtn">Sadź (<span id="cost_sun">0</span>)</button>
+        </div>
+      </div>
+
+      <div class="title" style="margin-top:6px">Ulepszenia</div>
+      <div class="upgrade">
+        <div>
+          <div>🌿 DMG roślin +20%/poziom</div>
+          <small>Poziom: <b id="uPlantDmgL">0</b> • <span class="muted">Skaluje z posągami (+2%/posąg)</span></small>
+        </div>
+        <button id="uPlantDmg">Kup (<span id="uPlantDmgC">0</span>)</button>
+      </div>
+      <div class="upgrade">
+        <div>
+          <div>📡 Zasięg roślin +10%/poziom</div>
+          <small>Poziom: <b id="uPlantRangeL">0</b></small>
+        </div>
+        <button id="uPlantRange">Kup (<span id="uPlantRangeC">0</span>)</button>
+      </div>
+      <div class="upgrade">
+        <div>
+          <div>🖱️ Klik DMG +40%/poziom</div>
+          <small>Poziom: <b id="uClickL">0</b></small>
+        </div>
+        <button id="uClick">Kup (<span id="uClickC">0</span>)</button>
+      </div>
+      <div class="upgrade">
+        <div>
+          <div>💎 Dochód posągów +20%/poziom</div>
+          <small>Poziom: <b id="uStatueL">0</b></small>
+        </div>
+        <button id="uStatue">Kup (<span id="uStatueC">0</span>)</button>
+      </div>
+
+      <!-- TALENTY -->
+      <div class="title" style="margin-top:6px">Talenty</div>
+      <div class="upgrade">
+        <div>
+          <div>Punkty talentów: <b id="talentPoints">0</b></div>
+          <small>1 pkt za każde 5 najwyższej fali (konto)</small>
+        </div>
+        <button id="btnRespec" class="warn">Respec (zwrot punktów)</button>
+      </div>
+      <div id="talentGrid" class="shopGrid"></div>
+
+      <!-- WYGLĄD -->
+      <div class="title" style="margin-top:6px">Wygląd</div>
+      <div class="upgrade">
+        <div>
+          <div>Motyw</div>
+          <small>Zmienia paletę kolorów</small>
+        </div>
+        <div class="row">
+          <button id="themeClassic">Classic</button>
+          <button id="themeNeon">Neon</button>
+          <button id="themePastel">Pastel</button>
+        </div>
+      </div>
+      <div class="upgrade">
+        <div>
+          <div>Efekty</div>
+          <small>Przełączniki FX</small>
+        </div>
+        <div class="row">
+          <button id="fxGlow">Glow: ON</button>
+          <button id="fxTrails">Smugi: ON</button>
+          <button id="fxShake">Trzęsienie: ON</button>
+        </div>
+      </div>
+
+      <div class="title" style="margin-top:6px">Zapis</div>
+      <div class="row">
+        <button id="btnSave">💾 Zapisz</button>
+        <button id="btnLoad">📂 Wczytaj</button>
+        <button id="btnReset">🧨 Reset</button>
+      </div>
+
+      <div class="footer">
+        <div class="legend">
+          <span class="pill">🌱 Rośliny = auto atak</span>
+          <span class="pill">🗿 Posąg = dochód + DMG bonus</span>
+          <span class="pill">🖱️ Klik = dodatkowe obrażenia</span>
+          <span class="pill">👹 Boss co 5 fal</span>
+          <span class="pill">⭐ Talenty = stałe bonusy</span>
+          <span class="pill">🎨 Wygląd = motywy + FX</span>
+        </div>
+        <div class="muted">v1.5</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- Konfiguracja gry ----------
+  const cfg = {
+    cols: 14,
+    rows: 8,
+    tileW: 80,
+    tileH: 90,
+    baseHP: 20,
+    startCoins: 150,
+    // Posągi
+    statueBaseCost: 80,
+    statueCostGrow: 1.15,
+    statueBaseIncome: 3.0, // coins/s per statue
+    statueDmgBonusEach: 0.02, // +2% dmg global
+    // Ulepszenia
+    upg: {
+      plantDmg:   { base: 60, grow: 1.7, step: 1.20 },
+      plantRange: { base: 40, grow: 1.6, step: 1.10 },
+      click:      { base: 35, grow: 1.5, step: 1.40 },
+      statue:     { base: 70, grow: 1.7, step: 1.20 }
+    },
+    // Klik
+    clickBaseDmg: 5,
+    clicksPerSecond: 8,
+    // Fale
+    waveSpawnInterval: 0.9, // s
+    waveBaseCount: 7,
+    waveCountPerLvl: 2,
+    waveHPBase: 30,
+    waveHPPerLvl: 16,
+    waveSpeedBase: 60,
+    waveSpeedPerLvl: 2.2,
+    interWaveDelay: 2.5, // s
+    // Nagrody
+    killRewardBase: 6,
+    killRewardPerLvl: 2.0,
+    // Boss
+    boss: {
+      every: 5,
+      hpMul: 10,
+      speedMul: 0.7,
+      rewardMul: 12,
+      baseHit: 3
+    },
+    // Typy roślin
+    plantTypes: {
+      basic:  { name:'Strzelacz', icon:'🌿', baseCost:30,  grow:1.13, baseDmg:10, fireRate:0.9, range:240, bulletSpeed:620 },
+      frost:  { name:'Mroźna',    icon:'❄️', baseCost:50,  grow:1.12, baseDmg:7,  fireRate:1.0, range:220, bulletSpeed:560, slowPct:0.40, slowDur:1.6 },
+      bomb:   { name:'Bomba',     icon:'💥', baseCost:80,  grow:1.14, baseDmg:24, fireRate:1.6, range:230, bulletSpeed:520, aoeRadius:70, aoeFalloff:0.3 },
+      sniper: { name:'Snajper',   icon:'🎯', baseCost:120, grow:1.15, baseDmg:85, fireRate:2.2, range:460, bulletSpeed:900, pierce:1 },
+
+      // NOWE ROŚLINY
+      chain:  { name:'Piorun',    icon:'⚡', baseCost:140, grow:1.15, baseDmg:22, fireRate:1.3, range:280, bulletSpeed:800, chain:2, chainRange:180 },
+      spore:  { name:'Zarodnik',  icon:'🍄', baseCost:90,  grow:1.14, baseDmg:8,  fireRate:1.0, range:220, bulletSpeed:520, poisonDps:12, poisonDur:2.6 },
+      sun:    { name:'Słonecznik',icon:'🌻', baseCost:100, grow:1.18, income:2.2 }
+    },
+    // NOWE: Typy przeciwników
+    enemyTypes: {
+      basic: { name: 'Szlam', color: '#ff597a', hpMul: 1.0, speedMul: 1.0, rewardMul: 1.0, size: 24, special: null },
+      fast: { name: 'Szybki', color: '#ff8c42', hpMul: 0.6, speedMul: 1.8, rewardMul: 1.3, size: 20, special: 'fast' },
+      tank: { name: 'Czołg', color: '#8c42ff', hpMul: 2.5, speedMul: 0.7, rewardMul: 2.0, size: 32, special: 'tank' },
+      armored: { name: 'Opancerzony', color: '#42a5ff', hpMul: 1.8, speedMul: 0.9, rewardMul: 1.7, size: 28, special: 'armored', armor: 0.3 },
+      regenerating: { name: 'Regenerujący', color: '#42ff8c', hpMul: 1.3, speedMul: 1.1, rewardMul: 1.5, size: 26, special: 'regenerating', regen: 5 }
+    },
+    // NOWE: Modyfikatory trudności
+    difficulty: {
+      hpScale: 1.15, // Skalowanie HP na falę
+      speedScale: 1.08, // Skalowanie prędkości na falę
+      spawnScale: 1.1, // Skalowanie liczby przeciwników na falę
+      eliteChance: 0.15, // Szansa na elitarnego przeciwnika po fali 10
+      eliteMultiplier: 1.5 // Mnożnik statystyk dla elitarnych
+    }
+  };
+
+  // ---------- Ścieżka: jedna droga -> rozgałęzienie -> złączenie ----------
+  const pathCfg = {
+    startRow: Math.floor(cfg.rows/2),           // środkowy rząd
+    upperRow: Math.max(1, Math.floor(cfg.rows/2)-2),
+    lowerRow: Math.min(cfg.rows-2, Math.floor(cfg.rows/2)+2),
+    splitStart: Math.floor(cfg.cols*0.30),      // gdzie zaczyna się rozgałęzienie
+    splitEnd:   Math.floor(cfg.cols*0.65),      // gdzie kończy się rozgałęzienie
+    mergeRow:   Math.floor(cfg.rows/2),
+    baseCol:    cfg.cols - 1
+  };
+
+  function tileCenter(c,r){ return { x: c*cfg.tileW + cfg.tileW/2, y: r*cfg.tileH + cfg.tileH/2 }; }
+  function lineTiles(c1,r1,c2,r2){
+    const pts=[];
+    if(c1===c2){
+      const step = r2>=r1?1:-1;
+      for(let r=r1; r!==r2+step; r+=step) pts.push({c:c1, r});
+    }else if(r1===r2){
+      const step = c2>=c1?1:-1;
+      for(let c=c1; c!==c2+step; c+=step) pts.push({c, r:r1});
+    }
+    return pts;
+  }
+  function buildPaths(){
+    const tilesSet = new Set();
+    const addTiles = (arr)=> arr.forEach(t=> tilesSet.add(`${t.c},${t.r}`));
+
+    const sR = pathCfg.startRow, uR = pathCfg.upperRow, lR = pathCfg.lowerRow, mR = pathCfg.mergeRow;
+    const a = [], b = [];
+
+    // wspólny start: od kolumny 0 do splitStart
+    const startTiles = lineTiles(0, sR, pathCfg.splitStart, sR);
+    addTiles(startTiles);
+    a.push(...startTiles.map(t=>tileCenter(t.c,t.r)));
+    b.push(...startTiles.map(t=>tileCenter(t.c,t.r)));
+
+    // rozwidlenie w splitStart: pionowo do górnego i dolnego toru
+    const upVert = lineTiles(pathCfg.splitStart, sR, pathCfg.splitStart, uR);
+    const loVert = lineTiles(pathCfg.splitStart, sR, pathCfg.splitStart, lR);
+    addTiles(upVert); addTiles(loVert);
+    a.push(...upVert.slice(1).map(t=>tileCenter(t.c,t.r)));
+    b.push(...loVert.slice(1).map(t=>tileCenter(t.c,t.r)));
+
+    // poziomy odcinek rozgałęzienia
+    const upHoriz = lineTiles(pathCfg.splitStart+1, uR, pathCfg.splitEnd, uR);
+    const loHoriz = lineTiles(pathCfg.splitStart+1, lR, pathCfg.splitEnd, lR);
+    addTiles(upHoriz); addTiles(loHoriz);
+    a.push(...upHoriz.map(t=>tileCenter(t.c,t.r)));
+    b.push(...loHoriz.map(t=>tileCenter(t.c,t.r)));
+
+    // połączenie w splitEnd: pionowo do mergeRow
+    const upToMerge = lineTiles(pathCfg.splitEnd, uR, pathCfg.splitEnd, mR);
+    const loToMerge = lineTiles(pathCfg.splitEnd, lR, pathCfg.splitEnd, mR);
+    addTiles(upToMerge); addTiles(loToMerge);
+    a.push(...upToMerge.slice(1).map(t=>tileCenter(t.c,t.r)));
+    b.push(...loToMerge.slice(1).map(t=>tileCenter(t.c,t.r)));
+
+    // wspólny koniec do bazy
+    const endHoriz = lineTiles(pathCfg.splitEnd+1, mR, pathCfg.baseCol, mR);
+    addTiles(endHoriz);
+    const endPts = endHoriz.map(t=>tileCenter(t.c,t.r));
+    a.push(...endPts);
+    b.push(...endPts);
+
+    return {
+      paths: [a, b],
+      tiles: tilesSet,
+      basePos: tileCenter(pathCfg.baseCol, mR),
+      startY: tileCenter(0, sR).y
+    };
+  }
+  const path = buildPaths();
+
+  // ---------- Talenty (meta, bez prestiżu) ----------
+  const talents = {
+    maxWave: 0,
+    nodes: {
+      dmg:0,      // DMG roślin +10%/lvl (max5)
+      click:0,    // Klik DMG +15%/lvl (max5)
+      cps:0,      // Dochód posągów +10%/lvl (max5)
+      range:0,    // Zasięg roślin +8%/lvl (max3)
+      crit:0,     // Krytyk: +5%/lvl (x2 dmg, max4)
+      start:0,    // Startowe monety +150/poziom (max5)
+      boss:0,     // Nagrody za zabicia +10%/lvl (max5)
+      frost:0,    // Mroźna: +10% slow i +0.2s/poziom (max3)
+      bomb:0,     // Bomba: +15% promień i +10% dmg/poziom (max3)
+      chain:0,    // Piorun: +1 odbicie/poziom (max3)
+      elite:0     // NOWE: +10% DMG do elitarnych/poziom (max3)
+    }
+  };
+  const talentDefs = {
+    dmg:   { name:'Siła chlorofilu', desc:'DMG roślin +10%/poziom', max:5 },
+    click: { name:'Zielony kciuk',   desc:'Klik DMG +15%/poziom', max:5 },
+    cps:   { name:'Kult posągów',    desc:'Dochód posągów +10%/poziom', max:5 },
+    range: { name:'Rozrastanie',     desc:'Zasięg roślin +8%/poziom', max:3, req:[['dmg',1]] },
+    crit:  { name:'Ostre kolce',     desc:'Szansa na kryta +5%/poziom (x2 dmg)', max:4, req:[['dmg',2]] },
+    start: { name:'Zapas nasion',    desc:'Startowe monety +150/poziom', max:5 },
+    boss:  { name:'Łupy',            desc:'Nagrody za zabicia +10%/poziom', max:5, req:[['cps',2]] },
+    frost: { name:'Mróz+',           desc:'Mroźna: +10% spowolnienie i +0.2s/poziom', max:3 },
+    bomb:  { name:'Proch+',          desc:'Bomba: +15% promień i +10% DMG/poziom', max:3 },
+    chain: { name:'Łańcuch',         desc:'Piorun: +1 odbicie/poziom', max:3, req:[['dmg',1]] },
+    elite: { name:'Myśliwy',         desc:'+10% DMG do elitarnych przeciwników/poziom', max:3, req:[['dmg',2]] }
+  };
+  function tLvl(id){ return talents.nodes[id]||0; }
+  function talentSpent(){ return Object.values(talents.nodes).reduce((a,b)=>a+b,0); }
+  function talentPoints(){ return Math.max(0, Math.floor((talents.maxWave||0)/5) - talentSpent()); }
+  function canBuyTalent(id){
+    const n = talentDefs[id]; if(!n) return false;
+    if(talentPoints()<=0 || tLvl(id)>=n.max) return false;
+    if(n.req){ for(const [rid,rlvl] of n.req){ if(tLvl(rid)<rlvl) return false; } }
+    return true;
+  }
+  function saveTalents(){ localStorage.setItem('bloom_talents_v15', JSON.stringify(talents)); }
+  function loadTalents(){
+    const raw = localStorage.getItem('bloom_talents_v15'); if(!raw) return;
+    try{
+      const t = JSON.parse(raw);
+      talents.maxWave = t.maxWave||0;
+      talents.nodes = Object.assign({}, talents.nodes, t.nodes||{});
+    }catch(e){ console.error(e); }
+  }
+
+  // ---------- Skórki i FX ----------
+  const cosmetics = { theme:'classic', glow:true, trails:true, shake:true };
+  function saveCosmetics(){ localStorage.setItem('bloom_cosmetics_v15', JSON.stringify(cosmetics)); }
+  function loadCosmetics(){
+    const raw = localStorage.getItem('bloom_cosmetics_v15'); if(!raw) return;
+    try{ Object.assign(cosmetics, JSON.parse(raw)||{}); }catch(e){}
+  }
+  function palette(){
+    switch(cosmetics.theme){
+      case 'neon': return {
+        tilePath:'#0b0f20', tileGrass:'#060915',
+        enemy:'#ff57b3', enemyBoss:'#ffd166',
+        enemyFast: '#ff8c42', enemyTank: '#8c42ff', enemyArmored: '#42a5ff', enemyRegen: '#42ff8c'
+      };
+      case 'pastel': return {
+        tilePath:'#182140', tileGrass:'#141a34',
+        enemy:'#ff8aa8', enemyBoss:'#ffd48a',
+        enemyFast: '#ffb38a', enemyTank: '#b38aff', enemyArmored: '#8ac6ff', enemyRegen: '#8affb3'
+      };
+      default: return {
+        tilePath:'#101530', tileGrass:'#0f1430',
+        enemy:'#ff597a', enemyBoss:'#ffb24c',
+        enemyFast: '#ff8c42', enemyTank: '#8c42ff', enemyArmored: '#42a5ff', enemyRegen: '#42ff8c'
+      };
+    }
+  }
+  const shake = { a:0, x:0, y:0 };
+  function addShake(p){ if(!cosmetics.shake) return; shake.a = Math.min(10, shake.a + p); }
+
+  // ---------- Stan gry ----------
+  const game = {
+    coins: cfg.startCoins,
+    wave: 1,
+    baseHP: cfg.baseHP,
+    enemies: [],
+    bullets: [],
+    plants: [], // {kind, c,r,x,y, cd, purchaseIndex}
+    statues: [], // {c,r,x,y, purchaseIndex}
+    timers: { spawn: 0, inter: 0 },
+    wavePlan: { toSpawn: 0, spawned: 0, inProgress: false, bossPending: false },
+    upgrades: { plantDmg: 0, plantRange: 0, click: 0, statue: 0 },
+    tool: 'none', // 'plant_basic'|'plant_frost'|'plant_bomb'|'plant_sniper'|'plant_chain'|'plant_spore'|'plant_sun'|'statue'|'sell'|'none'
+    pointer: { x: 0, y: 0, down: false, clickTimer: 0 },
+    overlay: false,
+    // NOWE: Kontrola prędkości gry
+    gameSpeed: 1,
+    // NOWE: Statystyki przeciwników
+    enemyStats: {
+      totalKilled: 0,
+      elitesKilled: 0,
+      bossesKilled: 0
+    }
+  };
+
+  // ---------- Canvas i UI ----------
+  const $ = sel => document.querySelector(sel);
+  const canvas = $('#game');
+  const ctx = canvas.getContext('2d');
+  canvas.width = cfg.cols * cfg.tileW;
+  canvas.height = cfg.rows * cfg.tileH;
+
+  const ui = {
+    coins: $('#coins'),
+    cps: $('#cps'),
+    wave: $('#wave'),
+    basehp: $('#basehp'),
+    cdmg: $('#cdmg'),
+    statueCost: $('#statueCost'),
+    overlay: $('#overlay'),
+    ovWave: $('#ovWave'),
+    ovCoins: $('#ovCoins'),
+    // upgrades
+    uPlantDmgL: $('#uPlantDmgL'),
+    uPlantRangeL: $('#uPlantRangeL'),
+    uClickL: $('#uClickL'),
+    uStatueL: $('#uStatueL'),
+    uPlantDmgC: $('#uPlantDmgC'),
+    uPlantRangeC: $('#uPlantRangeC'),
+    uClickC: $('#uClickC'),
+    uStatueC: $('#uStatueC'),
+    // buttons
+    btnStatue: $('#btnStatue'),
+    btnSell: $('#btnSell'),
+    btnCancel: $('#btnCancel'),
+    btnRestart: $('#btnRestart'),
+    btnContinue: $('#btnContinue'),
+    uPlantDmg: $('#uPlantDmg'),
+    uPlantRange: $('#uPlantRange'),
+    uClick: $('#uClick'),
+    uStatue: $('#uStatue'),
+    btnSave: $('#btnSave'),
+    btnLoad: $('#btnLoad'),
+    btnReset: $('#btnReset'),
+    // sklep roślin
+    btnPlant_basic: $('#btnPlant_basic'),
+    btnPlant_frost: $('#btnPlant_frost'),
+    btnPlant_bomb: $('#btnPlant_bomb'),
+    btnPlant_sniper: $('#btnPlant_sniper'),
+    btnPlant_chain: $('#btnPlant_chain'),
+    btnPlant_spore: $('#btnPlant_spore'),
+    btnPlant_sun: $('#btnPlant_sun'),
+    cost_basic: $('#cost_basic'),
+    cost_frost: $('#cost_frost'),
+    cost_bomb: $('#cost_bomb'),
+    cost_sniper: $('#cost_sniper'),
+    cost_chain: $('#cost_chain'),
+    cost_spore: $('#cost_spore'),
+    cost_sun: $('#cost_sun'),
+    // talenty + wygląd
+    talentPoints: $('#talentPoints'),
+    talentGrid: $('#talentGrid'),
+    btnRespec: $('#btnRespec'),
+    themeClassic: $('#themeClassic'), themeNeon: $('#themeNeon'), themePastel: $('#themePastel'),
+    fxGlow: $('#fxGlow'), fxTrails: $('#fxTrails'), fxShake: $('#fxShake'),
+    // NOWE: Kontrola prędkości
+    btnSpeed1: $('#btnSpeed1'), btnSpeed2: $('#btnSpeed2'), btnSpeed3: $('#btnSpeed3')
+  };
+
+  // ---------- Narzędzia pomocnicze ----------
+  const rnd = (a,b)=>Math.random()*(b-a)+a;
+  const clamp = (v,a,b)=>Math.max(a,Math.min(b,v));
+  function weightedRandom(weights) {
+    const total = weights.reduce((sum, weight) => sum + weight, 0);
+    let random = Math.random() * total;
+    for (let i = 0; i < weights.length; i++) {
+      if (random < weights[i]) return i;
+      random -= weights[i];
+    }
+    return weights.length - 1;
+  }
+  function choose(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+  function dist(ax,ay,bx,by){ const dx=ax-bx, dy=ay-by; return Math.hypot(dx,dy); }
+  function lerp(a,b,t){ return a+(b-a)*t; }
+  function getPointerPos(ev){
+    const rect = canvas.getBoundingClientRect();
+    const rx = canvas.width / rect.width;
+    const ry = canvas.height / rect.height;
+    const cx = (ev.touches?ev.touches[0].clientX:ev.clientX) - rect.left;
+    const cy = (ev.touches?ev.touches[0].clientY:ev.clientY) - rect.top;
+    return { x: cx, y: cy, rx, ry, rect };
+  }
+  function toCanvasCoords(x,y,rx,ry){ return { x: x * rx, y: y * ry }; }
+
+  // Siatka i ścieżka
+  function toTile(x,y){
+    const c = Math.floor(x / cfg.tileW);
+    const r = Math.floor(y / cfg.tileH);
+    return {c, r};
+  }
+  function inBounds(c,r){ return c>=0 && c<cfg.cols && r>=0 && r<cfg.rows; }
+  function isPathTile(c,r){ return path.tiles.has(`${c},${r}`); }
+
+  // ---------- Ekonomia i mnożniki (z Talentami) ----------
+  function plantTypeCount(kind){ return game.plants.filter(p=>p.kind===kind).length; }
+  function plantCost(kind){
+    const t = cfg.plantTypes[kind];
+    return Math.floor(t.baseCost * Math.pow(t.grow, plantTypeCount(kind)));
+  }
+  function statueCost(){
+    return Math.floor(cfg.statueBaseCost * Math.pow(cfg.statueCostGrow, game.statues.length));
+  }
+  function upgCost(key, lvl){
+    const u = cfg.upg[key];
+    return Math.floor(u.base * Math.pow(u.grow, lvl));
+  }
+  function plantDmgMultiplier(){
+    // bazowe ulepszenia + bonus z posągów + talent dmg
+    return Math.pow(cfg.upg.plantDmg.step, game.upgrades.plantDmg)
+         * (1 + game.statues.length * cfg.statueDmgBonusEach)
+         * (1 + 0.10 * tLvl('dmg'));
+  }
+  function plantRangeFor(kind){
+    return cfg.plantTypes[kind].range * Math.pow(cfg.upg.plantRange.step, game.upgrades.plantRange) * (1 + 0.08 * tLvl('range'));
+  }
+  function clickDamage(){
+    return Math.floor(cfg.clickBaseDmg * Math.pow(cfg.upg.click.step, game.upgrades.click) * (1 + 0.15 * tLvl('click'))
+                      * (1 + game.statues.length * cfg.statueDmgBonusEach));
+  }
+  function statueIncomePer(){
+    return cfg.statueBaseIncome * Math.pow(cfg.upg.statue.step, game.upgrades.statue) * (1 + 0.10 * tLvl('cps'));
+  }
+  function sunIncomePerSec(){
+    const s = cfg.plantTypes.sun; if(!s) return 0;
+    const count = game.plants.filter(p=>p.kind==='sun').length;
+    return count * s.income;
+  }
+  function totalCPS(){ return game.statues.length * statueIncomePer() + sunIncomePerSec(); }
+  function rewardForEnemy(e){
+    const base = cfg.killRewardBase + cfg.killRewardPerLvl * game.wave;
+    const mul = (e.boss ? cfg.boss.rewardMul : 1) * (1 + 0.10 * tLvl('boss')) * (e.type ? cfg.enemyTypes[e.type].rewardMul : 1);
+    if (e.elite) mul *= 1.5;
+    return Math.floor(base * mul);
+  }
+
+  // ---------- Rozgrywka: fale ----------
+  function startWave(){
+    const baseCount = cfg.waveBaseCount + cfg.waveCountPerLvl * (game.wave-1);
+    game.wavePlan.toSpawn = Math.floor(baseCount * Math.pow(cfg.difficulty.spawnScale, Math.max(0, game.wave-1)));
+    game.wavePlan.spawned = 0;
+    game.wavePlan.inProgress = true;
+    game.wavePlan.bossPending = (game.wave % cfg.boss.every === 0);
+    game.timers.spawn = 0.4;
+  }
+  function endWave(){
+    game.wavePlan.inProgress = false;
+    game.timers.inter = cfg.interWaveDelay;
+    game.wave++;
+    if(game.wave > (talents.maxWave||0)){ talents.maxWave = game.wave; saveTalents(); }
+  }
+  function enemyHPForWave(){ 
+    return (cfg.waveHPBase + cfg.waveHPPerLvl * (game.wave-1)) * Math.pow(cfg.difficulty.hpScale, Math.max(0, game.wave-1));
+  }
+  function enemySpeedForWave(){ 
+    return (cfg.waveSpeedBase + cfg.waveSpeedPerLvl * (game.wave-1)) * Math.pow(cfg.difficulty.speedScale, Math.max(0, game.wave-1));
+  }
+
+  // NOWE: Wybór typu przeciwnika na podstawie fali
+  function getEnemyTypeForWave() {
+    const wave = game.wave;
+    const types = Object.keys(cfg.enemyTypes);
+    const weights = [];
+    
+    // Podstawowe wagi dla każdego typu
+    for (const type of types) {
+      let weight = 1.0;
+      
+      // Modyfikatory na podstawie fali
+      switch(type) {
+        case 'basic': weight = Math.max(0.5, 2.0 - wave * 0.1); break;
+        case 'fast': weight = 0.8 + wave * 0.05; break;
+        case 'tank': weight = Math.min(1.5, 0.3 + wave * 0.08); break;
+        case 'armored': weight = wave >= 8 ? 0.7 + (wave-8)*0.1 : 0; break;
+        case 'regenerating': weight = wave >= 12 ? 0.5 + (wave-12)*0.08 : 0; break;
+      }
+      
+      weights.push(Math.max(0, weight));
+    }
+    
+    const typeIndex = weightedRandom(weights);
+    return types[typeIndex];
+  }
+
+  function spawnEnemy(isBoss=false){
+    const branch = choose(path.paths);
+    const startPt = branch[0];
+    
+    let enemyType = 'basic';
+    let isElite = false;
+    
+    if (!isBoss) {
+      enemyType = getEnemyTypeForWave();
+      // Szansa na elitarnego przeciwnika po fali 10
+      if (game.wave >= 10 && Math.random() < cfg.difficulty.eliteChance) {
+        isElite = true;
+      }
+    }
+    
+    const typeConfig = cfg.enemyTypes[enemyType];
+    const eliteMultiplier = isElite ? cfg.difficulty.eliteMultiplier : 1;
+    
+    const e = {
+      x: startPt.x - 60, y: startPt.y,
+      path: branch,
+      pIdx: 0,
+      hp: (isBoss ? enemyHPForWave()*cfg.boss.hpMul : enemyHPForWave() * typeConfig.hpMul) * eliteMultiplier,
+      maxhp: (isBoss ? enemyHPForWave()*cfg.boss.hpMul : enemyHPForWave() * typeConfig.hpMul) * eliteMultiplier,
+      speed: (isBoss ? enemySpeedForWave()*cfg.boss.speedMul : enemySpeedForWave() * typeConfig.speedMul) * eliteMultiplier,
+      w: isBoss? 44 : typeConfig.size, 
+      h: isBoss? 34 : typeConfig.size * 0.8,
+      slow: { pct:0, dur:0 },
+      dot: { dps:0, dur:0 },
+      tint: rnd(0.85,1.15),
+      boss: isBoss,
+      type: isBoss ? 'boss' : enemyType,
+      elite: isElite,
+      // Specjalne właściwości
+      armor: typeConfig.armor || 0,
+      regen: typeConfig.regen || 0,
+      special: typeConfig.special
+    };
+    game.enemies.push(e);
+  }
+
+  // ---------- Obiekty: rośliny, posągi, pociski ----------
+  function isOccupied(c,r){
+    return game.plants.some(o=>o.c===c&&o.r===r) || game.statues.some(o=>o.c===c&&o.r===r);
+  }
+  function placePlant(kind,c,r){
+    const cost = plantCost(kind);
+    if(game.coins < cost) return false;
+    if(!inBounds(c,r) || isPathTile(c,r)) return false;
+    if(isOccupied(c,r)) return false;
+    const idx = plantTypeCount(kind);
+    const p = {
+      kind, c, r,
+      ...tileCenter(c,r),
+      cd: rnd(0, cfg.plantTypes[kind].fireRate||1),
+      purchaseIndex: idx
+    };
+    game.plants.push(p);
+    game.coins -= cost;
+    return true;
+  }
+  function placeStatue(c,r){
+    const cost = statueCost();
+    if(game.coins < cost) return false;
+    if(!inBounds(c,r) || isPathTile(c,r)) return false;
+    if(isOccupied(c,r)) return false;
+    const s = {
+      c,r, ...tileCenter(c,r),
+      purchaseIndex: game.statues.length
+    };
+    game.statues.push(s);
+    game.coins -= cost;
+    return true;
+  }
+  function plantRefund(p){
+    const t = cfg.plantTypes[p.kind];
+    return Math.floor(t.baseCost * Math.pow(t.grow, p.purchaseIndex) * 0.5);
+  }
+  function statueRefund(s){
+    return Math.floor(cfg.statueBaseCost * Math.pow(cfg.statueCostGrow, s.purchaseIndex) * 0.5);
+  }
+  function sellAt(c,r){
+    let i = game.plants.findIndex(o=>o.c===c&&o.r===r);
+    if(i>=0){
+      const refund = plantRefund(game.plants[i]);
+      game.coins += refund;
+      game.plants.splice(i,1);
+      return true;
+    }
+    i = game.statues.findIndex(o=>o.c===c&&o.r===r);
+    if(i>=0){
+      const refund = statueRefund(game.statues[i]);
+      game.coins += refund;
+      game.statues.splice(i,1);
+      return true;
+    }
+    return false;
+  }
+
+  function fireFromPlant(p, dt){
+    const t = cfg.plantTypes[p.kind];
+    if(t.income){ return; } // słonecznik nie strzela
+
+    p.cd -= dt;
+    if(p.cd>0) return;
+    const range = plantRangeFor(p.kind);
+    // cel: najbliższy wróg w zasięgu
+    let best=null, bd=1e9;
+    for(const e of game.enemies){
+      const d=dist(p.x,p.y,e.x,e.y);
+      if(d<=range && d<bd){ best=e; bd=d; }
+    }
+    if(best){
+      const ang = Math.atan2(best.y-p.y, best.x-p.x);
+      const critChance = 0.05 * tLvl('crit');
+      const isCrit = Math.random() < critChance;
+      
+      // Bonus do elitarnych z talentu
+      const eliteBonus = best.elite ? (1 + 0.10 * tLvl('elite')) : 1;
+      
+      let dmg = Math.floor((t.baseDmg * plantDmgMultiplier() * eliteBonus) * (isCrit ? 2 : 1));
+      
+      // Redukcja pancerza
+      if (best.armor && best.armor > 0) {
+        dmg = Math.max(1, Math.floor(dmg * (1 - best.armor)));
+      }
+      
+      const b = {
+        x:p.x, y:p.y, px:p.x, py:p.y,
+        vx: Math.cos(ang)*t.bulletSpeed,
+        vy: Math.sin(ang)*t.bulletSpeed,
+        dmg, crit:isCrit,
+        life: 2.0,
+        kind: p.kind,
+        slowPct: t.slowPct||0, slowDur: t.slowDur||0,
+        aoeRadius: t.aoeRadius||0, aoeFalloff: t.aoeFalloff||0,
+        pierce: t.pierce||0,
+        chainLeft: (t.chain||0) + tLvl('chain'),
+        chainRange: t.chainRange||0,
+        poisonDps: t.poisonDps||0,
+        poisonDur: t.poisonDur||0,
+        hitIds: []
+      };
+      // talenty mrozu/bomby
+      if(p.kind==='frost'){
+        b.slowPct  = b.slowPct * (1 + 0.10*tLvl('frost'));
+        b.slowDur += 0.2 * tLvl('frost');
+      }
+      if(p.kind==='bomb'){
+        b.aoeRadius = Math.floor(b.aoeRadius * (1 + 0.15*tLvl('bomb')));
+        b.dmg = Math.floor(b.dmg * (1 + 0.10*tLvl('bomb')));
+      }
+      game.bullets.push(b);
+      p.cd = t.fireRate;
+    }else{
+      p.cd = 0.25;
+    }
+  }
+
+  function applySlow(e, pct, dur){
+    if(pct<=0 || dur<=0) return;
+    if(pct > e.slow.pct){ e.slow.pct = pct; e.slow.dur = dur; }
+    else{ e.slow.dur = Math.max(e.slow.dur, dur*0.6); }
+  }
+
+  function explodeAt(x,y, baseDmg, radius, fall=0.3){
+    for(const e of game.enemies){
+      const d = dist(x,y,e.x,e.y);
+      if(d<=radius){
+        const mul = 1 - fall*(d/radius);
+        let dmg = Math.max(1, Math.floor(baseDmg * mul));
+        
+        // Redukcja pancerza dla wybuchu
+        if (e.armor && e.armor > 0) {
+          dmg = Math.max(1, Math.floor(dmg * (1 - e.armor * 0.5))); // Wybuch ignoruje 50% pancerza
+        }
+        
+        e.hp -= dmg;
+        spawnHit(e.x,e.y,dmg);
+      }
+    }
+    spawnHit(x,y,'💥');
+    addShake(5);
+  }
+
+  function updateBullets(dt){
+    for(let i=game.bullets.length-1;i>=0;i--){
+      const b = game.bullets[i];
+      b.px = b.x; b.py = b.y;
+      b.x += b.vx*dt; b.y += b.vy*dt; b.life -= dt;
+
+      // kolizja
+      let hitIndex=-1;
+      for(let j=0;j<game.enemies.length;j++){
+        const e = game.enemies[j];
+        if(dist(b.x,b.y,e.x,e.y) < (e.boss? 22: e.w/2)){
+          hitIndex=j; 
+          break;
+        }
+      }
+
+      if(hitIndex>=0){
+        const e = game.enemies[hitIndex];
+        if(b.kind==='bomb'){
+          explodeAt(b.x,b.y,b.dmg,b.aoeRadius,b.aoeFalloff);
+          game.bullets.splice(i,1);
+          continue;
+        }else{
+          // obrażenia trafienia
+          let finalDmg = b.dmg;
+          
+          // Redukcja pancerza
+          if (e.armor && e.armor > 0) {
+            finalDmg = Math.max(1, Math.floor(finalDmg * (1 - e.armor)));
+          }
+          
+          e.hp -= finalDmg;
+          spawnHit(e.x,e.y,Math.floor(finalDmg), b.crit);
+
+          // efekty specjalne
+          if(b.kind==='frost'){ applySlow(e, b.slowPct, b.slowDur); }
+          if(b.kind==='spore'){
+            e.dot = e.dot || { dps:0, dur:0 };
+            e.dot.dps = Math.max(e.dot.dps, b.poisonDps);
+            e.dot.dur = Math.max(e.dot.dur, b.poisonDur);
+          }
+
+          // snajper przebija
+          if(b.kind==='sniper' && b.pierce>0){
+            b.pierce -= 1;
+          }
+          // piorun: łańcuch do kolejnego celu
+          else if(b.kind==='chain' && b.chainLeft>0){
+            b.hitIds.push(e);
+            // znajdź następny w zasięgu
+            let next=null, nd=1e9;
+            for(const e2 of game.enemies){
+              if(b.hitIds.includes(e2)) continue;
+              const d = dist(e.x,e.y,e2.x,e2.y);
+              if(d<=b.chainRange && d<nd){ nd=d; next=e2; }
+            }
+            if(next){
+              const ang = Math.atan2(next.y-e.y, next.x-e.x);
+              b.x = e.x; b.y = e.y;
+              b.vx = Math.cos(ang)*cfg.plantTypes.chain.bulletSpeed;
+              b.vy = Math.sin(ang)*cfg.plantTypes.chain.bulletSpeed;
+              b.chainLeft -= 1;
+              b.life = Math.max(0.3, b.life);
+            }else{
+              game.bullets.splice(i,1);
+              continue;
+            }
+          }else{
+            // zwykły pocisk znika
+            game.bullets.splice(i,1);
+            continue;
+          }
+        }
+      }
+
+      if(b.life<=0 || b.x<-80 || b.x>canvas.width+80 || b.y<-80 || b.y>canvas.height+80){
+        game.bullets.splice(i,1);
+      }
+    }
+  }
+
+  // ---------- Klik obrażenia ----------
+  function doClickAttack(){
+    if(game.enemies.length===0) return;
+    let cdmg = clickDamage();
+    const px = game.pointer.x, py = game.pointer.y;
+    let target = null, dmin = 9999;
+    for(const e of game.enemies){
+      const d = dist(px,py,e.x,e.y);
+      if(d < 60 && d < dmin){ dmin=d; target=e; }
+    }
+    if(!target){ target = game.enemies.reduce((a,b)=> (a.path[a.pIdx]?.x > b.path[b.pIdx]?.x ? a : b)); }
+    if(target){
+      // Bonus do elitarnych z talentu
+      const eliteBonus = target.elite ? (1 + 0.10 * tLvl('elite')) : 1;
+      cdmg = Math.floor(cdmg * eliteBonus);
+      
+      // Redukcja pancerza
+      if (target.armor && target.armor > 0) {
+        cdmg = Math.max(1, Math.floor(cdmg * (1 - target.armor)));
+      }
+      
+      target.hp -= cdmg;
+      spawnHit(target.x,target.y,cdmg,true);
+    }
+  }
+
+  // ---------- Efekty: liczby obrażeń ----------
+  const floating = [];
+  function spawnHit(x,y,amount,click=false){
+    floating.push({ x,y, t:0, life:0.7, txt: (typeof amount==='number' ? '-'+amount : amount), click });
+  }
+  function updateFloating(dt){
+    for(let i=floating.length-1;i>=0;i--){
+      floating[i].t += dt;
+      if(floating[i].t>=floating[i].life) floating.splice(i,1);
+    }
+  }
+
+  // ---------- Aktualizacja gry ----------
+  function moveEnemy(e, dt){
+    // statusy
+    if(e.slow.dur>0){ e.slow.dur -= dt; if(e.slow.dur<=0) e.slow.pct=0; }
+    if(e.dot && e.dot.dur>0){
+      const dmg = e.dot.dps * dt;
+      e.hp -= dmg;
+      e.dot.dur -= dt;
+    }
+    // Regeneracja
+    if(e.regen && e.regen > 0) {
+      e.hp = Math.min(e.maxhp, e.hp + e.regen * dt);
+    }
+    
+    let speed = e.speed * (1 - e.slow.pct);
+
+    // może pokonać kilka punktów w jednym dt
+    while(dt>0){
+      if(e.pIdx >= e.path.length){
+        // dotarł do bazy
+        game.baseHP -= e.boss ? cfg.boss.baseHit : 1;
+        spawnHit(e.x,e.y,'💥');
+        addShake(e.boss?5:3);
+        return true; // usuń wroga
+      }
+      const target = e.path[e.pIdx];
+      const dx = target.x - e.x, dy = target.y - e.y;
+      const d = Math.hypot(dx,dy) || 0.0001;
+      const step = speed * dt;
+      if(step >= d){
+        // dochodzi do punktu
+        e.x = target.x; e.y = target.y;
+        e.pIdx++;
+        dt -= d / speed;
+      }else{
+        e.x += dx/d * step;
+        e.y += dy/d * step;
+        dt = 0;
+      }
+    }
+    return false;
+  }
+
+  function update(dt){
+    // Mnożnik prędkości gry
+    const speedMultiplier = game.gameSpeed;
+    const adjustedDt = dt * speedMultiplier;
+
+    // pasywny dochód
+    const cps = totalCPS();
+    game.coins += cps * adjustedDt;
+
+    // klik hold
+    if(game.pointer.down){
+      game.pointer.clickTimer -= adjustedDt;
+      if(game.pointer.clickTimer<=0){
+        doClickAttack();
+        game.pointer.clickTimer = 1/cfg.clicksPerSecond;
+      }
+    }
+
+    // rośliny
+    for(const p of game.plants) fireFromPlant(p, adjustedDt);
+
+    // pociski
+    updateBullets(adjustedDt);
+
+    // wrogowie
+    for(let i=game.enemies.length-1;i>=0;i--){
+      const e = game.enemies[i];
+      // śmierć
+      if(e.hp<=0){
+        game.coins += rewardForEnemy(e);
+        game.enemyStats.totalKilled++;
+        if(e.elite) game.enemyStats.elitesKilled++;
+        if(e.boss) game.enemyStats.bossesKilled++;
+        game.enemies.splice(i,1);
+        continue;
+      }
+      // ruch po punktach
+      const reachedBase = moveEnemy(e, adjustedDt);
+      if(reachedBase){
+        game.enemies.splice(i,1);
+      }
+    }
+
+    // fale
+    if(game.wavePlan.inProgress){
+      game.timers.spawn -= adjustedDt;
+      if(game.timers.spawn<=0){
+        if(game.wavePlan.bossPending){
+          spawnEnemy(true);
+          game.wavePlan.bossPending = false;
+          game.timers.spawn = cfg.waveSpawnInterval * 1.5;
+        }else if(game.wavePlan.spawned < game.wavePlan.toSpawn){
+          spawnEnemy(false);
+          game.wavePlan.spawned++;
+          game.timers.spawn = cfg.waveSpawnInterval;
+        }
+      }
+      if(game.wavePlan.spawned >= game.wavePlan.toSpawn && !game.wavePlan.bossPending && game.enemies.length===0){
+        endWave();
+      }
+    }else{
+      game.timers.inter -= adjustedDt;
+      if(game.timers.inter<=0) startWave();
+    }
+
+    // przegrana?
+    if(game.baseHP<=0 && !game.overlay){
+      game.overlay = true;
+      ui.ovWave.textContent = game.wave;
+      ui.ovCoins.textContent = Math.floor(game.coins);
+      ui.overlay.classList.add('show');
+    }
+
+    updateFloating(adjustedDt);
+    updateUI();
+  }
+
+  // ---------- Rysowanie ----------
+  function draw(){
+    const pal = palette();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // shake
+    if(cosmetics.shake && shake.a>0){
+      shake.a *= 0.90;
+      shake.x = (Math.random()-0.5)*shake.a;
+      shake.y = (Math.random()-0.5)*shake.a;
+      ctx.save();
+      ctx.translate(shake.x, shake.y);
+    }else{
+      ctx.save();
+    }
+
+    // tło siatki + ścieżka
+    for(let r=0;r<cfg.rows;r++){
+      for(let c=0;c<cfg.cols;c++){
+        const x = c*cfg.tileW, y = r*cfg.tileH;
+        const onPath = isPathTile(c,r);
+        ctx.fillStyle = onPath? pal.tilePath : pal.tileGrass;
+        ctx.fillRect(x,y,cfg.tileW-1,cfg.tileH-1);
+        if(onPath){
+          ctx.fillStyle = 'rgba(120,140,220,0.10)';
+          ctx.fillRect(x,y,cfg.tileW-1,cfg.tileH-1);
+        }
+      }
+    }
+
+    // highlight narzędzia
+    if(game.tool!=='none'){
+      const {c,r} = toTile(game.pointer.x, game.pointer.y);
+      if(inBounds(c,r)){
+        const x = c*cfg.tileW, y = r*cfg.tileH;
+        const bad = isPathTile(c,r) || isOccupied(c,r);
+        ctx.save();
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = bad? '#7a1e36' : '#1e7a4b';
+        ctx.fillRect(x,y,cfg.tileW-1,cfg.tileH-1);
+        ctx.restore();
+      }
+    }
+
+    // posągi
+    for(const s of game.statues){
+      ctx.save(); ctx.translate(s.x, s.y);
+      ctx.fillStyle = '#394066'; roundRect(-20,-18,40,36,6,true);
+      ctx.fillStyle = '#9099b8'; roundRect(-12,-24,24,20,6,true);
+      ctx.fillStyle = '#2a304f'; ctx.fillRect(-6,-12,12,4);
+      ctx.restore();
+    }
+
+    // rośliny
+    for(const p of game.plants){
+      ctx.save(); ctx.translate(p.x,p.y);
+      if(p.kind==='basic'){
+        ctx.fillStyle = '#2b915d'; roundRect(-10,-20,20,40,8,true);
+        ctx.beginPath(); ctx.arc(0,-14,12,0,Math.PI*2); ctx.fillStyle = '#6cf0a7'; ctx.fill();
+      }else if(p.kind==='frost'){
+        ctx.fillStyle = '#276a90'; roundRect(-10,-20,20,40,8,true);
+        ctx.beginPath(); ctx.arc(0,-14,12,0,Math.PI*2); ctx.fillStyle = '#a6e8ff'; ctx.fill();
+      }else if(p.kind==='bomb'){
+        ctx.fillStyle = '#7a3a3a'; roundRect(-12,-22,24,44,8,true);
+        ctx.beginPath(); ctx.arc(0,-8,10,0,Math.PI*2); ctx.fillStyle = '#ffcf75'; ctx.fill();
+      }else if(p.kind==='sniper'){
+        ctx.fillStyle = '#3a375d'; roundRect(-8,-22,16,44,6,true);
+        ctx.fillStyle='#b7a8ff'; ctx.fillRect(-2,-18,4,26);
+      }else if(p.kind==='chain'){
+        ctx.fillStyle = '#226b6e'; roundRect(-10,-20,20,40,8,true);
+        ctx.beginPath(); ctx.arc(0,-14,12,0,Math.PI*2); ctx.fillStyle = '#a8ffea'; ctx.fill();
+      }else if(p.kind==='spore'){
+        ctx.fillStyle = '#385021'; roundRect(-10,-20,20,40,8,true);
+        ctx.beginPath(); ctx.arc(0,-14,12,0,Math.PI*2); ctx.fillStyle = '#9cff9e'; ctx.fill();
+      }else if(p.kind==='sun'){
+        ctx.fillStyle = '#7b6529'; roundRect(-10,-20,20,40,8,true);
+        ctx.beginPath(); ctx.arc(0,-14,12,0,Math.PI*2); ctx.fillStyle = '#ffd24c'; ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // wrogowie
+    for(const e of game.enemies){
+      ctx.save(); ctx.translate(e.x,e.y);
+      
+      // Wybór koloru na podstawie typu
+      let enemyColor;
+      if (e.boss) {
+        enemyColor = pal.enemyBoss;
+      } else {
+        switch(e.type) {
+          case 'fast': enemyColor = pal.enemyFast; break;
+          case 'tank': enemyColor = pal.enemyTank; break;
+          case 'armored': enemyColor = pal.enemyArmored; break;
+          case 'regenerating': enemyColor = pal.enemyRegen; break;
+          default: enemyColor = pal.enemy;
+        }
+      }
+      
+      // Elitarny przeciwnik ma specjalny wygląd
+      if (e.elite) {
+        ctx.fillStyle = enemyColor;
+        roundRect(-e.w/2-2,-e.h/2-2,e.w+4,e.h+4,8,true);
+        ctx.fillStyle = '#ffd700';
+        roundRect(-e.w/2,-e.h/2,e.w,e.h,6,true);
+        
+        // Efekt błysku dla elitarnych
+        if (cosmetics.glow) {
+          ctx.shadowBlur = 15;
+          ctx.shadowColor = '#ffd700';
+        }
+      } else {
+        ctx.fillStyle = enemyColor; 
+        roundRect(-e.w/2,-e.h/2,e.w,e.h,6,true);
+      }
+      
+      // pasek HP
+      const w = e.boss? 60 : 34, h=5;
+      ctx.fillStyle = '#1a203d'; roundRect(-w/2,-(e.h/2)-12,w,h,3,true);
+      const ratio = clamp(e.hp/e.maxhp,0,1);
+      ctx.fillStyle = ratio>0.5? '#37e28a' : (ratio>0.25? '#ffb24c' : '#ff597a');
+      roundRect(-w/2+1,-(e.h/2)-12+1,(w-2)*ratio,h-2,3,true);
+      
+      // Ikona specjalnej właściwości
+      if (e.special && !e.boss) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        let icon = '';
+        switch(e.special) {
+          case 'fast': icon = '⚡'; break;
+          case 'tank': icon = '🛡️'; break;
+          case 'armored': icon = '🔰'; break;
+          case 'regenerating': icon = '💚'; break;
+        }
+        ctx.fillText(icon, 0, e.h/2 + 10);
+      }
+      
+      ctx.restore();
+    }
+
+    // pociski: smugi + glow
+    for(const b of game.bullets){
+      if(cosmetics.trails){
+        ctx.save();
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = (b.kind==='bomb')?'#ffd18a' : (b.kind==='frost')?'#c6f3ff' : (b.kind==='sniper')?'#e8dcff' : (b.kind==='chain')?'#a8ffea':'#9dffe0';
+        ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(b.px,b.py); ctx.lineTo(b.x,b.y); ctx.stroke();
+        ctx.restore();
+      }
+      ctx.save(); ctx.translate(b.x,b.y);
+      if(b.kind==='bomb'){ ctx.fillStyle = '#ffd18a'; }
+      else if(b.kind==='frost'){ ctx.fillStyle = '#c6f3ff'; }
+      else if(b.kind==='sniper'){ ctx.fillStyle = '#e8dcff'; }
+      else if(b.kind==='chain'){ ctx.fillStyle = '#a8ffea'; }
+      else if(b.kind==='spore'){ ctx.fillStyle = '#9cff9e'; }
+      else{ ctx.fillStyle = '#9dffe0'; }
+      if(cosmetics.glow){ ctx.shadowBlur=10; ctx.shadowColor=ctx.fillStyle; }
+      ctx.beginPath(); ctx.arc(0,0,3.2,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    // pływające liczby
+    for(const f of floating){
+      const t = clamp(f.t / f.life, 0, 1);
+      const y = f.y - t*30;
+      ctx.globalAlpha = 1 - t;
+      ctx.fillStyle = f.click? '#fff2a8' : '#c6eaff';
+      ctx.font = 'bold 14px Inter,system-ui';
+      ctx.textAlign='center';
+      ctx.fillText(f.txt, f.x, y);
+      ctx.globalAlpha = 1;
+    }
+
+    // baza po prawej (na złączeniu)
+    ctx.save();
+    ctx.translate(path.basePos.x, path.basePos.y);
+    ctx.fillStyle = '#24305a'; roundRect(-20,-30,40,60,8,true);
+    ctx.fillStyle = '#9cc6ff'; ctx.fillRect(-8,-8,16,16);
+    ctx.restore();
+
+    ctx.restore(); // zamknięcie translacji shake
+  }
+
+  function roundRect(x,y,w,h,r,fill){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    if(fill) ctx.fill(); else ctx.stroke();
+  }
+
+  // ---------- Budowa UI Talentów ----------
+  function buildTalentUI(){
+    ui.talentGrid.innerHTML = '';
+    Object.keys(talentDefs).forEach(id=>{
+      const def = talentDefs[id];
+      const row = document.createElement('div');
+      row.className = 'upgrade';
+      row.innerHTML = `
+        <div>
+          <div>${def.name}</div>
+          <small>${def.desc} • Poziom: <b id="tLvl_${id}">${tLvl(id)}</b>/${def.max}</small>
+        </div>
+        <button id="tBuy_${id}">Ulepsz</button>
+      `;
+      ui.talentGrid.appendChild(row);
+      row.querySelector('#tBuy_'+id).addEventListener('click', ()=>{
+        if(canBuyTalent(id)){
+          talents.nodes[id] = tLvl(id)+1;
+          saveTalents();
+          updateUI();
+        }
+      });
+    });
+    ui.btnRespec.addEventListener('click', ()=>{
+      if(confirm('Zresetować talenty? Punkty wrócą, postęp fali zostaje.')){
+        Object.keys(talents.nodes).forEach(k=> talents.nodes[k]=0);
+        saveTalents();
+        updateUI();
+      }
+    });
+  }
+
+  // ---------- UI update ----------
+  function updateUI(){
+    ui.coins.textContent = Math.floor(game.coins);
+    ui.cps.textContent = totalCPS().toFixed(1);
+    ui.wave.textContent = game.wave;
+    ui.basehp.textContent = game.baseHP;
+    ui.cdmg.textContent = clickDamage();
+
+    // koszty roślin
+    ui.cost_basic.textContent = plantCost('basic');
+    ui.cost_frost.textContent = plantCost('frost');
+    ui.cost_bomb.textContent = plantCost('bomb');
+    ui.cost_sniper.textContent = plantCost('sniper');
+    ui.cost_chain.textContent = plantCost('chain');
+    ui.cost_spore.textContent = plantCost('spore');
+    ui.cost_sun.textContent   = plantCost('sun');
+    ui.statueCost.textContent = statueCost();
+
+    // poziomy i koszty ulepszeń
+    ui.uPlantDmgL.textContent = game.upgrades.plantDmg;
+    ui.uPlantRangeL.textContent = game.upgrades.plantRange;
+    ui.uClickL.textContent = game.upgrades.click;
+    ui.uStatueL.textContent = game.upgrades.statue;
+    ui.uPlantDmgC.textContent = upgCost('plantDmg', game.upgrades.plantDmg);
+    ui.uPlantRangeC.textContent = upgCost('plantRange', game.upgrades.plantRange);
+    ui.uClickC.textContent = upgCost('click', game.upgrades.click);
+    ui.uStatueC.textContent = upgCost('statue', game.upgrades.statue);
+
+    // disable przy braku kasy
+    ui.btnPlant_basic.disabled  = game.coins < plantCost('basic');
+    ui.btnPlant_frost.disabled  = game.coins < plantCost('frost');
+    ui.btnPlant_bomb.disabled   = game.coins < plantCost('bomb');
+    ui.btnPlant_sniper.disabled = game.coins < plantCost('sniper');
+    ui.btnPlant_chain.disabled  = game.coins < plantCost('chain');
+    ui.btnPlant_spore.disabled  = game.coins < plantCost('spore');
+    ui.btnPlant_sun.disabled    = game.coins < plantCost('sun');
+    ui.btnStatue.disabled       = game.coins < statueCost();
+    ui.uPlantDmg.disabled   = game.coins < upgCost('plantDmg', game.upgrades.plantDmg);
+    ui.uPlantRange.disabled = game.coins < upgCost('plantRange', game.upgrades.plantRange);
+    ui.uClick.disabled      = game.coins < upgCost('click', game.upgrades.click);
+    ui.uStatue.disabled     = game.coins < upgCost('statue', game.upgrades.statue);
+
+    // aktywne narzędzie
+    for(const k of ['basic','frost','bomb','sniper','chain','spore','sun']){
+      const btn = ui['btnPlant_'+k];
+      if(!btn) continue;
+      btn.classList.toggle('active', game.tool==='plant_'+k);
+    }
+
+    // Talenty
+    ui.talentPoints.textContent = talentPoints();
+    Object.keys(talentDefs).forEach(id=>{
+      const e = document.getElementById('tLvl_'+id);
+      const b = document.getElementById('tBuy_'+id);
+      if(e) e.textContent = tLvl(id);
+      if(b){
+        b.disabled = !canBuyTalent(id);
+        b.textContent = tLvl(id)>=talentDefs[id].max ? 'MAX' : 'Ulepsz';
+      }
+    });
+
+    // Skórki/Fx
+    ui.themeClassic.classList.toggle('active', cosmetics.theme==='classic');
+    ui.themeNeon.classList.toggle('active', cosmetics.theme==='neon');
+    ui.themePastel.classList.toggle('active', cosmetics.theme==='pastel');
+    ui.fxGlow.textContent = `Glow: ${cosmetics.glow?'ON':'OFF'}`;
+    ui.fxTrails.textContent = `Smugi: ${cosmetics.trails?'ON':'OFF'}`;
+    ui.fxShake.textContent = `Trzęsienie: ${cosmetics.shake?'ON':'OFF'}`;
+
+    // Kontrola prędkości
+    ui.btnSpeed1.classList.toggle('active', game.gameSpeed === 1);
+    ui.btnSpeed2.classList.toggle('active', game.gameSpeed === 2);
+    ui.btnSpeed3.classList.toggle('active', game.gameSpeed === 3);
+  }
+
+  // ---------- Wejście ----------
+  function setTool(t){
+    game.tool = t;
+    if(t!=='none'){ game.pointer.down=false; }
+    updateUI();
+  }
+
+  // Canvas events
+  canvas.addEventListener('pointerdown', e=>{
+    const pos = getPointerPos(e);
+    const p = toCanvasCoords(pos.x, pos.y, pos.rx, pos.ry);
+    game.pointer.x = p.x; game.pointer.y = p.y;
+
+    const {c,r} = toTile(p.x,p.y);
+    if(game.tool.startsWith('plant_')){
+      const kind = game.tool.split('_')[1];
+      placePlant(kind,c,r);
+    }else if(game.tool==='statue'){
+      placeStatue(c,r);
+    }else if(game.tool==='sell'){
+      sellAt(c,r);
+    }else{
+      doClickAttack();
+      game.pointer.down = true;
+      game.pointer.clickTimer = 1/cfg.clicksPerSecond;
+    }
+  });
+  canvas.addEventListener('pointermove', e=>{
+    const pos = getPointerPos(e);
+    const p = toCanvasCoords(pos.x, pos.y, pos.rx, pos.ry);
+    game.pointer.x = p.x; game.pointer.y = p.y;
+  });
+  ['pointerup','pointercancel','pointerout','pointerleave'].forEach(t=>{
+    canvas.addEventListener(t, e=>{ game.pointer.down=false; });
+  });
+
+  // UI buttons
+  ui.btnPlant_basic.addEventListener('click', ()=> setTool(game.tool==='plant_basic'?'none':'plant_basic'));
+  ui.btnPlant_frost.addEventListener('click', ()=> setTool(game.tool==='plant_frost'?'none':'plant_frost'));
+  ui.btnPlant_bomb.addEventListener('click', ()=> setTool(game.tool==='plant_bomb'?'none':'plant_bomb'));
+  ui.btnPlant_sniper.addEventListener('click', ()=> setTool(game.tool==='plant_sniper'?'none':'plant_sniper'));
+  ui.btnPlant_chain.addEventListener('click', ()=> setTool(game.tool==='plant_chain'?'none':'plant_chain'));
+  ui.btnPlant_spore.addEventListener('click', ()=> setTool(game.tool==='plant_spore'?'none':'plant_spore'));
+  ui.btnPlant_sun.addEventListener('click', ()=> setTool(game.tool==='plant_sun'?'none':'plant_sun'));
+
+  ui.btnStatue.addEventListener('click', ()=> setTool(game.tool==='statue'?'none':'statue'));
+  ui.btnSell.addEventListener('click', ()=> setTool(game.tool==='sell'?'none':'sell'));
+  ui.btnCancel.addEventListener('click', ()=> setTool('none'));
+
+  ui.uPlantDmg.addEventListener('click', ()=>{
+    const c = upgCost('plantDmg', game.upgrades.plantDmg);
+    if(game.coins>=c){ game.coins-=c; game.upgrades.plantDmg++; }
+  });
+  ui.uPlantRange.addEventListener('click', ()=>{
+    const c = upgCost('plantRange', game.upgrades.plantRange);
+    if(game.coins>=c){ game.coins-=c; game.upgrades.plantRange++; }
+  });
+  ui.uClick.addEventListener('click', ()=>{
+    const c = upgCost('click', game.upgrades.click);
+    if(game.coins>=c){ game.coins-=c; game.upgrades.click++; }
+  });
+  ui.uStatue.addEventListener('click', ()=>{
+    const c = upgCost('statue', game.upgrades.statue);
+    if(game.coins>=c){ game.coins-=c; game.upgrades.statue++; }
+  });
+
+  // Skórki
+  ui.themeClassic.addEventListener('click', ()=>{ cosmetics.theme='classic'; saveCosmetics(); updateUI(); });
+  ui.themeNeon.addEventListener('click', ()=>{ cosmetics.theme='neon'; saveCosmetics(); updateUI(); });
+  ui.themePastel.addEventListener('click', ()=>{ cosmetics.theme='pastel'; saveCosmetics(); updateUI(); });
+  ui.fxGlow.addEventListener('click', ()=>{ cosmetics.glow=!cosmetics.glow; saveCosmetics(); updateUI(); });
+  ui.fxTrails.addEventListener('click', ()=>{ cosmetics.trails=!cosmetics.trails; saveCosmetics(); updateUI(); });
+  ui.fxShake.addEventListener('click', ()=>{ cosmetics.shake=!cosmetics.shake; saveCosmetics(); updateUI(); });
+
+  // Kontrola prędkości
+  ui.btnSpeed1.addEventListener('click', ()=>{ game.gameSpeed = 1; updateUI(); });
+  ui.btnSpeed2.addEventListener('click', ()=>{ game.gameSpeed = 2; updateUI(); });
+  ui.btnSpeed3.addEventListener('click', ()=>{ game.gameSpeed = 3; updateUI(); });
+
+  // Overlay (game over)
+  ui.btnRestart.addEventListener('click', ()=>{
+    ui.overlay.classList.remove('show');
+    resetGame(false);
+  });
+  ui.btnContinue.addEventListener('click', ()=>{
+    ui.overlay.classList.remove('show');
+    game.overlay=false;
+    game.baseHP = 5;
+  });
+
+  // Save/Load/Reset
+  ui.btnSave.addEventListener('click', ()=>{ saveGame(); saveTalents(); saveCosmetics(); alert('Zapisano!'); });
+  ui.btnLoad.addEventListener('click', ()=>{ loadTalents(); loadCosmetics(); loadGame(); updateUI(); alert('Wczytano!'); });
+  ui.btnReset.addEventListener('click', ()=>{
+    if(confirm('Na pewno zresetować TYLKO bieżący run?')){
+      resetGame(false);
+    }
+  });
+
+  function resetGame(fromRespec){
+    game.coins = cfg.startCoins + tLvl('start')*150;
+    game.wave = 1;
+    game.baseHP = cfg.baseHP;
+    game.enemies.length=0;
+    game.bullets.length=0;
+    game.plants.length=0;
+    game.statues.length=0;
+    game.upgrades = { plantDmg:0, plantRange:0, click:0, statue:0 };
+    game.overlay=false;
+    game.gameSpeed = 1;
+    game.enemyStats = { totalKilled:0, elitesKilled:0, bossesKilled:0 };
+    ui.overlay.classList.remove('show');
+    setTool('none');
+    startWave();
+  }
+
+  function saveGame(){
+    const data = {
+      coins: game.coins,
+      wave: game.wave,
+      baseHP: game.baseHP,
+      plants: game.plants.map(p=>({kind:p.kind,c:p.c,r:p.r,purchaseIndex:p.purchaseIndex})),
+      statues: game.statues.map(s=>({c:s.c,r:s.r,purchaseIndex:s.purchaseIndex})),
+      upgrades: game.upgrades,
+      gameSpeed: game.gameSpeed,
+      enemyStats: game.enemyStats
+    };
+    localStorage.setItem('bloom_save_v15', JSON.stringify(data));
+  }
+  function loadGame(){
+    const raw = localStorage.getItem('bloom_save_v15');
+    if(!raw) return;
+    try{
+      const d = JSON.parse(raw);
+      game.coins = d.coins ?? (cfg.startCoins + tLvl('start')*150);
+      game.wave = d.wave ?? 1;
+      game.baseHP = d.baseHP ?? cfg.baseHP;
+      game.enemies.length=0; game.bullets.length=0;
+      game.plants = (d.plants||[]).map(o=>({
+        kind:o.kind, c:o.c, r:o.r, ...tileCenter(o.c,o.r),
+        cd:rnd(0, cfg.plantTypes[o.kind]?.fireRate||1), purchaseIndex:o.purchaseIndex??0
+      }));
+      game.statues = (d.statues||[]).map(o=>({ c:o.c, r:o.r, ...tileCenter(o.c,o.r), purchaseIndex:o.purchaseIndex??0 }));
+      game.upgrades = Object.assign({ plantDmg:0, plantRange:0, click:0, statue:0 }, d.upgrades||{});
+      game.gameSpeed = d.gameSpeed || 1;
+      game.enemyStats = d.enemyStats || { totalKilled:0, elitesKilled:0, bossesKilled:0 };
+      game.wavePlan.inProgress=false; game.timers.inter=0.2;
+      setTool('none');
+    }catch(e){ console.error(e); }
+  }
+
+  // ---------- Pętla gry ----------
+  let last = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05, (t-last)/1000);
+    last = t;
+    if(!game.overlay){
+      update(dt);
+      draw();
+    }
+    requestAnimationFrame(loop);
+  }
+
+  // Start
+  loadTalents();
+  loadCosmetics();
+  resetGame(false);
+  loadGame(); // ewentualnie wczytaj run po meta
+  buildTalentUI();
+  requestAnimationFrame(loop);
+
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="pl" data-theme="light" data-hide-done="0">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Lista zakupów</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      /* LIGHT */
+      --bg-1:#f8fafc;
+      --bg-2:#eef2ff;
+      --card:rgba(255,255,255,0.75);
+      --text:#0f172a;
+      --muted:#64748b;
+      --primary:#6366f1;
+      --accent:#10b981;
+      --danger:#ef4444;
+      --ring:rgba(99,102,241,.3);
+      --item:#ffffff;
+      --item-border:#e5e7eb;
+      --chip:#eef2ff;
+      --chip-text:#4f46e5;
+    }
+    [data-theme="dark"]{
+      --bg-1:#0b1220;
+      --bg-2:#0a0f1a;
+      --card:rgba(15,23,42,0.6);
+      --text:#e5e7eb;
+      --muted:#94a3b8;
+      --primary:#818cf8;
+      --accent:#34d399;
+      --danger:#f87171;
+      --ring:rgba(129,140,248,.35);
+      --item:#0f172a;
+      --item-border:#1f2937;
+      --chip:#141b2c;
+      --chip-text:#a5b4fc;
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      background:
+        radial-gradient(900px 500px at -10% -10%, #c7d2fe22 0%, transparent 50%),
+        radial-gradient(900px 500px at 110% 0%, #a7f3d022 0%, transparent 50%),
+        linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+    }
+    .app{
+      max-width:820px;
+      margin: min(6vh,60px) auto;
+      padding:22px;
+      background:var(--card);
+      backdrop-filter: blur(10px);
+      border:1px solid rgba(99,102,241,.12);
+      border-radius:16px;
+      box-shadow: 0 20px 80px rgba(2,6,23,.12);
+    }
+    header{
+      display:flex; align-items:center; justify-content:space-between; gap:12px;
+      margin-bottom:10px;
+    }
+    h1{
+      margin:0; font-size:26px; font-weight:700; letter-spacing:.2px;
+      display:flex; align-items:center; gap:10px;
+    }
+    h1 .dot{ width:10px;height:10px;border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),var(--accent));
+      box-shadow:0 0 0 4px rgba(99,102,241,.12);
+    }
+    .top-actions{ display:flex; align-items:center; gap:8px; }
+
+    .icon-btn{
+      height:38px; min-width:38px; padding:0 10px;
+      display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:none; border-radius:10px; cursor:pointer;
+      background:linear-gradient(135deg,var(--primary),#8b5cf6);
+      color:#fff; font-weight:600;
+      box-shadow:0 8px 20px rgba(99,102,241,.25);
+      transition:transform .05s ease, filter .15s ease;
+    }
+    .icon-btn:active{ transform:translateY(1px) }
+    .ghost{
+      background:transparent; color:var(--text);
+      border:1px solid var(--item-border);
+      box-shadow:none;
+    }
+
+    .tabs{
+      display:flex; gap:6px; margin:8px 0 4px;
+      background:transparent;
+    }
+    .tab{
+      border:1px solid var(--item-border); background:var(--item);
+      color:var(--text);
+      height:38px; padding:0 14px; border-radius:10px; cursor:pointer; font-weight:600;
+    }
+    .tab[aria-selected="true"]{
+      outline:none;
+      box-shadow:0 0 0 4px var(--ring);
+      border-color:#c7d2fe44;
+    }
+
+    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .grow{ flex:1 }
+
+    .add{
+      display:flex; gap:10px; margin:12px 0 8px; width:100%;
+    }
+    .add input{
+      flex:1; height:44px; padding:0 14px; border-radius:10px;
+      border:1px solid var(--item-border); background:var(--item); color:var(--text);
+      font-size:16px; outline:none; transition:border .15s, box-shadow .15s;
+    }
+    .add input::placeholder{ color:var(--muted) }
+    .add input:focus{ border-color:var(--primary); box-shadow:0 0 0 4px var(--ring) }
+    .add button{
+      height:44px; padding:0 14px; border:none; border-radius:10px;
+      background:linear-gradient(135deg,var(--primary),#8b5cf6);
+      color:#fff; font-weight:600; cursor:pointer;
+      box-shadow:0 8px 20px rgba(99,102,241,.25);
+      transition:transform .05s ease, filter .15s ease;
+    }
+    .add button:active{ transform:translateY(1px) }
+
+    .controls{
+      display:flex; align-items:center; gap:10px; margin-top:4px; color:var(--muted); font-size:14px;
+    }
+    .switch{
+      display:inline-flex; align-items:center; gap:8px; padding:6px 10px;
+      border:1px solid var(--item-border); border-radius:10px; background:var(--item);
+      cursor:pointer; user-select:none;
+    }
+    .switch input{ accent-color:var(--accent); }
+    .hint{ margin-top:10px; color:var(--muted); font-size:13px; }
+
+    .panel{ display:none }
+    .panel[aria-hidden="false"]{ display:block }
+
+    .list{ list-style:none; padding:0; margin:10px 0 0; }
+    .item{
+      display:grid;
+      grid-template-columns: 36px 28px 1fr 36px;
+      align-items:center;
+      gap:8px;
+      background:var(--item);
+      border:1px solid var(--item-border);
+      border-radius:12px;
+      padding:10px 10px 10px 6px;
+      margin:10px 0;
+      transition: background .15s, border-color .15s, opacity .15s;
+    }
+    .item:hover{ border-color:#d1d5db44; }
+    .drag-handle{
+      width:32px; height:32px; border-radius:8px; color:#94a3b8;
+      display:flex; align-items:center; justify-content:center;
+      cursor:grab;
+      /* mobile drag helpers */
+      touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
+    }
+    .dragging{ opacity:.6 }
+    .check{ width:20px; height:20px; cursor:pointer; accent-color: var(--accent); }
+    .text{
+      padding:8px 10px; border-radius:8px; min-height:24px; line-height:1.35; word-break:break-word;
+    }
+    .text[contenteditable="true"]{ outline:none; box-shadow: inset 0 0 0 2px var(--ring); background:rgba(0,0,0,.03) }
+    [data-theme="dark"] .text[contenteditable="true"]{ background:rgba(255,255,255,.05) }
+    .item.done .text{ text-decoration: line-through; color:var(--muted) }
+    .delete{ width:32px;height:32px;border:none;background:transparent; cursor:pointer; color:#9ca3af; border-radius:8px; }
+    .delete:hover{ color:var(--danger) }
+
+    .subtext{ color:var(--muted); font-size:12px; }
+    .meta{ display:flex; align-items:center; gap:8px }
+    .chip{
+      display:inline-flex; align-items:center; gap:6px; height:24px;
+      padding:0 8px; border-radius:999px; background:var(--chip); color:var(--chip-text); font-weight:600; font-size:12px;
+    }
+
+    .empty{ margin:16px 0 0; color:var(--muted); font-size:14px; }
+    [data-hide-done="1"] .item.done{ display:none }
+
+    /* Gdy brak biblioteki Sortable (np. offline) */
+    .no-drag .drag-handle{ opacity:.4; cursor:not-allowed }
+
+    /* Historia: inny układ siatki */
+    .item.history{ grid-template-columns: 1fr 36px 36px; padding-left:12px }
+    .add-back{ width:32px;height:32px;border:none;background:transparent; cursor:pointer; color:#10b981; border-radius:8px; }
+    .add-back:hover{ filter:brightness(1.1) }
+
+    @media (max-width:560px){
+      .item{ grid-template-columns: 28px 24px 1fr 32px }
+      .drag-handle{ width:28px;height:28px }
+      .delete{ width:28px;height:28px }
+      .item.history{ grid-template-columns: 1fr 32px 32px }
+    }
+  </style>
+</head>
+<body>
+  <main class="app" role="main">
+    <header>
+      <h1><span class="dot"></span> Lista zakupów</h1>
+      <div class="top-actions">
+        <button id="theme-toggle" class="icon-btn ghost" aria-label="Przełącz motyw">🌙</button>
+      </div>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Zakładki">
+      <button class="tab" id="tab-list" role="tab" aria-controls="panel-list" aria-selected="true">Lista</button>
+      <button class="tab" id="tab-history" role="tab" aria-controls="panel-history" aria-selected="false">Historia</button>
+    </nav>
+
+    <!-- PANEL LISTY -->
+    <section id="panel-list" class="panel" role="tabpanel" aria-labelledby="tab-list" aria-hidden="false">
+      <form class="add" id="add-form" autocomplete="off">
+        <input id="item-input" class="grow" type="text" placeholder="Dodaj produkt i naciśnij Enter…" aria-label="Nazwa produktu">
+        <button type="submit" aria-label="Dodaj pozycję">Dodaj</button>
+      </form>
+
+      <div class="controls">
+        <label class="switch" title="Ukryj kupione">
+          <input type="checkbox" id="hide-done"> Ukryj kupione
+        </label>
+        <span class="subtext">- Kupione zawsze lądują na dole, a odznaczone wracają na górę listy.</span>
+      </div>
+
+      <ul id="list" class="list" aria-live="polite"></ul>
+      <div id="empty" class="empty" hidden>Twoja lista jest pusta. Dodaj pierwszy produkt ✨</div>
+
+      <div class="hint">Stan listy i motyw zapisywane lokalnie (localStorage). Przeciągaj za kropki po lewej (działa też na telefonie).</div>
+    </section>
+
+    <!-- PANEL HISTORII -->
+    <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" aria-hidden="true">
+      <div class="subtext" style="margin-top:6px">
+        Historia zbiera pozycje usunięte z listy, jeśli były oznaczone jako kupione. Możesz je edytować, usunąć lub dodać z powrotem do listy.
+      </div>
+      <ul id="history" class="list" aria-live="polite"></ul>
+      <div id="history-empty" class="empty" hidden>Brak historii. Kup coś i usuń z listy jako kupione, a pojawi się tutaj 🙂</div>
+    </section>
+  </main>
+
+  <script>
+    // Klucze storage
+    const STORAGE_ITEMS = 'shoppingList.v3';
+    const STORAGE_HISTORY = 'shoppingHistory.v2';
+    const STORAGE_THEME = 'shoppingList.theme';
+    const STORAGE_HIDE = 'shoppingList.hideDone';
+    const STORAGE_TAB = 'shoppingList.activeTab';
+
+    // Elementy
+    const htmlEl = document.documentElement;
+    const listEl = document.getElementById('list');
+    const emptyEl = document.getElementById('empty');
+    const historyEl = document.getElementById('history');
+    const historyEmptyEl = document.getElementById('history-empty');
+    const formEl = document.getElementById('add-form');
+    const inputEl = document.getElementById('item-input');
+    const hideDoneInput = document.getElementById('hide-done');
+    const themeBtn = document.getElementById('theme-toggle');
+    const tabListBtn = document.getElementById('tab-list');
+    const tabHistoryBtn = document.getElementById('tab-history');
+    const panelList = document.getElementById('panel-list');
+    const panelHistory = document.getElementById('panel-history');
+
+    // Dane
+    let items = load(STORAGE_ITEMS, []);
+    let history = load(STORAGE_HISTORY, []);
+    let hideDone = load(STORAGE_HIDE, false);
+    let theme = load(STORAGE_THEME, getSystemTheme());
+    let activeTab = load(STORAGE_TAB, 'list');
+
+    // ————— Utils —————
+    function uid(){
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+    }
+    function load(key, fallback){
+      try{
+        const raw = localStorage.getItem(key);
+        return raw ? JSON.parse(raw) : fallback;
+      }catch(e){ return fallback }
+    }
+    function save(key, value){ localStorage.setItem(key, JSON.stringify(value)) }
+    function esc(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
+    const uaMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    function fmtDate(ts){
+      try{
+        return new Intl.DateTimeFormat('pl-PL', { dateStyle:'medium', timeStyle:'short' }).format(new Date(ts));
+      }catch(e){
+        return new Date(ts).toLocaleString('pl-PL');
+      }
+    }
+    function getSystemTheme(){
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    function applyTheme(){
+      htmlEl.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
+      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
+      save(STORAGE_THEME, theme);
+    }
+    function applyHideDone(){
+      hideDoneInput.checked = !!hideDone;
+      htmlEl.setAttribute('data-hide-done', hideDone ? '1' : '0');
+      save(STORAGE_HIDE, hideDone);
+    }
+    function setActiveTab(tab){
+      activeTab = tab;
+      const isList = tab === 'list';
+      tabListBtn.setAttribute('aria-selected', isList ? 'true' : 'false');
+      tabHistoryBtn.setAttribute('aria-selected', !isList ? 'true' : 'false');
+      panelList.setAttribute('aria-hidden', isList ? 'false' : 'true');
+      panelHistory.setAttribute('aria-hidden', !isList ? 'false' : 'true');
+      save(STORAGE_TAB, activeTab);
+      if(isList) renderList(); else renderHistory();
+    }
+    function norm(s){ return String(s||'').trim().toLowerCase(); }
+
+    // ————— Render listy —————
+    function renderList(){
+      listEl.innerHTML = '';
+      items.forEach(renderListItem);
+      emptyEl.hidden = items.length !== 0;
+    }
+    function renderListItem(item){
+      const li = document.createElement('li');
+      li.className = 'item' + (item.done ? ' done' : '');
+      li.dataset.id = item.id;
+      li.innerHTML = `
+        <span class="drag-handle" role="button" aria-label="Przeciągnij, aby zmienić kolejność" title="Przeciągnij">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <circle cx="7" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="17" cy="6" r="1.6"/>
+            <circle cx="7" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="17" cy="12" r="1.6"/>
+            <circle cx="7" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>
+          </svg>
+        </span>
+        <input class="check" type="checkbox" ${item.done ? 'checked' : ''} aria-label="Zaznacz jako kupione">
+        <div class="text" spellcheck="false" title="Kliknij dwa razy, aby edytować">${esc(item.text)}</div>
+        <button class="delete" aria-label="Usuń pozycję" title="Usuń">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4v0h-4ZM7 7h10v12H7V7Zm3 3v6h2v-6h-2Z"/>
+          </svg>
+        </button>
+      `;
+      listEl.appendChild(li);
+    }
+
+    // ————— Render historii —————
+    function renderHistory(){
+      historyEl.innerHTML = '';
+      const sorted = [...history].sort((a,b)=> (b.lastBoughtAt||0) - (a.lastBoughtAt||0));
+      if(sorted.length === 0){
+        historyEmptyEl.hidden = false;
+        return;
+      }
+      historyEmptyEl.hidden = true;
+      sorted.forEach(item=>{
+        const li = document.createElement('li');
+        li.className = 'item history';
+        li.dataset.id = item.id;
+        li.innerHTML = `
+          <div style="display:flex; flex-direction:column; gap:4px">
+            <div class="text" spellcheck="false" title="Kliknij dwa razy, aby edytować">${esc(item.text)}</div>
+            <div class="meta">
+              <span class="subtext">Ostatnio: ${item.lastBoughtAt ? esc(fmtDate(item.lastBoughtAt)) : '—'}</span>
+              <span class="chip" title="Ile razy było kupione">× ${item.count || 1}</span>
+            </div>
+          </div>
+          <button class="add-back" aria-label="Dodaj do listy" title="Dodaj do listy">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
+          </button>
+          <button class="delete" aria-label="Usuń z historii" title="Usuń z historii">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4v0h-4ZM7 7h10v12H7V7Zm3 3v6h2v-6h-2Z"/>
+            </svg>
+          </button>
+        `;
+        historyEl.appendChild(li);
+      });
+    }
+
+    // ————— Inicjalizacja UI —————
+    function initUI(){
+      // Motyw
+      applyTheme();
+      themeBtn.addEventListener('click', ()=>{
+        theme = theme === 'dark' ? 'light' : 'dark';
+        applyTheme();
+      });
+
+      // Filtr
+      hideDoneInput.checked = !!hideDone;
+      applyHideDone();
+      hideDoneInput.addEventListener('change', ()=>{
+        hideDone = hideDoneInput.checked;
+        applyHideDone();
+      });
+
+      // Zakładki
+      tabListBtn.addEventListener('click', ()=> setActiveTab('list'));
+      tabHistoryBtn.addEventListener('click', ()=> setActiveTab('history'));
+      setActiveTab(activeTab);
+
+      renderList();
+      renderHistory();
+    }
+
+    // ————— Dodawanie —————
+    formEl.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const text = (inputEl.value || '').trim().replace(/\s+/g,' ');
+      if(!text) return;
+      // dodaj na górę listy (wśród niekupionych)
+      const newItem = { id: uid(), text, done:false, createdAt: Date.now() };
+      const split = items.filter(i=>!i.done);
+      const dones = items.filter(i=>i.done);
+      items = [newItem, ...split, ...dones];
+      save(STORAGE_ITEMS, items);
+      inputEl.value = '';
+      renderList();
+    });
+
+    // ————— Zmiana checkboxa (auto-przenoszenie między grupami) —————
+    listEl.addEventListener('change', (e)=>{
+      if(!e.target.classList.contains('check')) return;
+      const li = e.target.closest('.item');
+      const id = li.dataset.id;
+      const idx = items.findIndex(i => i.id === id);
+      if(idx === -1) return;
+      const item = items[idx];
+      item.done = e.target.checked;
+
+      // Usuń z obecnej pozycji
+      items.splice(idx, 1);
+
+      if(item.done){
+        // Kupione → na koniec (grupa kupionych na dole)
+        const dones = items.filter(i=>i.done);
+        const actives = items.filter(i=>!i.done);
+        items = [...actives, ...dones, item];
+      }else{
+        // Odznaczone → na górę (wśród niekupionych)
+        const actives = items.filter(i=>!i.done);
+        const dones = items.filter(i=>i.done);
+        items = [item, ...actives, ...dones];
+      }
+      save(STORAGE_ITEMS, items);
+      renderList();
+    });
+
+    // ————— Usuwanie z listy (archiwizacja kupionych do Historii) —————
+    listEl.addEventListener('click', (e)=>{
+      const delBtn = e.target.closest('.delete');
+      if(!delBtn) return;
+      const li = delBtn.closest('.item');
+      const id = li.dataset.id;
+      const idx = items.findIndex(i=>i.id===id);
+      if(idx === -1) return;
+      const item = items[idx];
+
+      items.splice(idx,1);
+      save(STORAGE_ITEMS, items);
+      renderList();
+
+      // Jeśli był kupiony → do historii (zliczaj wystąpienia po tekście)
+      if(item && item.done){
+        const normalized = norm(item.text);
+        let existing = history.find(h => norm(h.text) === normalized);
+        if(existing){
+          existing.lastBoughtAt = Date.now();
+          existing.count = (existing.count || 1) + 1;
+        }else{
+          history.push({ id: uid(), text: item.text, lastBoughtAt: Date.now(), count: 1 });
+        }
+        save(STORAGE_HISTORY, history);
+        if(activeTab === 'history') renderHistory();
+      }
+    });
+
+    // ————— Edycja w liście —————
+    listEl.addEventListener('dblclick', (e)=>{
+      const t = e.target;
+      if(!t.classList.contains('text')) return;
+      t.setAttribute('contenteditable','true');
+      placeCaretAtEnd(t);
+      t.focus();
+    });
+    listEl.addEventListener('keydown', (e)=>{
+      const t = e.target;
+      if(t.classList.contains('text') && t.isContentEditable && e.key === 'Enter'){
+        e.preventDefault(); t.blur();
+      }
+    });
+    listEl.addEventListener('blur', (e)=>{
+      const t = e.target;
+      if(!(t.classList && t.classList.contains('text') && t.isContentEditable)) return;
+      const li = t.closest('.item');
+      const id = li.dataset.id;
+      const item = items.find(i => i.id === id);
+      if(!item) return;
+      const newText = t.textContent.trim().replace(/\s+/g,' ');
+      if(!newText){ t.textContent = item.text; }
+      else { item.text = newText; }
+      t.removeAttribute('contenteditable');
+      save(STORAGE_ITEMS, items);
+    }, true);
+
+    // ————— Historia: usuwanie i edycja —————
+    historyEl.addEventListener('click', (e)=>{
+      // usuń z historii
+      const delBtn = e.target.closest('.delete');
+      if(delBtn){
+        const li = delBtn.closest('.item');
+        const id = li.dataset.id;
+        history = history.filter(h => h.id !== id);
+        save(STORAGE_HISTORY, history);
+        renderHistory();
+        return;
+      }
+      // dodaj do listy
+      const addBtn = e.target.closest('.add-back');
+      if(addBtn){
+        const li = addBtn.closest('.item');
+        const id = li.dataset.id;
+        const hItem = history.find(h => h.id === id);
+        if(!hItem) return;
+        const existingIdx = items.findIndex(i => norm(i.text) === norm(hItem.text));
+        if(existingIdx !== -1){
+          // Przenieś istniejący na górę i odznacz
+          const it = items.splice(existingIdx,1)[0];
+          it.done = false;
+          const actives = items.filter(i=>!i.done);
+          const dones = items.filter(i=>i.done);
+          items = [it, ...actives, ...dones];
+        }else{
+          // Dodaj nowy na górę
+          const newItem = { id: uid(), text: hItem.text, done:false, createdAt: Date.now() };
+          const actives = items.filter(i=>!i.done);
+          const dones = items.filter(i=>i.done);
+          items = [newItem, ...actives, ...dones];
+        }
+        save(STORAGE_ITEMS, items);
+        setActiveTab('list');
+        renderList();
+      }
+    });
+    historyEl.addEventListener('dblclick', (e)=>{
+      const t = e.target;
+      if(!t.classList.contains('text')) return;
+      t.setAttribute('contenteditable','true');
+      placeCaretAtEnd(t);
+      t.focus();
+    });
+    historyEl.addEventListener('keydown', (e)=>{
+      const t = e.target;
+      if(t.classList.contains('text') && t.isContentEditable && e.key === 'Enter'){
+        e.preventDefault(); t.blur();
+      }
+    });
+    historyEl.addEventListener('blur', (e)=>{
+      const t = e.target;
+      if(!(t.classList && t.classList.contains('text') && t.isContentEditable)) return;
+      const li = t.closest('.item');
+      const id = li.dataset.id;
+      const item = history.find(h => h.id === id);
+      if(item){
+        const newText = t.textContent.trim().replace(/\s+/g,' ');
+        if(newText){ item.text = newText; }
+        t.removeAttribute('contenteditable');
+        save(STORAGE_HISTORY, history);
+      }
+    }, true);
+
+    function placeCaretAtEnd(el){
+      const range = document.createRange();
+      range.selectNodeContents(el); range.collapse(false);
+      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+
+    // ————— Drag & drop (z automatycznym loaderem Sortable + fallback) —————
+    const SORTABLE_URLS = [
+      'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js',
+      'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js',
+      'https://unpkg.com/sortablejs@1.15.2/Sortable.min.js'
+    ];
+    function loadScript(src){
+      return new Promise((resolve, reject)=>{
+        const s = document.createElement('script');
+        s.src = src; s.async = true;
+        s.onload = ()=>resolve(true);
+        s.onerror = ()=>reject(new Error('load fail '+src));
+        document.head.appendChild(s);
+      });
+    }
+    async function ensureSortable(){
+      if(window.Sortable) return true;
+      for(const url of SORTABLE_URLS){
+        try{
+          await loadScript(url);
+          if(window.Sortable) return true;
+        }catch(e){}
+      }
+      return false;
+    }
+    function applyDOMOrderToActive(){
+      // Reorder tylko wśród niekupionych wg DOM; kupione zostają na dole
+      const order = Array.from(listEl.children).map(li => li.dataset.id);
+      const actives = items.filter(i=>!i.done);
+      const dones = items.filter(i=>i.done);
+      const activesSorted = [...actives].sort((a,b)=> order.indexOf(a.id) - order.indexOf(b.id));
+      items = [...activesSorted, ...dones];
+      save(STORAGE_ITEMS, items);
+    }
+    async function setupDrag(){
+      const ok = await ensureSortable();
+      if(!ok){
+        // Brak biblioteki (np. offline) – po prostu wyłączamy przeciąganie
+        htmlEl.classList.add('no-drag');
+        return;
+      }
+      htmlEl.classList.remove('no-drag');
+      new Sortable(listEl, {
+        handle: '.drag-handle',
+        animation: 150,
+        ghostClass: 'dragging',
+        fallbackOnBody: true,
+        forceFallback: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
+        delayOnTouchOnly: true,
+        delay: 120,
+        touchStartThreshold: 3,
+        onEnd: () => {
+          applyDOMOrderToActive();
+          // Nie renderujemy całości – Sortable już przełożył DOM niekupionych.
+        }
+      });
+    }
+
+    // ————— Start —————
+    function init(){
+      initUI();
+      setupDrag();
+      if(!localStorage.getItem(STORAGE_THEME)){
+        theme = getSystemTheme();
+        applyTheme();
+      }
+    }
+    init();
+  </script>
+</body>
+</html>

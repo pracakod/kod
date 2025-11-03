@@ -1,260 +1,392 @@
 <!doctype html>
-<html lang="pl" data-theme="light" data-hide-done="0">
+<html lang="pl" data-theme="light" data-hide-done="0" data-hints="1" data-density="normal">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Lista zakupów</title>
+  <title>Lista</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root{
-      /* LIGHT */
-      --bg-1:#f8fafc;
-      --bg-2:#eef2ff;
-      --card:rgba(255,255,255,0.75);
-      --text:#0f172a;
-      --muted:#64748b;
-      --primary:#6366f1;
-      --accent:#10b981;
-      --danger:#ef4444;
-      --ring:rgba(99,102,241,.3);
-      --item:#ffffff;
-      --item-border:#e5e7eb;
-      --chip:#eef2ff;
-      --chip-text:#4f46e5;
+      --bg-1:#f8fafc; --bg-2:#eef2ff; --card:rgba(255,255,255,0.75);
+      --text:#0f172a; --muted:#64748b; --primary:#6366f1; --accent:#10b981; --danger:#ef4444;
+      --ring:rgba(99,102,241,.3); --item:#ffffff; --item-border:#e5e7eb;
+      --chip:#eef2ff; --chip-text:#4f46e5; --toast-bg:#0b1220; --toast-fg:#e5e7eb;
+      --overlay:rgba(2,6,23,.5);
     }
     [data-theme="dark"]{
-      --bg-1:#0b1220;
-      --bg-2:#0a0f1a;
-      --card:rgba(15,23,42,0.6);
-      --text:#e5e7eb;
-      --muted:#94a3b8;
-      --primary:#818cf8;
-      --accent:#34d399;
-      --danger:#f87171;
-      --ring:rgba(129,140,248,.35);
-      --item:#0f172a;
-      --item-border:#1f2937;
-      --chip:#141b2c;
-      --chip-text:#a5b4fc;
+      --bg-1:#0b1220; --bg-2:#0a0f1a; --card:rgba(15,23,42,0.6);
+      --text:#e5e7eb; --muted:#94a3b8; --primary:#818cf8; --accent:#34d399; --danger:#f87171;
+      --ring:rgba(129,140,248,.35); --item:#0f172a; --item-border:#1f2937;
+      --chip:#141b2c; --chip-text:#a5b4fc; --toast-bg:#111827; --toast-fg:#f9fafb;
+      --overlay:rgba(0,0,0,.6);
     }
 
     *{box-sizing:border-box}
     html,body{height:100%}
     body{
-      margin:0;
-      font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      margin:0; font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       color:var(--text);
       background:
         radial-gradient(900px 500px at -10% -10%, #c7d2fe22 0%, transparent 50%),
         radial-gradient(900px 500px at 110% 0%, #a7f3d022 0%, transparent 50%),
         linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
-      -webkit-font-smoothing:antialiased;
-      -moz-osx-font-smoothing:grayscale;
+      -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
     }
     .app{
-      max-width:820px;
-      margin: min(6vh,60px) auto;
-      padding:22px;
-      background:var(--card);
-      backdrop-filter: blur(10px);
-      border:1px solid rgba(99,102,241,.12);
-      border-radius:16px;
+      max-width:940px; margin: min(6vh,60px) auto; padding:22px;
+      background:var(--card); backdrop-filter: blur(10px);
+      border:1px solid rgba(99,102,241,.12); border-radius:16px;
       box-shadow: 0 20px 80px rgba(2,6,23,.12);
     }
-    header{
-      display:flex; align-items:center; justify-content:space-between; gap:12px;
-      margin-bottom:10px;
-    }
-    h1{
-      margin:0; font-size:26px; font-weight:700; letter-spacing:.2px;
-      display:flex; align-items:center; gap:10px;
-    }
-    h1 .dot{ width:10px;height:10px;border-radius:50%;
-      background:linear-gradient(135deg,var(--primary),var(--accent));
-      box-shadow:0 0 0 4px rgba(99,102,241,.12);
-    }
-    .top-actions{ display:flex; align-items:center; gap:8px; }
+    header{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:6px; }
+    h1{ margin:0; font-size:26px; font-weight:700; letter-spacing:.2px; display:flex; align-items:center; gap:10px; }
+    h1 .dot{ width:10px;height:10px;border-radius:50%; background:linear-gradient(135deg,var(--primary),var(--accent)); box-shadow:0 0 0 4px rgba(99,102,241,.12) }
+    .title{ border-radius:6px; padding:2px 6px; cursor:text }
+    .title[contenteditable="true"]{ outline:none; box-shadow: inset 0 0 0 2px var(--ring); background:rgba(0,0,0,.03) }
+    [data-theme="dark"] .title[contenteditable="true"]{ background:rgba(255,255,255,.05) }
+    .title-hint{ margin:4px 0 0 24px }
+    .top-actions{ display:flex; align-items:center; gap:8px; position:relative; flex-wrap:wrap }
 
-    .icon-btn{
-      height:38px; min-width:38px; padding:0 10px;
-      display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      border:none; border-radius:10px; cursor:pointer;
-      background:linear-gradient(135deg,var(--primary),#8b5cf6);
-      color:#fff; font-weight:600;
-      box-shadow:0 8px 20px rgba(99,102,241,.25);
-      transition:transform .05s ease, filter .15s ease;
+    .icon-btn{ height:38px; min-width:38px; padding:0 10px; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+      border:none; border-radius:10px; cursor:pointer; background:linear-gradient(135deg,var(--primary),#8b5cf6); color:#fff; font-weight:600;
+      box-shadow:0 8px 20px rgba(99,102,241,.25); transition:transform .05s ease, filter .15s ease;
     }
+    .icon-btn.ghost{ background:transparent; color:var(--text); border:1px solid var(--item-border); box-shadow:none; }
     .icon-btn:active{ transform:translateY(1px) }
-    .ghost{
-      background:transparent; color:var(--text);
-      border:1px solid var(--item-border);
-      box-shadow:none;
-    }
 
-    .tabs{
-      display:flex; gap:6px; margin:8px 0 4px;
-      background:transparent;
+    .lists-bar{
+      display:flex; align-items:center; gap:8px; margin:6px 0 2px; flex-wrap:wrap;
+      color:var(--muted); font-size:13px;
     }
-    .tab{
-      border:1px solid var(--item-border); background:var(--item);
-      color:var(--text);
-      height:38px; padding:0 14px; border-radius:10px; cursor:pointer; font-weight:600;
+    .lists-bar select, .lists-bar input[type="color"]{
+      height:34px; border-radius:8px; border:1px solid var(--item-border); background:var(--item); color:var(--text); padding:0 10px;
     }
-    .tab[aria-selected="true"]{
-      outline:none;
-      box-shadow:0 0 0 4px var(--ring);
-      border-color:#c7d2fe44;
-    }
+    .chip{ display:inline-flex; align-items:center; gap:8px; height:28px; padding:0 10px; border-radius:999px; background:var(--chip); color:var(--text); font-weight:600; font-size:13px; border:1px solid var(--item-border) }
+    .dot-s{ width:10px; height:10px; border-radius:50% }
+    .btn{ height:36px; padding:0 12px; border-radius:8px; border:1px solid var(--item-border); background:var(--item); color:var(--text); cursor:pointer }
 
-    .row{ display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-    .grow{ flex:1 }
+    .tabs{ display:flex; gap:6px; margin:8px 0 4px; }
+    .tab{ border:1px solid var(--item-border); background:var(--item); color:var(--text); height:38px; padding:0 14px; border-radius:10px; cursor:pointer; font-weight:600; }
+    .tab[aria-selected="true"]{ box-shadow:0 0 0 4px var(--ring); border-color:#c7d2fe44; }
 
-    .add{
-      display:flex; gap:10px; margin:12px 0 8px; width:100%;
-    }
-    .add input{
-      flex:1; height:44px; padding:0 14px; border-radius:10px;
-      border:1px solid var(--item-border); background:var(--item); color:var(--text);
-      font-size:16px; outline:none; transition:border .15s, box-shadow .15s;
-    }
+    .add{ display:flex; gap:10px; margin:12px 0 8px; width:100% }
+    .add input{ flex:1; height:44px; padding:0 14px; border-radius:10px; border:1px solid var(--item-border); background:var(--item); color:var(--text);
+      font-size:16px; outline:none; transition:border .15s, box-shadow .15s; }
     .add input::placeholder{ color:var(--muted) }
     .add input:focus{ border-color:var(--primary); box-shadow:0 0 0 4px var(--ring) }
-    .add button{
-      height:44px; padding:0 14px; border:none; border-radius:10px;
-      background:linear-gradient(135deg,var(--primary),#8b5cf6);
-      color:#fff; font-weight:600; cursor:pointer;
-      box-shadow:0 8px 20px rgba(99,102,241,.25);
-      transition:transform .05s ease, filter .15s ease;
-    }
+    .add button{ height:44px; padding:0 14px; border:none; border-radius:10px; background:linear-gradient(135deg,var(--primary),#8b5cf6); color:#fff; font-weight:600; cursor:pointer; box-shadow:0 8px 20px rgba(99,102,241,.25); }
     .add button:active{ transform:translateY(1px) }
 
-    .controls{
-      display:flex; align-items:center; gap:10px; margin-top:4px; color:var(--muted); font-size:14px;
-    }
-    .switch{
-      display:inline-flex; align-items:center; gap:8px; padding:6px 10px;
-      border:1px solid var(--item-border); border-radius:10px; background:var(--item);
-      cursor:pointer; user-select:none;
-    }
-    .switch input{ accent-color:var(--accent); }
-    .hint{ margin-top:10px; color:var(--muted); font-size:13px; }
-
+    .controls{ display:flex; align-items:center; gap:10px; margin-top:4px; color:var(--muted); font-size:14px }
+    .switch{ display:inline-flex; align-items:center; gap:8px; padding:6px 10px; border:1px solid var(--item-border); border-radius:10px; background:var(--item); cursor:pointer; user-select:none }
+    .switch input{ accent-color:var(--accent) }
+    .hint{ margin-top:10px; color:var(--muted); font-size:13px }
     .panel{ display:none }
     .panel[aria-hidden="false"]{ display:block }
 
-    .list{ list-style:none; padding:0; margin:10px 0 0; }
-    .item{
-      display:grid;
-      grid-template-columns: 36px 28px 1fr 36px;
-      align-items:center;
-      gap:8px;
-      background:var(--item);
-      border:1px solid var(--item-border);
-      border-radius:12px;
-      padding:10px 10px 10px 6px;
-      margin:10px 0;
+    .list{ list-style:none; padding:0; margin:10px 0 0 }
+    .item{ display:grid; grid-template-columns: 36px 28px 1fr 36px; align-items:center; gap:8px;
+      background:var(--item); border:1px solid var(--item-border); border-radius:12px; padding:10px 10px 10px 6px; margin:10px 0;
       transition: background .15s, border-color .15s, opacity .15s;
     }
-    .item:hover{ border-color:#d1d5db44; }
-    .drag-handle{
-      width:32px; height:32px; border-radius:8px; color:#94a3b8;
-      display:flex; align-items:center; justify-content:center;
-      cursor:grab;
-      /* mobile drag helpers */
+    .item:hover{ border-color:#d1d5db44 }
+    .drag-handle{ width:32px; height:32px; border-radius:8px; color:#94a3b8; display:flex; align-items:center; justify-content:center; cursor:grab;
       touch-action:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none;
     }
     .dragging{ opacity:.6 }
-    .check{ width:20px; height:20px; cursor:pointer; accent-color: var(--accent); }
-    .text{
-      padding:8px 10px; border-radius:8px; min-height:24px; line-height:1.35; word-break:break-word;
-    }
+    .check{ width:20px; height:20px; cursor:pointer; accent-color: var(--accent) }
+    .text{ padding:8px 10px; border-radius:8px; min-height:24px; line-height:1.35; word-break:break-word }
     .text[contenteditable="true"]{ outline:none; box-shadow: inset 0 0 0 2px var(--ring); background:rgba(0,0,0,.03) }
     [data-theme="dark"] .text[contenteditable="true"]{ background:rgba(255,255,255,.05) }
     .item.done .text{ text-decoration: line-through; color:var(--muted) }
-    .delete{ width:32px;height:32px;border:none;background:transparent; cursor:pointer; color:#9ca3af; border-radius:8px; }
+    .delete{ width:32px;height:32px;border:none;background:transparent; cursor:pointer; color:#9ca3af; border-radius:8px }
     .delete:hover{ color:var(--danger) }
+    .subtext{ color:var(--muted); font-size:12px }
+    .chip-mini{ display:inline-flex; align-items:center; gap:6px; height:22px; padding:0 8px; border-radius:999px; background:var(--chip); color:var(--text); font-weight:600; font-size:12px; border:1px solid var(--item-border) }
+    .empty{ margin:16px 0 0; color:var(--muted); font-size:14px }
 
-    .subtext{ color:var(--muted); font-size:12px; }
-    .meta{ display:flex; align-items:center; gap:8px }
-    .chip{
-      display:inline-flex; align-items:center; gap:6px; height:24px;
-      padding:0 8px; border-radius:999px; background:var(--chip); color:var(--chip-text); font-weight:600; font-size:12px;
-    }
-
-    .empty{ margin:16px 0 0; color:var(--muted); font-size:14px; }
     [data-hide-done="1"] .item.done{ display:none }
-
-    /* Gdy brak biblioteki Sortable (np. offline) */
+    [data-hints="0"] .hint, [data-hints="0"] .subtext, [data-hints="0"] .title-hint{ display:none !important }
     .no-drag .drag-handle{ opacity:.4; cursor:not-allowed }
 
-    /* Historia: inny układ siatki */
-    .item.history{ grid-template-columns: 1fr 36px 36px; padding-left:12px }
+    /* Historia – stały layout */
+    .item.history{ grid-template-columns: 1fr 36px 36px; align-items:center; padding-left:12px }
+    .h-body{ display:flex; flex-direction:column; gap:4px }
+    .h-meta{ display:flex; align-items:center; gap:8px; flex-wrap:wrap }
     .add-back{ width:32px;height:32px;border:none;background:transparent; cursor:pointer; color:#10b981; border-radius:8px; }
     .add-back:hover{ filter:brightness(1.1) }
+
+    /* Zapisane */
+    .saved-card{ display:grid; grid-template-columns: 1fr 36px 36px 36px 36px; gap:8px; align-items:flex-start;
+      background:var(--item); border:1px solid var(--item-border); border-radius:12px; padding:12px; margin:10px 0; }
+    .saved-head{ display:flex; flex-direction:column; gap:4px }
+    .saved-actions button{ width:32px; height:32px; border:none; background:transparent; cursor:pointer; border-radius:8px }
+    .btn-green{ color:#10b981 } .btn-blue{ color:#3b82f6 } .btn-red{ color:#ef4444 } .btn-gray{ color:#6b7280 }
+    .saved-preview{ grid-column:1 / span 5; margin-top:6px; border-top:1px solid var(--item-border); padding-top:6px; color:var(--muted); font-size:13px }
+    .saved-preview ul{ margin:6px 0 0; padding-left:18px }
+    .saved-preview li.done{ text-decoration:line-through; color:#9ca3af }
+
+    /* Menu opcji */
+    .menu{ position:absolute; right:0; top:46px; min-width:280px; z-index:20; background:var(--item); border:1px solid var(--item-border);
+      border-radius:12px; box-shadow:0 14px 40px rgba(2,6,23,.18); padding:8px; display:none }
+    .menu[aria-hidden="false"]{ display:block }
+    .menu h3{ margin:6px 8px 8px; font-size:13px; color:var(--muted); font-weight:600 }
+    .menu-item{ display:flex; align-items:center; gap:10px; padding:10px; border-radius:10px; cursor:pointer }
+    .menu-item:hover{ background:#f5f7ff11 }
+    .menu-item input{ accent-color:var(--accent) }
+    .menu-line{ height:1px; background:#e5e7eb22; margin:6px 8px }
+    .menu-open-settings{
+      display:flex; align-items:center; gap:8px; width:100%; text-align:left; border:none; cursor:pointer;
+      border-radius:10px; padding:10px; color:#fff; font-weight:700;
+      background:linear-gradient(135deg,var(--primary),#8b5cf6);
+      box-shadow:0 8px 20px rgba(99,102,241,.25);
+    }
+    .menu-open-settings:hover{ filter:brightness(1.05) }
+
+    /* Modale (druk/kopiuj/ustawienia) */
+    .modal{ position:fixed; inset:0; background:var(--overlay); display:none; align-items:center; justify-content:center; z-index:60; padding:16px }
+    .modal[aria-hidden="false"]{ display:flex }
+    .modal-card{ width:min(640px, 100%); background:var(--item); border:1px solid var(--item-border); border-radius:12px; box-shadow:0 16px 60px rgba(0,0,0,.3); padding:16px }
+    .modal-card h3{ margin:0 0 8px; font-size:18px }
+    .modal-row{ display:flex; gap:10px; align-items:center; margin:8px 0; flex-wrap:wrap }
+    .checks{ max-height:40vh; overflow:auto; border:1px solid var(--item-border); border-radius:8px; padding:8px }
+    .checks label{ display:flex; gap:8px; align-items:center; padding:6px 4px }
+    .modal-actions{ display:flex; gap:8px; justify-content:flex-end; margin-top:12px }
+    .btn.primary{ background:linear-gradient(135deg,var(--primary),#8b5cf6); color:#fff; border:none }
+    .help{ color:var(--muted); font-size:12px }
+
+    /* Gęstość kompaktowa */
+    [data-density="compact"] .item{ padding:8px 8px 8px 6px; margin:6px 0 }
+    [data-density="compact"] .text{ font-size:14px }
+
+    /* Toast */
+    .toast{ position:fixed; right:16px; bottom:16px; z-index:50; background:var(--toast-bg); color:var(--toast-fg);
+      border-radius:10px; padding:10px 14px; box-shadow:0 10px 30px rgba(0,0,0,.25); font-weight:600; font-size:14px;
+      opacity:0; transform: translateY(8px); transition: opacity .15s, transform .15s; pointer-events:none }
+    .toast.show{ opacity:1; transform: translateY(0) }
+
+    /* Print – czarno, wiele list */
+    #print-container{ display:none }
+    @media print{
+      @page{ margin:10mm }
+      html, body{ background:#fff !important; color:#000 !important }
+      *{ color:#000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .app, .modal, .toast{ display:none !important }
+      #print-container{ display:block !important }
+      .prn-list{ margin:0 0 6mm }
+      .prn-head{
+        display:flex; align-items:center; justify-content:space-between;
+        padding:0 0 2mm; margin:0 0 3mm; border-bottom:1px solid #000;
+      }
+      .prn-title{ font-size:12px; font-weight:700; margin:0 }
+      .prn-meta{ font-size:10px }
+      .prn-ul{ list-style:none; margin:0; padding:0 }
+      .prn-li{ margin:1.2mm 0; font-size:12px; line-height:1.2; page-break-inside:avoid }
+      .prn-li::before{ content:'[ ] ' }
+      .prn-li.done::before{ content:'[x] ' }
+      .prn-head.hidden{ display:none !important }
+    }
 
     @media (max-width:560px){
       .item{ grid-template-columns: 28px 24px 1fr 32px }
       .drag-handle{ width:28px;height:28px }
       .delete{ width:28px;height:28px }
       .item.history{ grid-template-columns: 1fr 32px 32px }
+      .saved-card{ grid-template-columns: 1fr 32px 32px 32px 32px }
     }
   </style>
 </head>
 <body>
   <main class="app" role="main">
     <header>
-      <h1><span class="dot"></span> Lista zakupów</h1>
+      <h1><span class="dot"></span> <span id="list-title" class="title" title="Podwójnie kliknij, aby zmienić">Lista</span></h1>
       <div class="top-actions">
-        <button id="theme-toggle" class="icon-btn ghost" aria-label="Przełącz motyw">🌙</button>
+        <button type="button" id="theme-toggle" class="icon-btn ghost" aria-label="Przełącz motyw" title="Motyw">🌙</button>
+        <button type="button" id="print-btn" class="icon-btn ghost" aria-label="Drukuj" title="Drukuj">🖨️</button>
+        <button type="button" id="copy-btn" class="icon-btn ghost" aria-label="Kopiuj listy" title="Kopiuj listy">📋</button>
+        <button type="button" id="options-toggle" class="icon-btn ghost" aria-haspopup="menu" aria-expanded="false" aria-controls="options-menu" title="Opcje">⚙️</button>
+        <div id="options-menu" class="menu" role="menu" aria-hidden="true">
+          <h3>Ustawienia</h3>
+          <label class="menu-item" role="menuitemcheckbox">
+            <input type="checkbox" id="opt-hints" checked>
+            <span>Pokaż podpowiedzi</span>
+          </label>
+          <div class="menu-line"></div>
+          <button type="button" id="open-settings" class="menu-open-settings">⚙️ Więcej ustawień…</button>
+          <div class="menu-line"></div>
+          <button type="button" id="opt-reset" class="menu-item" role="menuitem" title="Reset danych tej aplikacji">🧹 Resetuj dane</button>
+          <button type="button" id="opt-hard-reset" class="menu-item" role="menuitem" title="Twardy reset (czyści cały localStorage tej domeny)">🧨 Twardy reset</button>
+        </div>
       </div>
     </header>
+    <div class="title-hint hint">Podpowiedź: podwójnie kliknij tytuł, aby zmienić nazwę</div>
+
+    <div class="lists-bar">
+      <span>Lista:</span>
+      <select id="list-switch" aria-label="Wybierz listę"></select>
+      <div id="current-chip" class="chip"><span id="chip-dot" class="dot-s" style="background:#10b981"></span><span id="chip-name">Lista</span></div>
+      <label>Kolor: <input type="color" id="list-color" aria-label="Kolor listy"></label>
+      <button type="button" id="list-add" class="btn" title="Nowa lista">➕</button>
+      <button type="button" id="list-del" class="btn" title="Usuń bieżącą listę">🗑️</button>
+      <button type="button" id="save-list" class="btn" title="Zapisz migawkę tej listy">💾 Zapisz listę</button>
+    </div>
 
     <nav class="tabs" role="tablist" aria-label="Zakładki">
-      <button class="tab" id="tab-list" role="tab" aria-controls="panel-list" aria-selected="true">Lista</button>
-      <button class="tab" id="tab-history" role="tab" aria-controls="panel-history" aria-selected="false">Historia</button>
+      <button type="button" class="tab" id="tab-list" role="tab" aria-controls="panel-list" aria-selected="true">Lista</button>
+      <button type="button" class="tab" id="tab-history" role="tab" aria-controls="panel-history" aria-selected="false">Historia</button>
+      <button type="button" class="tab" id="tab-saved" role="tab" aria-controls="panel-saved" aria-selected="false">Zapisane</button>
     </nav>
 
     <!-- PANEL LISTY -->
     <section id="panel-list" class="panel" role="tabpanel" aria-labelledby="tab-list" aria-hidden="false">
       <form class="add" id="add-form" autocomplete="off">
-        <input id="item-input" class="grow" type="text" placeholder="Dodaj produkt i naciśnij Enter…" aria-label="Nazwa produktu">
+        <input id="item-input" class="grow" type="text" placeholder="Dodaj element i naciśnij Enter…" aria-label="Treść elementu" enterkeyhint="done">
         <button type="submit" aria-label="Dodaj pozycję">Dodaj</button>
       </form>
 
       <div class="controls">
-        <label class="switch" title="Ukryj kupione">
-          <input type="checkbox" id="hide-done"> Ukryj kupione
+        <label class="switch" title="Ukryj zrobione">
+          <input type="checkbox" id="hide-done"> Ukryj zrobione
         </label>
-        <span class="subtext">- Kupione zawsze lądują na dole, a odznaczone wracają na górę listy.</span>
+        <span class="subtext">Zaznaczone “zrobione” są na dole; odznaczone wracają na górę.</span>
       </div>
 
       <ul id="list" class="list" aria-live="polite"></ul>
-      <div id="empty" class="empty" hidden>Twoja lista jest pusta. Dodaj pierwszy produkt ✨</div>
+      <div id="empty" class="empty" hidden>Lista jest pusta. Dodaj pierwszy element ✨</div>
 
-      <div class="hint">Stan listy i motyw zapisywane lokalnie (localStorage). Przeciągaj za kropki po lewej (działa też na telefonie).</div>
+      <div class="hint">Dane, motyw i ustawienia zapisywane lokalnie (localStorage). Przeciągaj za kropki po lewej (działa też na telefonie).</div>
     </section>
 
     <!-- PANEL HISTORII -->
     <section id="panel-history" class="panel" role="tabpanel" aria-labelledby="tab-history" aria-hidden="true">
-      <div class="subtext" style="margin-top:6px">
-        Historia zbiera pozycje usunięte z listy, jeśli były oznaczone jako kupione. Możesz je edytować, usunąć lub dodać z powrotem do listy.
+      <div class="history-controls">
+        <label for="history-scope">Zakres:</label>
+        <select id="history-scope">
+          <option value="all">Wszystkie listy</option>
+          <option value="current">Bieżąca lista</option>
+        </select>
       </div>
       <ul id="history" class="list" aria-live="polite"></ul>
-      <div id="history-empty" class="empty" hidden>Brak historii. Kup coś i usuń z listy jako kupione, a pojawi się tutaj 🙂</div>
+      <div id="history-empty" class="empty" hidden>Brak historii. Usuwaj pozycje z list, a pojawią się tutaj 🙂</div>
+    </section>
+
+    <!-- PANEL ZAPISANYCH -->
+    <section id="panel-saved" class="panel" role="tabpanel" aria-labelledby="tab-saved" aria-hidden="true">
+      <div class="hint">Zapisane migawki list. Przywracanie nie usuwa z zapisanych; możesz usuwać ręcznie.</div>
+      <div id="saved-wrap"></div>
+      <div id="saved-empty" class="empty" hidden>Brak zapisanych migawek. Użyj “💾 Zapisz listę”.</div>
     </section>
   </main>
 
-  <script>
-    // Klucze storage
-    const STORAGE_ITEMS = 'shoppingList.v3';
-    const STORAGE_HISTORY = 'shoppingHistory.v2';
-    const STORAGE_THEME = 'shoppingList.theme';
-    const STORAGE_HIDE = 'shoppingList.hideDone';
-    const STORAGE_TAB = 'shoppingList.activeTab';
+  <!-- Modal drukowania -->
+  <div id="print-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card" role="document">
+      <h3>Drukuj listy</h3>
+      <div class="modal-row">
+        <label><input type="checkbox" id="print-include-done" checked> Uwzględnij zrobione</label>
+        <label><input type="checkbox" id="print-show-title" checked> Pokaż tytuł</label>
+        <label><input type="checkbox" id="print-show-date" checked> Pokaż datę</label>
+      </div>
+      <div class="help">Numery stron włącz/wyłącz w oknie drukowania (nagłówki/stopki przeglądarki).</div>
+      <div class="modal-row">
+        <button type="button" id="print-select-all" class="btn">Zaznacz wszystkie</button>
+        <button type="button" id="print-select-none" class="btn">Odznacz wszystkie</button>
+      </div>
+      <div id="print-checks" class="checks" aria-label="Wybór list"></div>
+      <div class="modal-actions">
+        <button type="button" id="print-cancel" class="btn">Anuluj</button>
+        <button type="button" id="print-go" class="btn primary">Drukuj wybrane</button>
+      </div>
+    </div>
+  </div>
 
-    // Elementy
+  <!-- Modal kopiowania (wiele list) -->
+  <div id="copy-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card" role="document">
+      <h3>Kopiuj listy</h3>
+      <div class="modal-row">
+        <label><input type="checkbox" id="copy-include-done" checked> Uwzględnij zrobione</label>
+      </div>
+      <div class="modal-row">
+        <button type="button" id="copy-select-all" class="btn">Zaznacz wszystkie</button>
+        <button type="button" id="copy-select-none" class="btn">Odznacz wszystkie</button>
+      </div>
+      <div id="copy-checks" class="checks" aria-label="Wybór list"></div>
+      <div class="modal-actions">
+        <button type="button" id="copy-cancel" class="btn">Anuluj</button>
+        <button type="button" id="copy-go" class="btn primary">Kopiuj wybrane</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal ustawień -->
+  <div id="settings-modal" class="modal" aria-hidden="true" role="dialog" aria-modal="true">
+    <div class="modal-card" role="document">
+      <h3>Ustawienia</h3>
+      <div class="modal-row">
+        <label><input type="checkbox" id="set-default-hide"> Domyślnie ukrywaj zrobione</label>
+        <label>Gęstość:
+          <select id="set-density">
+            <option value="normal">Normalna</option>
+            <option value="compact">Kompaktowa</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal-row">
+        <label>Motyw:
+          <select id="set-theme-mode">
+            <option value="system">System</option>
+            <option value="light">Jasny</option>
+            <option value="dark">Ciemny</option>
+          </select>
+        </label>
+      </div>
+      <div class="modal-row">
+        <strong>Druk (domyślnie):</strong>
+        <label><input type="checkbox" id="set-print-done"> Uwzględnij zrobione</label>
+        <label><input type="checkbox" id="set-print-title" checked> Pokaż tytuł</label>
+        <label><input type="checkbox" id="set-print-date" checked> Pokaż datę</label>
+      </div>
+      <div class="modal-row">
+        <strong>Kopiuj (domyślnie):</strong>
+        <label><input type="checkbox" id="set-copy-done"> Uwzględnij zrobione</label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="settings-cancel" class="btn">Anuluj</button>
+        <button type="button" id="settings-save" class="btn primary">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kontener dla wydruku -->
+  <div id="print-container" aria-hidden="true"></div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // Storage keys
+    const STORAGE_APP = 'list.appdata.v2'; // lists + saved
+    const STORAGE_THEME = 'list.theme';
+    const STORAGE_HIDE = 'list.hideDone';
+    const STORAGE_TAB = 'list.activeTab';
+    const STORAGE_HINTS = 'list.showHints';
+    const STORAGE_HIST_SCOPE = 'list.historyScope';
+    const STORAGE_SETTINGS = 'list.settings.v1';
+
+    // Elements
     const htmlEl = document.documentElement;
+    const titleEl = document.getElementById('list-title');
+
+    const listSwitch = document.getElementById('list-switch');
+    const listAddBtn = document.getElementById('list-add');
+    const listDelBtn = document.getElementById('list-del');
+    const saveListBtn = document.getElementById('save-list');
+    const listColor = document.getElementById('list-color');
+    const chipDot = document.getElementById('chip-dot');
+    const chipName = document.getElementById('chip-name');
+
     const listEl = document.getElementById('list');
     const emptyEl = document.getElementById('empty');
     const historyEl = document.getElementById('history');
@@ -263,393 +395,736 @@
     const inputEl = document.getElementById('item-input');
     const hideDoneInput = document.getElementById('hide-done');
     const themeBtn = document.getElementById('theme-toggle');
+    const printBtn = document.getElementById('print-btn');
+    const copyBtn = document.getElementById('copy-btn');
     const tabListBtn = document.getElementById('tab-list');
     const tabHistoryBtn = document.getElementById('tab-history');
+    const tabSavedBtn = document.getElementById('tab-saved');
     const panelList = document.getElementById('panel-list');
     const panelHistory = document.getElementById('panel-history');
+    const panelSaved = document.getElementById('panel-saved');
+    const savedWrap = document.getElementById('saved-wrap');
+    const savedEmptyEl = document.getElementById('saved-empty');
 
-    // Dane
-    let items = load(STORAGE_ITEMS, []);
-    let history = load(STORAGE_HISTORY, []);
+    const optBtn = document.getElementById('options-toggle');
+    const optMenu = document.getElementById('options-menu');
+    const openSettingsBtn = document.getElementById('open-settings');
+    const optHints = document.getElementById('opt-hints');
+    const optReset = document.getElementById('opt-reset');
+    const optHardReset = document.getElementById('opt-hard-reset');
+    const toastEl = document.getElementById('toast');
+
+    const historyScopeSel = document.getElementById('history-scope');
+
+    // Print modal
+    const printModal = document.getElementById('print-modal');
+    const printChecks = document.getElementById('print-checks');
+    const printIncludeDone = document.getElementById('print-include-done');
+    const printShowTitle = document.getElementById('print-show-title');
+    const printShowDate = document.getElementById('print-show-date');
+    const printCancel = document.getElementById('print-cancel');
+    const printGo = document.getElementById('print-go');
+    const printSelectAll = document.getElementById('print-select-all');
+    const printSelectNone = document.getElementById('print-select-none');
+    const printContainer = document.getElementById('print-container');
+
+    // Copy modal
+    const copyModal = document.getElementById('copy-modal');
+    const copyChecks = document.getElementById('copy-checks');
+    const copyIncludeDone = document.getElementById('copy-include-done');
+    const copyCancel = document.getElementById('copy-cancel');
+    const copyGo = document.getElementById('copy-go');
+    const copySelectAll = document.getElementById('copy-select-all');
+    const copySelectNone = document.getElementById('copy-select-none');
+
+    // Settings modal
+    const settingsModal = document.getElementById('settings-modal');
+    const setDefaultHide = document.getElementById('set-default-hide');
+    const setDensity = document.getElementById('set-density');
+    const setThemeMode = document.getElementById('set-theme-mode');
+    const setPrintDone = document.getElementById('set-print-done');
+    const setPrintTitle = document.getElementById('set-print-title');
+    const setPrintDate = document.getElementById('set-print-date');
+    const setCopyDone = document.getElementById('set-copy-done');
+    const settingsSave = document.getElementById('settings-save');
+    const settingsCancel = document.getElementById('settings-cancel');
+
+    // State
+    let app;
+    let items = [];
     let hideDone = load(STORAGE_HIDE, false);
     let theme = load(STORAGE_THEME, getSystemTheme());
     let activeTab = load(STORAGE_TAB, 'list');
+    let showHints = load(STORAGE_HINTS, true);
+    let histScope = load(STORAGE_HIST_SCOPE, 'all');
+    let settings = loadSettings();
 
-    // ————— Utils —————
-    function uid(){
-      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
-      return 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36);
-    }
-    function load(key, fallback){
-      try{
-        const raw = localStorage.getItem(key);
-        return raw ? JSON.parse(raw) : fallback;
-      }catch(e){ return fallback }
-    }
+    // Utils
+    function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-' + Math.random().toString(36).slice(2) + Date.now().toString(36) }
+    function load(key, fallback){ try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback }catch(e){ return fallback } }
     function save(key, value){ localStorage.setItem(key, JSON.stringify(value)) }
-    function esc(str){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
+    function esc(str){ return String(str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])) }
     const uaMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    function fmtDate(ts){
-      try{
-        return new Intl.DateTimeFormat('pl-PL', { dateStyle:'medium', timeStyle:'short' }).format(new Date(ts));
-      }catch(e){
-        return new Date(ts).toLocaleString('pl-PL');
-      }
-    }
-    function getSystemTheme(){
-      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    function applyTheme(){
-      htmlEl.setAttribute('data-theme', theme === 'dark' ? 'dark' : 'light');
-      themeBtn.textContent = theme === 'dark' ? '☀️' : '🌙';
-      save(STORAGE_THEME, theme);
-    }
-    function applyHideDone(){
-      hideDoneInput.checked = !!hideDone;
-      htmlEl.setAttribute('data-hide-done', hideDone ? '1' : '0');
-      save(STORAGE_HIDE, hideDone);
-    }
-    function setActiveTab(tab){
-      activeTab = tab;
-      const isList = tab === 'list';
-      tabListBtn.setAttribute('aria-selected', isList ? 'true' : 'false');
-      tabHistoryBtn.setAttribute('aria-selected', !isList ? 'true' : 'false');
-      panelList.setAttribute('aria-hidden', isList ? 'false' : 'true');
-      panelHistory.setAttribute('aria-hidden', !isList ? 'false' : 'true');
-      save(STORAGE_TAB, activeTab);
-      if(isList) renderList(); else renderHistory();
-    }
-    function norm(s){ return String(s||'').trim().toLowerCase(); }
+    function fmtDate(ts){ try{ return new Intl.DateTimeFormat('pl-PL',{dateStyle:'medium', timeStyle:'short'}).format(new Date(ts)) }catch(e){ return new Date(ts).toLocaleString('pl-PL') } }
+    function getSystemTheme(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light' }
+    function showToast(msg){ toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(showToast._t); showToast._t = setTimeout(()=> toastEl.classList.remove('show'), 1800) }
+    function norm(s){ return String(s||'').trim().toLowerCase() }
+    function readJSONSafe(key){ try{ const raw = localStorage.getItem(key); return raw? JSON.parse(raw): null }catch(e){ localStorage.setItem(key+'.backup', localStorage.getItem(key)||''); return null } }
 
-    // ————— Render listy —————
+    // App load/save
+    function defaultApp(){ const id = uid(); return { activeListId:id, lists:[{id, name:'Lista', items:[], history:[], color:'#10b981'}], saved:[] } }
+    function repairApp(a){
+      if(!a || typeof a!=='object') return defaultApp();
+      if(!Array.isArray(a.lists) || a.lists.length===0) a.lists=[{ id:uid(), name:'Lista', items:[], history:[], color:'#10b981' }];
+      a.lists = a.lists.map(l=>({
+        id: l.id||uid(),
+        name: String(l.name||'Lista'),
+        color: (typeof l.color==='string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(l.color)) ? l.color : '#10b981',
+        items: Array.isArray(l.items)? l.items.map(it=>({ id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now() })) : [],
+        history: Array.isArray(l.history)? l.history.map(h=>({ id:h?.id||uid(), text:String(h?.text||''), lastAt:h?.lastAt||h?.lastBoughtAt||Date.now(), count:h?.count||1, fromListId:l.id })) : []
+      }));
+      if(!Array.isArray(a.saved)) a.saved = [];
+      a.saved = a.saved.map(s=>({
+        id: s?.id||uid(),
+        name: String(s?.name||'Lista'),
+        items: Array.isArray(s?.items)? s.items.map(it=>({ id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now() })) : [],
+        createdAt: s?.createdAt||Date.now(),
+        fromListId: s?.fromListId || a.lists[0].id,
+        color: (typeof s?.color==='string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(s.color)) ? s.color : null
+      }));
+      if(!a.activeListId || !a.lists.find(x=>x.id===a.activeListId)) a.activeListId = a.lists[0].id;
+      return a;
+    }
+    function loadApp(){
+      const parsed = readJSONSafe(STORAGE_APP);
+      if(parsed) return repairApp(parsed);
+      const app0 = defaultApp();
+      localStorage.setItem(STORAGE_APP, JSON.stringify(app0));
+      return app0;
+    }
+    function saveApp(){ localStorage.setItem(STORAGE_APP, JSON.stringify(app)) }
+    function getList(){ return app.lists.find(l=>l.id===app.activeListId) || app.lists[0] }
+    function syncItems(){ items = (getList().items||[]); return items }
+
+    // Settings
+    function loadSettings(){
+      const s = load(STORAGE_SETTINGS, null);
+      const def = { defaultHideDone:false, density:'normal', themeMode:'system', print:{ includeDone:true, showTitle:true, showDate:true }, copy:{ includeDone:true } };
+      if(!s) return def;
+      return {
+        defaultHideDone: !!s.defaultHideDone,
+        density: s.density==='compact'?'compact':'normal',
+        themeMode: ['system','light','dark'].includes(s.themeMode)? s.themeMode : 'system',
+        print:{
+          includeDone: s.print?.includeDone!==false,
+          showTitle: s.print?.showTitle!==false,
+          showDate: s.print?.showDate!==false
+        },
+        copy:{ includeDone: s.copy?.includeDone!==false }
+      };
+    }
+    function applySettings(){
+      htmlEl.setAttribute('data-density', settings.density==='compact'?'compact':'normal');
+      let t = settings.themeMode==='system'? getSystemTheme(): settings.themeMode;
+      htmlEl.setAttribute('data-theme', t==='dark'?'dark':'light');
+      themeBtn.textContent = (t==='dark')?'☀️':'🌙';
+      if(localStorage.getItem(STORAGE_HIDE)===null){
+        hideDone = !!settings.defaultHideDone; applyHideDone();
+      }
+      save(STORAGE_SETTINGS, settings);
+    }
+
+    // UI apply
+    function applyThemeExplicit(mode){ htmlEl.setAttribute('data-theme', mode==='dark'?'dark':'light'); themeBtn.textContent = mode==='dark'?'☀️':'🌙'; save(STORAGE_THEME, mode) }
+    function applyHideDone(){ hideDoneInput.checked = !!hideDone; htmlEl.setAttribute('data-hide-done', hideDone?'1':'0'); save(STORAGE_HIDE, hideDone) }
+    function applyHints(){ optHints.checked = !!showHints; htmlEl.setAttribute('data-hints', showHints?'1':'0'); save(STORAGE_HINTS, showHints) }
+    function setActiveTab(tab){
+      activeTab = tab; save(STORAGE_TAB, activeTab);
+      const sel = (id, on)=> document.getElementById(id).setAttribute('aria-selected', on?'true':'false');
+      const vis = (el,on)=> el.setAttribute('aria-hidden', on?'false':'true');
+      sel('tab-list', tab==='list'); sel('tab-history', tab==='history'); sel('tab-saved', tab==='saved');
+      vis(panelList, tab==='list'); vis(panelHistory, tab==='history'); vis(panelSaved, tab==='saved');
+      if(tab==='list') renderList(); else if(tab==='history') renderHistory(); else renderSaved();
+    }
+    function uniqueListName(base){
+      const names = new Set(app.lists.map(l=> l.name.trim().toLowerCase()));
+      if(!names.has((base||'').trim().toLowerCase())) return base||'Lista';
+      let i=1;
+      while(names.has((base+' ('+i+')').toLowerCase())) i++;
+      return base+' ('+i+')';
+    }
+    function refreshTitleUI(){
+      const l=getList();
+      titleEl.textContent = l.name || 'Lista';
+      document.title = l.name || 'Lista';
+      listSwitch.innerHTML='';
+      app.lists.forEach(li=>{
+        const o=document.createElement('option');
+        o.value=li.id; o.textContent=li.name||'Lista';
+        if(li.id===app.activeListId) o.selected=true;
+        listSwitch.appendChild(o);
+      });
+      // kolor
+      listColor.value = l.color || '#10b981';
+      chipDot.style.background = l.color || '#10b981';
+      chipName.textContent = l.name || 'Lista';
+      applyListColor();
+    }
+    function applyListColor(){
+      const c = getList().color || '#10b981';
+      htmlEl.style.setProperty('--accent', c);
+    }
+
+    // Render list
     function renderList(){
-      listEl.innerHTML = '';
-      items.forEach(renderListItem);
-      emptyEl.hidden = items.length !== 0;
+      const arr=syncItems();
+      listEl.innerHTML='';
+      arr.forEach(renderListItem);
+      emptyEl.hidden = arr.length!==0;
     }
     function renderListItem(item){
-      const li = document.createElement('li');
-      li.className = 'item' + (item.done ? ' done' : '');
-      li.dataset.id = item.id;
-      li.innerHTML = `
-        <span class="drag-handle" role="button" aria-label="Przeciągnij, aby zmienić kolejność" title="Przeciągnij">
+      const li=document.createElement('li');
+      li.className='item'+(item.done?' done':'');
+      li.dataset.id=item.id;
+      li.innerHTML=`
+        <span class="drag-handle" role="button" aria-label="Przeciągnij" title="Przeciągnij">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <circle cx="7" cy="6" r="1.6"/><circle cx="12" cy="6" r="1.6"/><circle cx="17" cy="6" r="1.6"/>
             <circle cx="7" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="17" cy="12" r="1.6"/>
             <circle cx="7" cy="18" r="1.6"/><circle cx="12" cy="18" r="1.6"/><circle cx="17" cy="18" r="1.6"/>
           </svg>
         </span>
-        <input class="check" type="checkbox" ${item.done ? 'checked' : ''} aria-label="Zaznacz jako kupione">
+        <input class="check" type="checkbox" ${item.done?'checked':''} aria-label="Oznacz jako zrobione">
         <div class="text" spellcheck="false" title="Kliknij dwa razy, aby edytować">${esc(item.text)}</div>
-        <button class="delete" aria-label="Usuń pozycję" title="Usuń">
+        <button type="button" class="delete" aria-label="Usuń pozycję" title="Usuń">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
             <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4v0h-4ZM7 7h10v12H7V7Zm3 3v6h2v-6h-2Z"/>
           </svg>
-        </button>
-      `;
+        </button>`;
       listEl.appendChild(li);
     }
 
-    // ————— Render historii —————
+    // Render historii
+    function getHistoryData(){
+      if(histScope==='current'){ const l=getList(); return (l.history||[]).map(h=>({...h,__listId:l.id,__listName:l.name||'Lista', __color:l.color})) }
+      const out=[]; app.lists.forEach(l=> (l.history||[]).forEach(h=> out.push({...h,__listId:l.id,__listName:l.name||'Lista', __color:l.color}))); return out;
+    }
     function renderHistory(){
-      historyEl.innerHTML = '';
-      const sorted = [...history].sort((a,b)=> (b.lastBoughtAt||0) - (a.lastBoughtAt||0));
-      if(sorted.length === 0){
-        historyEmptyEl.hidden = false;
-        return;
-      }
-      historyEmptyEl.hidden = true;
-      sorted.forEach(item=>{
-        const li = document.createElement('li');
-        li.className = 'item history';
-        li.dataset.id = item.id;
-        li.innerHTML = `
-          <div style="display:flex; flex-direction:column; gap:4px">
-            <div class="text" spellcheck="false" title="Kliknij dwa razy, aby edytować">${esc(item.text)}</div>
-            <div class="meta">
-              <span class="subtext">Ostatnio: ${item.lastBoughtAt ? esc(fmtDate(item.lastBoughtAt)) : '—'}</span>
-              <span class="chip" title="Ile razy było kupione">× ${item.count || 1}</span>
+      historyEl.innerHTML='';
+      const data=getHistoryData().sort((a,b)=>(b.lastAt||0)-(a.lastAt||0));
+      if(data.length===0){ historyEmptyEl.hidden=false; return }
+      historyEmptyEl.hidden=true;
+      data.forEach(h=>{
+        const li=document.createElement('li');
+        li.className='item history';
+        li.dataset.id=h.id; li.dataset.listId=h.__listId;
+        const colorDot = `<span class="dot-s" style="background:${h.__color||'#10b981'}"></span>`;
+        li.innerHTML=`
+          <div class="h-body">
+            <div class="text" spellcheck="false" title="Kliknij dwa razy, aby edytować">${esc(h.text)}</div>
+            <div class="h-meta">
+              <span class="subtext">Ostatnio: ${h.lastAt?esc(fmtDate(h.lastAt)):'—'}</span>
+              <span class="chip-mini" title="Z której listy">${colorDot} ${esc(h.__listName)}</span>
+              <span class="chip-mini" title="Ile razy usunięto">× ${h.count||1}</span>
             </div>
           </div>
-          <button class="add-back" aria-label="Dodaj do listy" title="Dodaj do listy">
+          <button type="button" class="add-back" aria-label="Dodaj do bieżącej listy" title="Dodaj do bieżącej listy">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M11 4h2v6h6v2h-6v6h-2v-6H5v-2h6z"/></svg>
           </button>
-          <button class="delete" aria-label="Usuń z historii" title="Usuń z historii">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-              <path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4v0h-4ZM7 7h10v12H7V7Zm3 3v6h2v-6h-2Z"/>
-            </svg>
-          </button>
-        `;
+          <button type="button" class="delete" aria-label="Usuń z historii" title="Usuń z historii">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M9 3h6a1 1 0 0 1 1 1v1h4v2h-1v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V7H4V5h4V4a1 1 0 0 1 1-1Zm1 2v0h4v0h-4ZM7 7h10v12H7V7Zm3 3v6h2v-6h-2Z"/></svg>
+          </button>`;
         historyEl.appendChild(li);
       });
     }
 
-    // ————— Inicjalizacja UI —————
-    function initUI(){
-      // Motyw
-      applyTheme();
-      themeBtn.addEventListener('click', ()=>{
-        theme = theme === 'dark' ? 'light' : 'dark';
-        applyTheme();
+    // Render zapisanych (z podglądem)
+    function renderSaved(){
+      savedWrap.innerHTML='';
+      const data = (app.saved||[]).slice().sort((a,b)=> b.createdAt - a.createdAt);
+      if(data.length===0){ savedEmptyEl.hidden=false; return }
+      savedEmptyEl.hidden=true;
+      data.forEach(s=>{
+        const el = document.createElement('div');
+        el.className='saved-card';
+        el.dataset.id = s.id;
+        const count = (s.items||[]).length;
+        const previewCount = Math.min(8, count);
+        const more = count - previewCount;
+        const preview = (s.items||[]).slice(0, previewCount).map(it=>{
+          return `<li class="${it.done?'done':''}">${esc(it.text)}</li>`;
+        }).join('');
+        const colorDot = `<span class="dot-s" style="background:${s.color||'#10b981'}"></span>`;
+        el.innerHTML = `
+          <div class="saved-head">
+            <strong>${esc(s.name||'Lista')}</strong>
+            <div class="subtext">Zapisano: ${esc(fmtDate(s.createdAt))} • Elementów: ${count}</div>
+          </div>
+          <div class="saved-actions">
+            <button type="button" class="btn-blue restore-add" title="Dodaj do bieżącej">➕</button>
+          </div>
+          <div class="saved-actions">
+            <button type="button" class="btn-green restore-replace" title="Zastąp bieżącą">♻️</button>
+          </div>
+          <div class="saved-actions">
+            <button type="button" class="btn-gray restore-new" title="Utwórz nową listę z zapisu">🆕</button>
+          </div>
+          <div class="saved-actions">
+            <button type="button" class="btn-red saved-delete" title="Usuń z zapisanych">🗑️</button>
+          </div>
+          <div class="saved-preview">
+            <span class="chip-mini" title="Nazwa i kolor">${colorDot} ${esc(s.name||'Lista')}</span>
+            <ul>${preview}${more>0? `<li>… +${more} więcej</li>`:''}</ul>
+          </div>
+        `;
+        savedWrap.appendChild(el);
       });
-
-      // Filtr
-      hideDoneInput.checked = !!hideDone;
-      applyHideDone();
-      hideDoneInput.addEventListener('change', ()=>{
-        hideDone = hideDoneInput.checked;
-        applyHideDone();
-      });
-
-      // Zakładki
-      tabListBtn.addEventListener('click', ()=> setActiveTab('list'));
-      tabHistoryBtn.addEventListener('click', ()=> setActiveTab('history'));
-      setActiveTab(activeTab);
-
-      renderList();
-      renderHistory();
     }
 
-    // ————— Dodawanie —————
-    formEl.addEventListener('submit', (e)=>{
+    // History push
+    function pushToHistory(listId, text){
+      const l=app.lists.find(x=>x.id===listId); if(!l) return;
+      if(!Array.isArray(l.history)) l.history=[];
+      const n=norm(text);
+      let ex=l.history.find(h=>norm(h.text)===n);
+      if(ex){ ex.lastAt=Date.now(); ex.count=(ex.count||1)+1 }
+      else { l.history.push({ id:uid(), text, lastAt:Date.now(), count:1, fromListId:listId }) }
+    }
+
+    // Add item
+    formEl.addEventListener('submit',(e)=>{
       e.preventDefault();
-      const text = (inputEl.value || '').trim().replace(/\s+/g,' ');
+      const text=(inputEl.value||'').trim().replace(/\s+/g,' ');
       if(!text) return;
-      // dodaj na górę listy (wśród niekupionych)
-      const newItem = { id: uid(), text, done:false, createdAt: Date.now() };
-      const split = items.filter(i=>!i.done);
-      const dones = items.filter(i=>i.done);
-      items = [newItem, ...split, ...dones];
-      save(STORAGE_ITEMS, items);
-      inputEl.value = '';
-      renderList();
+      const base=syncItems();
+      const newItem={ id:uid(), text, done:false, createdAt:Date.now() };
+      const act=base.filter(i=>!i.done), done=base.filter(i=>i.done);
+      getList().items=[newItem, ...act, ...done]; syncItems(); saveApp();
+      inputEl.value=''; renderList();
     });
 
-    // ————— Zmiana checkboxa (auto-przenoszenie między grupami) —————
-    listEl.addEventListener('change', (e)=>{
+    // Toggle done
+    listEl.addEventListener('change',(e)=>{
       if(!e.target.classList.contains('check')) return;
-      const li = e.target.closest('.item');
-      const id = li.dataset.id;
-      const idx = items.findIndex(i => i.id === id);
-      if(idx === -1) return;
-      const item = items[idx];
-      item.done = e.target.checked;
-
-      // Usuń z obecnej pozycji
-      items.splice(idx, 1);
-
-      if(item.done){
-        // Kupione → na koniec (grupa kupionych na dole)
-        const dones = items.filter(i=>i.done);
-        const actives = items.filter(i=>!i.done);
-        items = [...actives, ...dones, item];
-      }else{
-        // Odznaczone → na górę (wśród niekupionych)
-        const actives = items.filter(i=>!i.done);
-        const dones = items.filter(i=>i.done);
-        items = [item, ...actives, ...dones];
-      }
-      save(STORAGE_ITEMS, items);
-      renderList();
+      const arr=syncItems();
+      const li=e.target.closest('.item'); const id=li.dataset.id;
+      const idx=arr.findIndex(i=>i.id===id); if(idx===-1) return;
+      const item=arr[idx]; item.done=e.target.checked;
+      arr.splice(idx,1);
+      const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done);
+      getList().items = item.done ? [...act, ...done, item] : [item, ...act, ...done];
+      syncItems(); saveApp(); renderList();
     });
 
-    // ————— Usuwanie z listy (archiwizacja kupionych do Historii) —————
-    listEl.addEventListener('click', (e)=>{
-      const delBtn = e.target.closest('.delete');
-      if(!delBtn) return;
-      const li = delBtn.closest('.item');
-      const id = li.dataset.id;
-      const idx = items.findIndex(i=>i.id===id);
-      if(idx === -1) return;
-      const item = items[idx];
+    // Delete
+    listEl.addEventListener('click',(e)=>{
+      const delBtn=e.target.closest('.delete'); if(!delBtn) return;
+      const arr=syncItems();
+      const id=delBtn.closest('.item').dataset.id;
+      const idx=arr.findIndex(i=>i.id===id); if(idx===-1) return;
+      const it=arr[idx]; arr.splice(idx,1);
+      const l=getList(); l.items=arr; pushToHistory(l.id, it.text); saveApp();
+      renderList(); if(activeTab==='history') renderHistory();
+    });
 
-      items.splice(idx,1);
-      save(STORAGE_ITEMS, items);
-      renderList();
-
-      // Jeśli był kupiony → do historii (zliczaj wystąpienia po tekście)
-      if(item && item.done){
-        const normalized = norm(item.text);
-        let existing = history.find(h => norm(h.text) === normalized);
-        if(existing){
-          existing.lastBoughtAt = Date.now();
-          existing.count = (existing.count || 1) + 1;
-        }else{
-          history.push({ id: uid(), text: item.text, lastBoughtAt: Date.now(), count: 1 });
-        }
-        save(STORAGE_HISTORY, history);
-        if(activeTab === 'history') renderHistory();
+    // Edit item text
+    listEl.addEventListener('dblclick',(e)=>{
+      const t=e.target; if(!t.classList.contains('text')) return;
+      t.dataset.orig=t.textContent;
+      t.setAttribute('contenteditable','true'); placeCaretAtEnd(t); t.focus();
+    });
+    listEl.addEventListener('keydown',(e)=>{
+      const t=e.target;
+      if(t.classList.contains('text') && t.isContentEditable){
+        if(e.key==='Enter'){ e.preventDefault(); t.blur() }
+        if(e.key==='Escape'){ t.textContent=t.dataset.orig||t.textContent; t.blur() }
       }
     });
-
-    // ————— Edycja w liście —————
-    listEl.addEventListener('dblclick', (e)=>{
-      const t = e.target;
-      if(!t.classList.contains('text')) return;
-      t.setAttribute('contenteditable','true');
-      placeCaretAtEnd(t);
-      t.focus();
-    });
-    listEl.addEventListener('keydown', (e)=>{
-      const t = e.target;
-      if(t.classList.contains('text') && t.isContentEditable && e.key === 'Enter'){
-        e.preventDefault(); t.blur();
-      }
-    });
-    listEl.addEventListener('blur', (e)=>{
-      const t = e.target;
+    listEl.addEventListener('focusout',(e)=>{
+      const t=e.target;
       if(!(t.classList && t.classList.contains('text') && t.isContentEditable)) return;
-      const li = t.closest('.item');
-      const id = li.dataset.id;
-      const item = items.find(i => i.id === id);
-      if(!item) return;
-      const newText = t.textContent.trim().replace(/\s+/g,' ');
-      if(!newText){ t.textContent = item.text; }
-      else { item.text = newText; }
-      t.removeAttribute('contenteditable');
-      save(STORAGE_ITEMS, items);
-    }, true);
+      const arr=syncItems();
+      const id=t.closest('.item').dataset.id;
+      const it=arr.find(i=>i.id===id); if(!it) return;
+      const newText=t.textContent.trim().replace(/\s+/g,' ');
+      if(newText) it.text=newText; else t.textContent=it.text;
+      t.removeAttribute('contenteditable'); delete t.dataset.orig;
+      getList().items=arr; saveApp();
+    });
 
-    // ————— Historia: usuwanie i edycja —————
-    historyEl.addEventListener('click', (e)=>{
-      // usuń z historii
-      const delBtn = e.target.closest('.delete');
+    // Historia actions
+    historyEl.addEventListener('click',(e)=>{
+      const delBtn=e.target.closest('.delete');
+      const addBtn=e.target.closest('.add-back');
       if(delBtn){
-        const li = delBtn.closest('.item');
-        const id = li.dataset.id;
-        history = history.filter(h => h.id !== id);
-        save(STORAGE_HISTORY, history);
-        renderHistory();
+        const li=delBtn.closest('.item'); const entryId=li.dataset.id; const listId=li.dataset.listId;
+        const l=app.lists.find(x=>x.id===listId); if(!l) return;
+        l.history=(l.history||[]).filter(h=>h.id!==entryId); saveApp(); renderHistory(); return;
+      }
+      if(addBtn){
+        const li=addBtn.closest('.item'); const entryId=li.dataset.id; const listId=li.dataset.listId;
+        const src=app.lists.find(x=>x.id===listId); const hItem=(src?.history||[]).find(h=>h.id===entryId); if(!hItem) return;
+        const cur=getList(); const arr=cur.items||[];
+        const exIdx=arr.findIndex(i=> norm(i.text)===norm(hItem.text));
+        if(exIdx!==-1){ const it=arr.splice(exIdx,1)[0]; it.done=false; const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done); cur.items=[it, ...act, ...done] }
+        else { const ni={ id:uid(), text:hItem.text, done:false, createdAt:Date.now() }; const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done); cur.items=[ni, ...act, ...done] }
+        syncItems(); saveApp(); setActiveTab('list'); renderList(); showToast('Dodano z historii');
+      }
+    });
+    historyEl.addEventListener('dblclick',(e)=>{
+      const t=e.target; if(!t.classList.contains('text')) return;
+      t.dataset.orig=t.textContent; t.setAttribute('contenteditable','true'); placeCaretAtEnd(t); t.focus();
+    });
+    historyEl.addEventListener('keydown',(e)=>{
+      const t=e.target; if(t.classList.contains('text') && t.isContentEditable){
+        if(e.key==='Enter'){ e.preventDefault(); t.blur() }
+        if(e.key==='Escape'){ t.textContent=t.dataset.orig||t.textContent; t.blur() }
+      }
+    });
+    historyEl.addEventListener('focusout',(e)=>{
+      const t=e.target;
+      if(!(t.classList && t.classList.contains('text') && t.isContentEditable)) return;
+      const li=t.closest('.item'); const entryId=li.dataset.id; const listId=li.dataset.listId;
+      const l=app.lists.find(x=>x.id===listId); if(!l) return;
+      const it=(l.history||[]).find(h=>h.id===entryId);
+      const newText=t.textContent.trim().replace(/\s+/g,' ');
+      if(it && newText){ it.text=newText; saveApp() }
+      t.removeAttribute('contenteditable'); delete t.dataset.orig;
+    });
+
+    // Saved actions (fixed + nowa lista)
+    saveListBtn.addEventListener('click', ()=>{
+      const l=getList();
+      const snapshot = { id:uid(), name:l.name||'Lista', items: JSON.parse(JSON.stringify(l.items||[])), createdAt: Date.now(), fromListId:l.id, color:l.color };
+      app.saved = app.saved || [];
+      app.saved.push(snapshot);
+      saveApp();
+      showToast('Zapisano migawkę listy');
+      if(activeTab==='saved') renderSaved();
+    });
+    savedWrap.addEventListener('click', (e)=>{
+      const card = e.target.closest('.saved-card'); if(!card) return;
+      const id = card.dataset.id;
+      const s = (app.saved||[]).find(x=>x.id===id);
+      if(!s) return;
+
+      // Usuń z zapisanych
+      if(e.target.closest('.saved-delete')){
+        app.saved = app.saved.filter(x=>x.id!==id); saveApp(); renderSaved(); return;
+      }
+
+      // Dodaj do bieżącej (merge)
+      if(e.target.closest('.restore-add')){
+        const cur=getList();
+        const arr=cur.items||[];
+        const exist = new Set(arr.map(i=> norm(i.text)));
+        const toAdd = (s.items||[]).reduce((acc, it)=>{
+          const txt = norm(it.text);
+          if(!txt || exist.has(txt)) return acc;
+          exist.add(txt);
+          acc.push({ id:uid(), text:it.text, done:false, createdAt: Date.now() });
+          return acc;
+        }, []);
+        const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done);
+        cur.items=[...toAdd, ...act, ...done];
+        syncItems(); saveApp(); setActiveTab('list'); renderList(); showToast('Dodano z zapisanych');
         return;
       }
-      // dodaj do listy
-      const addBtn = e.target.closest('.add-back');
-      if(addBtn){
-        const li = addBtn.closest('.item');
-        const id = li.dataset.id;
-        const hItem = history.find(h => h.id === id);
-        if(!hItem) return;
-        const existingIdx = items.findIndex(i => norm(i.text) === norm(hItem.text));
-        if(existingIdx !== -1){
-          // Przenieś istniejący na górę i odznacz
-          const it = items.splice(existingIdx,1)[0];
-          it.done = false;
-          const actives = items.filter(i=>!i.done);
-          const dones = items.filter(i=>i.done);
-          items = [it, ...actives, ...dones];
-        }else{
-          // Dodaj nowy na górę
-          const newItem = { id: uid(), text: hItem.text, done:false, createdAt: Date.now() };
-          const actives = items.filter(i=>!i.done);
-          const dones = items.filter(i=>i.done);
-          items = [newItem, ...actives, ...dones];
-        }
-        save(STORAGE_ITEMS, items);
-        setActiveTab('list');
-        renderList();
-      }
-    });
-    historyEl.addEventListener('dblclick', (e)=>{
-      const t = e.target;
-      if(!t.classList.contains('text')) return;
-      t.setAttribute('contenteditable','true');
-      placeCaretAtEnd(t);
-      t.focus();
-    });
-    historyEl.addEventListener('keydown', (e)=>{
-      const t = e.target;
-      if(t.classList.contains('text') && t.isContentEditable && e.key === 'Enter'){
-        e.preventDefault(); t.blur();
-      }
-    });
-    historyEl.addEventListener('blur', (e)=>{
-      const t = e.target;
-      if(!(t.classList && t.classList.contains('text') && t.isContentEditable)) return;
-      const li = t.closest('.item');
-      const id = li.dataset.id;
-      const item = history.find(h => h.id === id);
-      if(item){
-        const newText = t.textContent.trim().replace(/\s+/g,' ');
-        if(newText){ item.text = newText; }
-        t.removeAttribute('contenteditable');
-        save(STORAGE_HISTORY, history);
-      }
-    }, true);
 
-    function placeCaretAtEnd(el){
-      const range = document.createRange();
-      range.selectNodeContents(el); range.collapse(false);
-      const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+      // Zastąp bieżącą
+      if(e.target.closest('.restore-replace')){
+        if(!confirm('Zastąpić bieżącą listę tym zapisem?')) return;
+        const cur=getList();
+        cur.items = (s.items||[]).map(it=> ({ id:uid(), text:it.text, done:!!it.done, createdAt: Date.now() }));
+        syncItems(); saveApp(); setActiveTab('list'); renderList(); showToast('Przywrócono zapis (zastąpiono)');
+        return;
+      }
+
+      // Utwórz nową listę z zapisu (unikatowa nazwa + kolor)
+      if(e.target.closest('.restore-new')){
+        let base = s.name || 'Lista';
+        let name = uniqueListName(base);
+        const color = s.color || (app.lists.find(l=>l.id===s.fromListId)?.color) || '#10b981';
+        const idNew = uid();
+        app.lists.push({
+          id: idNew,
+          name,
+          color,
+          items: (s.items||[]).map(it=> ({ id:uid(), text:it.text, done:!!it.done, createdAt: Date.now() })),
+          history: []
+        });
+        app.activeListId = idNew; saveApp(); syncItems(); refreshTitleUI(); setActiveTab('list'); renderList();
+        showToast('Utworzono nową listę z zapisu');
+      }
+    });
+
+    // List switch + color + title edit
+    function refreshBars(){ refreshTitleUI(); renderList(); if(activeTab==='history') renderHistory(); if(activeTab==='saved') renderSaved(); }
+    listSwitch.addEventListener('change',()=>{ app.activeListId=listSwitch.value; saveApp(); syncItems(); refreshBars() });
+    listAddBtn.addEventListener('click',()=>{
+      let name = prompt('Nazwa nowej listy:','Nowa lista'); if(name==null) return;
+      name = uniqueListName((name||'').trim()||'Nowa lista');
+      const id=uid(); app.lists.push({ id, name, items:[], history:[], color:'#10b981' }); app.activeListId=id; saveApp(); syncItems(); refreshBars(); showToast('Utworzono nową listę');
+    });
+    listDelBtn.addEventListener('click',()=>{
+      if(app.lists.length<=1){ showToast('Musi pozostać co najmniej 1 lista'); return }
+      const l=getList(); if(!confirm(`Usunąć listę „${l.name}”?`)) return;
+      app.lists=app.lists.filter(x=>x.id!==l.id); app.activeListId=app.lists[0].id; saveApp(); syncItems(); refreshBars(); showToast('Usunięto listę');
+    });
+    listColor.addEventListener('input', ()=>{
+      const l = getList();
+      l.color = listColor.value;
+      chipDot.style.background = l.color;
+      saveApp();
+      applyListColor();
+    });
+
+    // Title edit (dblclick)
+    titleEl.addEventListener('dblclick',()=>{
+      titleEl.dataset.orig=titleEl.textContent; titleEl.setAttribute('contenteditable','true'); placeCaretAtEnd(titleEl); titleEl.focus();
+    });
+    titleEl.addEventListener('keydown',(e)=>{
+      if(!titleEl.isContentEditable) return;
+      if(e.key==='Enter'){ e.preventDefault(); titleEl.blur() }
+      if(e.key==='Escape'){ titleEl.textContent=titleEl.dataset.orig||titleEl.textContent; titleEl.blur() }
+    });
+    titleEl.addEventListener('focusout',()=>{
+      if(!titleEl.isContentEditable) return;
+      let name=(titleEl.textContent||'').trim();
+      if(!name) name = titleEl.dataset.orig || 'Lista';
+      getList().name=name; saveApp(); refreshTitleUI();
+      titleEl.removeAttribute('contenteditable'); delete titleEl.dataset.orig;
+    });
+
+    // Options / settings / reset
+    function wireOptions(){
+      applyHints();
+      applyHideDone();
+      applySettings();
+
+      themeBtn.addEventListener('click', ()=>{
+        const now = htmlEl.getAttribute('data-theme')==='dark'?'dark':'light';
+        const next = now==='dark'?'light':'dark';
+        applyThemeExplicit(next);
+        settings.themeMode = next;
+        save(STORAGE_SETTINGS, settings);
+      });
+
+      optHints.addEventListener('change', ()=>{ showHints=optHints.checked; applyHints() });
+      hideDoneInput.addEventListener('change', ()=>{ hideDone=hideDoneInput.checked; applyHideDone() });
+
+      optBtn.addEventListener('click',(e)=>{
+        e.stopPropagation();
+        const open=optMenu.getAttribute('aria-hidden')==='false';
+        optMenu.setAttribute('aria-hidden', open?'true':'false');
+        optBtn.setAttribute('aria-expanded', open?'false':'true');
+      });
+      document.addEventListener('click',(e)=>{
+        if(!optMenu.contains(e.target) && e.target!==optBtn){
+          optMenu.setAttribute('aria-hidden','true'); optBtn.setAttribute('aria-expanded','false');
+        }
+      });
+      document.addEventListener('keydown',(e)=>{
+        if(e.key==='Escape'){ optMenu.setAttribute('aria-hidden','true'); optBtn.setAttribute('aria-expanded','false') }
+      });
+
+      // Settings modal
+      function openSettings(){
+        setDefaultHide.checked = !!settings.defaultHideDone;
+        setDensity.value = settings.density||'normal';
+        setThemeMode.value = settings.themeMode||'system';
+        setPrintDone.checked = !!settings.print.includeDone;
+        setPrintTitle.checked = !!settings.print.showTitle;
+        setPrintDate.checked = !!settings.print.showDate;
+        setCopyDone.checked = !!settings.copy.includeDone;
+        settingsModal.setAttribute('aria-hidden','false');
+      }
+      function closeSettings(){ settingsModal.setAttribute('aria-hidden','true') }
+
+      openSettingsBtn.addEventListener('click', ()=>{ openSettings(); optMenu.setAttribute('aria-hidden','true'); });
+      settingsCancel.addEventListener('click', closeSettings);
+      settingsSave.addEventListener('click', ()=>{
+        settings.defaultHideDone = setDefaultHide.checked;
+        settings.density = setDensity.value==='compact'?'compact':'normal';
+        settings.themeMode = setThemeMode.value;
+        settings.print.includeDone = !!setPrintDone.checked;
+        settings.print.showTitle = !!setPrintTitle.checked;
+        settings.print.showDate = !!setPrintDate.checked;
+        settings.copy.includeDone = !!setCopyDone.checked;
+        applySettings();
+        closeSettings();
+        showToast('Zapisano ustawienia');
+      });
+
+      // Reset
+      optReset.addEventListener('click', ()=>{
+        if(!confirm('Zresetować dane tej aplikacji (listy, zapisane, ustawienia)?')) return;
+        const keys=[STORAGE_APP, STORAGE_THEME, STORAGE_HIDE, STORAGE_TAB, STORAGE_HINTS, STORAGE_HIST_SCOPE, STORAGE_SETTINGS, STORAGE_APP+'.backup'];
+        keys.forEach(k=> localStorage.removeItem(k));
+        location.reload();
+      });
+      // Twardy reset
+      optHardReset.addEventListener('click', ()=>{
+        if(!confirm('Twardy reset usunie cały localStorage tej strony (wszystkie dane). Kontynuować?')) return;
+        try{ localStorage.clear() }catch(_){}
+        location.reload();
+      });
     }
 
-    // ————— Drag & drop (z automatycznym loaderem Sortable + fallback) —————
-    const SORTABLE_URLS = [
+    // Copy modal (multi-list) – z kropeczkami kolorów
+    function openCopyModal(){
+      copyChecks.innerHTML='';
+      app.lists.forEach(l=>{
+        const id='cpy-'+l.id;
+        const dot = `<span class="dot-s" style="background:${l.color||'#10b981'}"></span>`;
+        const label=document.createElement('label');
+        label.innerHTML=`<input type="checkbox" id="${id}" data-id="${l.id}" ${l.id===app.activeListId?'checked':''}> ${dot} <span>${esc(l.name||'Lista')}</span>`;
+        copyChecks.appendChild(label);
+      });
+      copyIncludeDone.checked = !!settings.copy.includeDone;
+      copyModal.setAttribute('aria-hidden','false');
+    }
+    function closeCopyModal(){ copyModal.setAttribute('aria-hidden','true') }
+    copyBtn.addEventListener('click', openCopyModal);
+    copyCancel.addEventListener('click', closeCopyModal);
+    copySelectAll.addEventListener('click',()=>{ copyChecks.querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=true) });
+    copySelectNone.addEventListener('click',()=>{ copyChecks.querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=false) });
+    copyGo.addEventListener('click', async ()=>{
+      const ids=Array.from(copyChecks.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.dataset.id);
+      if(ids.length===0){ showToast('Nie wybrano żadnej listy'); return }
+      const text = buildCopyText(ids, copyIncludeDone.checked);
+      try{
+        if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text) }
+        else { const ta=document.createElement('textarea'); ta.value=text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta) }
+        showToast('Skopiowano do schowka');
+      }catch(e){ showToast('Nie udało się skopiować') }
+      closeCopyModal();
+    });
+    function buildCopyText(listIds, includeDone){
+      const now = fmtDate(Date.now());
+      const parts = [`Zestawienie list • ${now}`, ''];
+      listIds.forEach(id=>{
+        const l=app.lists.find(x=>x.id===id); if(!l) return;
+        parts.push(`${l.name||'Lista'}`);
+        const lines = (l.items||[]).filter(it=> includeDone || !it.done)
+          .map(it=>`- [${it.done?'x':' '}] ${it.text}`);
+        parts.push(...lines, '');
+      });
+      return parts.join('\n').replace(/\n{3,}/g,'\n\n');
+    }
+
+    // Print modal – z kropeczkami kolorów
+    function openPrintModal(){
+      printChecks.innerHTML='';
+      app.lists.forEach(l=>{
+        const id='prn-'+l.id;
+        const dot = `<span class="dot-s" style="background:${l.color||'#10b981'}"></span>`;
+        const label=document.createElement('label');
+        label.innerHTML=`<input type="checkbox" id="${id}" data-id="${l.id}" ${l.id===app.activeListId?'checked':''}> ${dot} <span>${esc(l.name||'Lista')}</span>`;
+        printChecks.appendChild(label);
+      });
+      printIncludeDone.checked = !!settings.print.includeDone;
+      printShowTitle.checked = !!settings.print.showTitle;
+      printShowDate.checked = !!settings.print.showDate;
+      printModal.setAttribute('aria-hidden','false');
+    }
+    function closePrintModal(){ printModal.setAttribute('aria-hidden','true') }
+    printBtn.addEventListener('click', openPrintModal);
+    printCancel.addEventListener('click', closePrintModal);
+    printSelectAll.addEventListener('click',()=>{ printChecks.querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=true) });
+    printSelectNone.addEventListener('click',()=>{ printChecks.querySelectorAll('input[type=checkbox]').forEach(c=> c.checked=false) });
+    printGo.addEventListener('click', ()=>{
+      const ids=Array.from(printChecks.querySelectorAll('input[type=checkbox]:checked')).map(i=>i.dataset.id);
+      if(ids.length===0){ showToast('Nie wybrano żadnej listy'); return }
+      buildPrint(ids, printIncludeDone.checked, printShowTitle.checked, printShowDate.checked);
+      closePrintModal();
+      requestAnimationFrame(()=> setTimeout(()=> window.print?.(), 0));
+    });
+
+    function buildPrint(listIds, includeDone, showTitle, showDate){
+      printContainer.innerHTML='';
+      const now=fmtDate(Date.now());
+      listIds.forEach(id=>{
+        const l=app.lists.find(x=>x.id===id); if(!l) return;
+        const ul=document.createElement('ul'); ul.className='prn-ul';
+        (l.items||[]).forEach(it=>{
+          if(!includeDone && it.done) return;
+          const li=document.createElement('li');
+          li.className='prn-li'+(it.done?' done':'');
+          li.textContent=it.text||'';
+          ul.appendChild(li);
+        });
+        const sec=document.createElement('section');
+        sec.className='prn-list prn-wrap';
+        const head = document.createElement('div');
+        head.className = 'prn-head' + (!showTitle && !showDate ? ' hidden' : '');
+        head.innerHTML = `
+          <div class="prn-title">${showTitle? esc(l.name||'Lista') : ''}</div>
+          <div class="prn-meta">${showDate? ('Data: '+esc(now)) : ''}</div>
+        `;
+        sec.appendChild(head);
+        sec.appendChild(ul);
+        printContainer.appendChild(sec);
+      });
+    }
+
+    // Caret helper
+    function placeCaretAtEnd(el){
+      const range=document.createRange(); range.selectNodeContents(el); range.collapse(false);
+      const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+    }
+
+    // Drag & drop
+    const SORTABLE_URLS=[
       'https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js',
       'https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js',
       'https://unpkg.com/sortablejs@1.15.2/Sortable.min.js'
     ];
-    function loadScript(src){
-      return new Promise((resolve, reject)=>{
-        const s = document.createElement('script');
-        s.src = src; s.async = true;
-        s.onload = ()=>resolve(true);
-        s.onerror = ()=>reject(new Error('load fail '+src));
-        document.head.appendChild(s);
-      });
-    }
-    async function ensureSortable(){
-      if(window.Sortable) return true;
-      for(const url of SORTABLE_URLS){
-        try{
-          await loadScript(url);
-          if(window.Sortable) return true;
-        }catch(e){}
-      }
-      return false;
-    }
+    function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.onload=()=>res(true); s.onerror=()=>rej(); document.head.appendChild(s) }) }
+    async function ensureSortable(){ if(window.Sortable) return true; for(const u of SORTABLE_URLS){ try{ await loadScript(u); if(window.Sortable) return true }catch(e){} } return false }
     function applyDOMOrderToActive(){
-      // Reorder tylko wśród niekupionych wg DOM; kupione zostają na dole
-      const order = Array.from(listEl.children).map(li => li.dataset.id);
-      const actives = items.filter(i=>!i.done);
-      const dones = items.filter(i=>i.done);
-      const activesSorted = [...actives].sort((a,b)=> order.indexOf(a.id) - order.indexOf(b.id));
-      items = [...activesSorted, ...dones];
-      save(STORAGE_ITEMS, items);
+      const arr=syncItems();
+      const order=Array.from(listEl.children).map(li=>li.dataset.id);
+      const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done);
+      const actSorted=[...act].sort((a,b)=> order.indexOf(a.id)-order.indexOf(b.id));
+      getList().items=[...actSorted, ...done]; syncItems(); saveApp();
     }
     async function setupDrag(){
-      const ok = await ensureSortable();
-      if(!ok){
-        // Brak biblioteki (np. offline) – po prostu wyłączamy przeciąganie
-        htmlEl.classList.add('no-drag');
-        return;
-      }
+      const ok=await ensureSortable();
+      if(!ok){ htmlEl.classList.add('no-drag'); return }
       htmlEl.classList.remove('no-drag');
-      new Sortable(listEl, {
-        handle: '.drag-handle',
-        animation: 150,
-        ghostClass: 'dragging',
-        fallbackOnBody: true,
-        forceFallback: /iPhone|iPad|iPod|Android/i.test(navigator.userAgent),
-        delayOnTouchOnly: true,
-        delay: 120,
-        touchStartThreshold: 3,
-        onEnd: () => {
-          applyDOMOrderToActive();
-          // Nie renderujemy całości – Sortable już przełożył DOM niekupionych.
-        }
+      new Sortable(listEl,{
+        handle:'.drag-handle', animation:150, ghostClass:'dragging',
+        fallbackOnBody:true, forceFallback:uaMobile, delayOnTouchOnly:true, delay:120, touchStartThreshold:3,
+        onEnd:applyDOMOrderToActive
       });
     }
 
-    // ————— Start —————
-    function init(){
-      initUI();
-      setupDrag();
-      if(!localStorage.getItem(STORAGE_THEME)){
-        theme = getSystemTheme();
-        applyTheme();
+    // Init
+    (function init(){
+      try{
+        app = loadApp();
+        applySettings();
+        wireOptions();
+
+        refreshTitleUI(); syncItems(); renderList();
+        tabListBtn.addEventListener('click',()=> setActiveTab('list'));
+        tabHistoryBtn.addEventListener('click',()=> setActiveTab('history'));
+        tabSavedBtn.addEventListener('click',()=> setActiveTab('saved'));
+        setActiveTab(activeTab);
+        setupDrag();
+
+        historyScopeSel.value=histScope;
+        historyScopeSel.addEventListener('change',()=>{ histScope=historyScopeSel.value; save(STORAGE_HIST_SCOPE, histScope); renderHistory() });
+
+        if(!localStorage.getItem(STORAGE_THEME) && settings.themeMode==='system'){
+          applyThemeExplicit(getSystemTheme());
+        }
+      }catch(e){
+        console.error('Init error', e);
+        showToast('Błąd inicjalizacji. Użyj Opcje → Resetuj dane');
       }
-    }
-    init();
+    })();
   </script>
 </body>
 </html>

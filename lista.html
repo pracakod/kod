@@ -5,232 +5,375 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Lista</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     :root{
       --bg:#ffffff; --card:#ffffff; --text:#0f172a; --muted:#64748b;
       --accent:#10b981; --danger:#ef4444; --border:#e5e7eb;
     }
     [data-theme="dark"]{
-      --bg:#0b1220; --card:#0f172a; --text:#e5e7eb; --muted:#94a3b8;
-      --accent:#34d399; --danger:#f87171; --border:#1f2937;
+      --bg:#0f172a; --card:#1e293b; --text:#f1f5f9; --muted:#94a3b8;
+      --accent:#34d399; --danger:#f87171; --border:#334155;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif; background:var(--bg); color:var(--text)}
-    .wrap{max-width:680px; margin:40px auto; padding:16px}
-    header{display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:20px}
-    h1{margin:0; font-size:24px; font-weight:700; display:flex; align-items:center; gap:12px; cursor:pointer; padding:8px 12px; border-radius:12px; transition:background-color 0.2s}
+    body{margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.5}
+    .wrap{max-width:480px; margin:0 auto; padding:24px 20px; min-height:100vh}
+    
+    /* Header */
+    header{display:flex; align-items:center; justify-content:space-between; margin-bottom:32px}
+    h1{margin:0; font-size:24px; font-weight:600; display:flex; align-items:center; gap:12px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:background-color 0.15s}
     h1:hover{background:var(--border)}
-    .dot{width:14px; height:14px; border-radius:50%}
-    .chip{display:none} /* Ukrywamy chip całkowicie */
-    .icon-btn{height:36px; min-width:36px; padding:0 10px; display:inline-flex; align-items:center; justify-content:center; gap:8px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:10px; cursor:pointer}
-    .icon-btn:active{transform:translateY(1px)}
-    .row{display:flex; gap:8px}
-    .input{height:44px; padding:0 12px; flex:1; border:1px solid var(--border); border-radius:10px; background:var(--card); color:var(--text); font-size:15px}
-    .add-btn{height:44px; padding:0 14px; border:1px solid var(--border); background:var(--card); border-radius:10px; cursor:pointer}
-    .list{list-style:none; padding:0; margin:12px 0 0}
-    .item{display:grid; grid-template-columns: 24px 1fr 28px; align-items:center; gap:8px; border:1px solid var(--border); background:var(--card); border-radius:12px; padding:10px; margin:10px 0}
-    .check{width:18px; height:18px; accent-color:var(--accent); cursor:pointer}
-    .txt{min-height:22px; word-break:break-word}
-    .txt[contenteditable="true"]{outline:2px solid var(--accent); border-radius:6px; padding:2px 4px; background:var(--bg)}
-    .del{width:28px; height:28px; border:none; background:transparent; color:var(--muted); cursor:pointer}
+    .dot{width:12px; height:12px; border-radius:50%; cursor:pointer; transition:transform 0.15s}
+    .dot:hover{transform:scale(1.2)}
+    
+    /* Przyciski */
+    .icon-btn{height:40px; width:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:16px}
+    .icon-btn:hover{background:var(--border)}
+    .icon-btn.eye-hidden{opacity:0.6; background:var(--border)}
+    .add-btn{height:48px; width:48px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:20px; display:flex; align-items:center; justify-content:center}
+    .add-btn:hover{background:var(--border); transform:scale(1.02)}
+    
+    /* Formularz */
+    .input-row{display:flex; gap:12px; margin-bottom:24px; align-items:center; transition:all 0.3s ease}
+    .input-row.hidden{display:none}
+    .input{height:48px; padding:0 16px; flex:1; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:16px; border-radius:8px; transition:border-color 0.15s; font-family:inherit}
+    .input:focus{outline:none; border-color:var(--accent)}
+    .input::placeholder{color:var(--muted)}
+    
+    /* Lista zadań - UPROSZCZONE bez drag & drop */
+    .list{list-style:none; padding:0; margin:0 0 40px 0}
+    .item{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:8px; padding:16px 12px; margin:8px 0; transition:all 0.15s; border:1px solid var(--border); position:relative; min-height:60px}
+    .item:hover{border-color:var(--accent)}
+    
+    /* PROSTE CHECKBOXY które działają na Androidzie */
+    .check{width:24px; height:24px; border:2px solid var(--border); border-radius:4px; background:var(--card); cursor:pointer; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; transition:all 0.15s}
+    .check.checked{background:var(--accent); border-color:var(--accent)}
+    .check.checked::after{content:"✓"; color:white; font-size:14px; font-weight:bold; line-height:1}
+    
+    .txt{flex:1; min-height:20px; word-break:break-word; font-size:15px; padding:2px 0}
+    .txt[contenteditable="true"]{outline:2px solid var(--accent); border-radius:4px; padding:4px 8px; background:var(--bg); margin:-2px -4px}
+    .del{width:28px; height:28px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:4px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-size:16px}
+    .del:hover{background:var(--danger); color:white}
     .item.done .txt{text-decoration:line-through; color:var(--muted)}
-    .empty{margin-top:12px; color:var(--muted); font-size:14px}
-    /* Gęstość i rozmiar */
-    [data-density="compact"] .item{padding:8px; margin:6px 0}
-    [data-size="big"] body{font-size:17px}
-    [data-size="big"] .input{font-size:16px}
-    /* Arkusze (sheet) */
-    .sheet{position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:flex-end; z-index:50}
+    .empty{text-align:center; color:var(--muted); font-size:15px; padding:40px 20px}
+    
+    /* Statystyki - początkowo ukryte */
+    .stats{display:none; justify-content:space-between; align-items:center; margin:24px 0 16px; padding:16px; background:var(--card); border-radius:8px; border:1px solid var(--border)}
+    .stats.show{display:flex}
+    .stat-item{display:flex; flex-direction:column; align-items:center; gap:4px}
+    .stat-number{font-size:18px; font-weight:600; color:var(--accent)}
+    .stat-label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
+    .progress{height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin:8px 0}
+    .progress-bar{height:100%; background:var(--accent); transition:width 0.3s ease}
+    
+    /* Arkusze */
+    .sheet{position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:flex-end; z-index:50}
     .sheet[aria-hidden="false"]{display:flex}
-    .card{width:100%; max-width:680px; margin:0 auto; background:var(--card); color:var(--text); border-top-left-radius:16px; border-top-right-radius:16px; padding:14px; border:1px solid var(--border)}
-    .card h3{margin:0 0 8px; font-size:16px}
-    .sec{margin:10px 0}
-    .opt-row{display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px solid var(--border)}
-    .small{font-size:12px; color:var(--muted)}
-    .btn{height:36px; padding:0 12px; border:1px solid var(--border); background:transparent; color:var(--text); border-radius:8px; cursor:pointer}
-    .btn.primary{background:var(--accent); color:#fff; border-color:var(--accent)}
+    .card{width:100%; max-width:480px; margin:0 auto; background:var(--card); color:var(--text); border-top-left-radius:16px; border-top-right-radius:16px; padding:20px; border:1px solid var(--border); max-height:80vh; overflow-y:auto; position:relative}
+    .card h3{margin:0 0 16px; font-size:18px; font-weight:600; padding-right:40px}
+    
+    /* Przycisk zamknij X u góry po prawej */
+    .close-btn{position:absolute; top:16px; right:16px; width:32px; height:32px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:6px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-size:20px}
+    .close-btn:hover{background:var(--border); color:var(--text)}
+    
+    /* Menu - Nowy układ */
+    .menu-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0}
+    .menu-section{margin:20px 0}
+    .menu-section:first-child{margin-top:0}
+    .menu-section-title{margin:0 0 12px 0; font-size:14px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
+    
+    /* Przyciski w menu */
+    .btn{height:44px; padding:0 16px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-family:inherit; font-size:14px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; width:100%}
+    .btn:hover{background:var(--border)}
+    .btn.primary{background:var(--accent); color:white; border-color:var(--accent)}
+    .btn.primary:hover{background:var(--accent); opacity:0.9}
     .btn.danger{border-color:var(--danger); color:var(--danger)}
-    .list-rows{display:flex; flex-direction:column; gap:6px; max-height:40vh; overflow:auto; border:1px solid var(--border); border-radius:10px; padding:8px}
-    .row-item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:6px 4px; border-radius:8px}
-    .row-item:hover{background:rgba(0,0,0,.04)}
-    .name{display:flex; align-items:center; gap:8px}
-    .dot-s{width:10px; height:10px; border-radius:50%}
+    .btn.danger:hover{background:var(--danger); color:white}
+    
+    /* Listy w menu */
+    .list-rows{display:flex; flex-direction:column; gap:8px; max-height:200px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:8px}
+    .row-item{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px; border-radius:6px; cursor:pointer; transition:background-color 0.15s}
+    .row-item:hover{background:var(--border)}
+    .name{display:flex; align-items:center; gap:8px; font-weight:500}
+    .dot-s{width:8px; height:8px; border-radius:50%}
     .sub{font-size:12px; color:var(--muted)}
-    /* Toast notifications */
+    
+    /* Historia - scalona */
+    .history-section{margin:16px 0}
+    .history-section:first-child{margin-top:0}
+    .history-section-header{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px 12px; background:var(--bg); border-radius:6px; border:1px solid var(--border)}
+    .history-section-title{font-weight:600; font-size:14px}
+    .history-items{display:flex; flex-direction:column; gap:8px}
+    .history-item{border:1px solid var(--border); border-radius:6px; padding:10px; background:var(--card); position:relative}
+    .history-text{font-size:14px; line-height:1.4; margin-bottom:6px; padding-right:60px}
+    .history-meta{display:flex; align-items:center; justify-content:space-between; font-size:11px; color:var(--muted)}
+    .history-actions{position:absolute; top:8px; right:8px; display:flex; gap:4px}
+    .history-btn{width:24px; height:24px; border:none; border-radius:4px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:12px; transition:all 0.15s}
+    .history-add{background:var(--accent); color:white}
+    .history-add:hover{opacity:0.8}
+    .history-delete{background:var(--danger); color:white}
+    .history-delete:hover{opacity:0.8}
+    
+    /* Wybór koloru */
+    .color-picker{display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin:16px 0}
+    .color-option{width:44px; height:44px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; display:flex; align-items:center; justify-content:center}
+    .color-option:hover{transform:scale(1.1)}
+    .color-option.selected{border-color:var(--text); transform:scale(1.1)}
+    
+    /* Toasty */
     .toast{position:fixed; top:20px; right:20px; padding:12px 16px; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; transform:translateX(120%); transition:transform 0.3s ease}
     .toast.show{transform:translateX(0)}
     .toast.success{border-left:4px solid var(--accent)}
     .toast.error{border-left:4px solid var(--danger)}
     .toast.info{border-left:4px solid var(--muted)}
-    /* Zapisane / Historia */
-    .rows{display:flex; flex-direction:column; gap:8px; max-height:50vh; overflow:auto}
-    .card-row{border:1px solid var(--border); border-radius:12px; padding:10px}
-    .actions{display:flex; gap:8px; flex-wrap:wrap}
-    .preview{margin-top:6px; font-size:13px; color:var(--muted)}
-    /* Druk – kompaktowy, czarny */
-    #printContainer{ display:none }
-    @media print{
-      @page{ margin:12mm }
-      html, body{ background:#fff !important; color:#000 !important; font-size:11pt }
-      *{ color:#000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-      .wrap, .sheet{ display:none !important }
-      #printContainer{ display:block !important }
-      .prn-list{ margin:0 0 8mm }
-      .prn-head{
-        display:flex; align-items:center; justify-content:space-between;
-        padding:0 0 2mm; margin:0 0 3mm; border-bottom:1px solid #000;
+    
+    /* Gęstość */
+    [data-density="compact"] .item{padding:12px; margin:6px 0; min-height:52px}
+    [data-density="compact"] .input-row{margin-bottom:20px}
+    [data-density="compact"] .check{width:20px; height:20px}
+    
+    /* Rozmiar tekstu */
+    [data-size="big"] body{font-size:17px}
+    [data-size="big"] .input{font-size:17px}
+    [data-size="big"] .txt{font-size:16px}
+    [data-size="big"] .check{width:26px; height:26px}
+    
+    /* Druk - poprawki dla kolorów */
+    @media print {
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
       }
-      .prn-title{ font-weight:700 }
-      .prn-meta{ font-size:10pt }
-      .prn-ul{ list-style:none; margin:0; padding:0 }
-      .prn-li{ margin:2.5mm 0; line-height:1.2; page-break-inside:avoid }
-      .prn-li::before{ content:'[ ] ' }
-      .prn-li.done::before{ content:'[x] ' }
-      .prn-head.hidden{ display:none !important }
+    }
+    
+    /* Responsywność dla urządzeń mobilnych */
+    @media (max-width: 768px) {
+      .item {
+        padding: 18px 12px;
+        min-height: 64px;
+      }
+      
+      .check {
+        width: 28px;
+        height: 28px;
+      }
+      
+      [data-size="big"] .check {
+        width: 30px;
+        height: 30px;
+      }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
-      <h1><span id="hdr-dot" class="dot" style="background:#10b981"></span><span id="title" class="title">Lista</span></h1>
-      <button id="menuBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false">⋯</button>
+      <h1><span id="hdr-dot" class="dot" style="background:#10b981" title="Kliknij aby zmienić kolor"></span><span id="title" class="title">Lista</span></h1>
+      <div style="display:flex; gap:8px;">
+        <!-- Nowy przycisk oko - zmieniona ikonka -->
+        <button id="toggleInputBtn" class="icon-btn" title="Ukryj/pokaż pole dodawania">−</button>
+        <button id="menuBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false" title="Menu">⋯</button>
+      </div>
     </header>
 
-    <!-- USUNIĘTY CHIP - już nie pokazujemy podwójnej nazwy -->
+    <!-- Statystyki - początkowo ukryte -->
+    <div id="stats" class="stats">
+      <div class="stat-item">
+        <span id="totalCount" class="stat-number">0</span>
+        <span class="stat-label">Wszystkie</span>
+      </div>
+      <div class="stat-item">
+        <span id="doneCount" class="stat-number">0</span>
+        <span class="stat-label">Ukończone</span>
+      </div>
+      <div class="stat-item">
+        <span id="progressPercent" class="stat-number">0%</span>
+        <span class="stat-label">Postęp</span>
+      </div>
+    </div>
+    <div id="progressContainer" class="progress" style="display:none">
+      <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+    </div>
 
-    <form id="addForm" class="row" autocomplete="off">
-      <input id="addInput" class="input" placeholder="Dodaj..." />
-      <button class="add-btn" aria-label="Dodaj">+</button>
+    <form id="addForm" class="input-row" autocomplete="off">
+      <input id="addInput" class="input" placeholder="Dodaj zadanie..." />
+      <button type="submit" class="add-btn" aria-label="Dodaj">+</button>
     </form>
 
     <ul id="list" class="list"></ul>
-    <div id="empty" class="empty" hidden>Brak elementów</div>
+    <div id="empty" class="empty" hidden>
+      Brak zadań na liście<br>
+      <span style="font-size:13px; opacity:0.7">Dodaj pierwsze zadanie powyżej</span>
+    </div>
   </main>
 
   <!-- MENU -->
   <div id="menuSheet" class="sheet" aria-hidden="true">
     <div class="card">
-      <div class="sec">
-        <h3>Listy</h3>
+      <h3>Menu</h3>
+      <button class="close-btn" id="closeMenu">×</button>
+      
+      <div class="menu-section">
+        <div class="menu-section-title">Listy</div>
         <div id="listsBox" class="list-rows"></div>
-        <div class="row" style="margin-top:8px">
+        <div class="menu-grid">
           <button id="newListBtn" class="btn">Nowa lista</button>
-          <button id="deleteListBtn" class="btn danger">Usuń bieżącą</button>
+          <button id="deleteListBtn" class="btn danger">Usuń listę</button>
         </div>
       </div>
-      <div class="sec">
-        <h3>Akcje</h3>
-        <div class="row" style="gap:8px; flex-wrap:wrap">
-          <button id="savedBtn" class="btn">Zapisane</button>
-          <button id="historyBtn" class="btn">Historia</button>
-          <button id="copyBtn" class="btn">Kopiuj</button>
+
+      <div class="menu-section">
+        <div class="menu-section-title">Akcje</div>
+        <div class="menu-grid">
           <button id="printBtn" class="btn">Drukuj</button>
+          <button id="historyBtn" class="btn">Historia</button>
         </div>
       </div>
-      <div class="sec">
-        <h3>Ustawienia</h3>
-        <div class="opt-row">
-          <span>Motyw</span>
-          <div class="row">
-            <button data-theme="light" class="btn" id="themeLight">Jasny</button>
-            <button data-theme="dark" class="btn" id="themeDark">Ciemny</button>
-            <button data-theme="system" class="btn" id="themeSystem">System</button>
+
+      <div class="menu-section">
+        <div class="menu-section-title">Ustawienia</div>
+        <div style="display:flex; flex-direction:column; gap:12px">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0">
+            <span>Motyw</span>
+            <div style="display:flex; gap:4px">
+              <button data-theme="light" class="btn" id="themeLight" style="width:auto; padding:0 12px">Jasny</button>
+              <button data-theme="dark" class="btn" id="themeDark" style="width:auto; padding:0 12px">Ciemny</button>
+            </div>
           </div>
+          
+          <label style="display:flex; align-items:center; gap:8px; padding:8px 0; cursor:pointer">
+            <input type="checkbox" id="toggleHide">
+            <span>Ukryj ukończone</span>
+          </label>
+
+          <label style="display:flex; align-items:center; gap:8px; padding:8px 0; cursor:pointer">
+            <input type="checkbox" id="toggleStats">
+            <span>Pokaż statystyki</span>
+          </label>
         </div>
-        <div class="opt-row">
-          <label class="name"><input type="checkbox" id="toggleHide"> Ukryj zrobione</label>
-          <span class="sub"></span>
-        </div>
-        <div class="row" style="margin-top:8px">
-          <button id="styleBtn" class="btn">Styl strony</button>
-          <button id="resetBtn" class="btn">Resetuj dane</button>
-          <button id="hardResetBtn" class="btn danger">Twardy reset</button>
-          <button id="closeMenu" class="btn" style="margin-left:auto">Zamknij</button>
+        
+        <div class="menu-grid" style="margin-top:16px">
+          <button id="styleBtn" class="btn">Styl</button>
+          <button id="resetBtn" class="btn danger">Resetuj</button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- STYL STRONY -->
+  <!-- STYL STRONY - bez zmiany koloru -->
   <div id="styleSheet" class="sheet" aria-hidden="true">
     <div class="card">
       <h3>Styl strony</h3>
-      <div class="opt-row">
-        <span>Gęstość</span>
-        <div class="row">
-          <button class="btn" id="densNormal">Normalna</button>
-          <button class="btn" id="densCompact">Kompaktowa</button>
+      <button class="close-btn" id="closeStyle">×</button>
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <span>Gęstość</span>
+          <div style="display:flex; gap:8px">
+            <button class="btn" id="densNormal" style="width:auto; padding:0 16px">Normalna</button>
+            <button class="btn" id="densCompact" style="width:auto; padding:0 16px">Kompaktowa</button>
+          </div>
         </div>
-      </div>
-      <div class="opt-row">
-        <span>Rozmiar tekstu</span>
-        <div class="row">
-          <button class="btn" id="sizeNormal">Normalny</button>
-          <button class="btn" id="sizeBig">Duży</button>
+        
+        <div style="display:flex; align-items:center; justify-content:space-between">
+          <span>Rozmiar tekstu</span>
+          <div style="display:flex; gap:8px">
+            <button class="btn" id="sizeNormal" style="width:auto; padding:0 16px">Normalny</button>
+            <button class="btn" id="sizeBig" style="width:auto; padding:0 16px">Duży</button>
+          </div>
         </div>
-      </div>
-      <div class="opt-row">
-        <span>Kolor listy</span>
-        <input type="color" id="colorPick" />
-      </div>
-      <div class="row" style="margin-top:8px">
-        <button id="closeStyle" class="btn" style="margin-left:auto">Zamknij</button>
       </div>
     </div>
   </div>
 
-  <!-- ZAPISANE -->
-  <div id="savedSheet" class="sheet" aria-hidden="true">
+  <!-- WYBÓR KOLORU -->
+  <div id="colorSheet" class="sheet" aria-hidden="true">
     <div class="card">
-      <h3>Zapisane</h3>
-      <div id="savedBox" class="rows"></div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="closeSaved">Zamknij</button></div>
+      <h3>Wybierz kolor listy</h3>
+      <button class="close-btn" id="closeColor">×</button>
+      <div class="color-picker">
+        <div class="color-option" data-color="#10b981" style="background:#10b981" title="Zielony">✓</div>
+        <div class="color-option" data-color="#3b82f6" style="background:#3b82f6" title="Niebieski"></div>
+        <div class="color-option" data-color="#8b5cf6" style="background:#8b5cf6" title="Fioletowy"></div>
+        <div class="color-option" data-color="#f59e0b" style="background:#f59e0b" title="Żółty"></div>
+        <div class="color-option" data-color="#ef4444" style="background:#ef4444" title="Czerwony"></div>
+        <div class="color-option" data-color="#06b6d4" style="background:#06b6d4" title="Cyjan"></div>
+        <div class="color-option" data-color="#84cc16" style="background:#84cc16" title="Limonkowy"></div>
+        <div class="color-option" data-color="#f97316" style="background:#f97316" title="Pomarańczowy"></div>
+        <div class="color-option" data-color="#ec4899" style="background:#ec4899" title="Różowy"></div>
+        <div class="color-option" data-color="#6b7280" style="background:#6b7280" title="Szary"></div>
+      </div>
     </div>
   </div>
 
   <!-- HISTORIA -->
   <div id="historySheet" class="sheet" aria-hidden="true">
     <div class="card">
-      <h3>Historia</h3>
-      <div id="historyBox" class="rows"></div>
-      <div class="row" style="margin-top:8px"><button class="btn" id="closeHistory">Zamknij</button></div>
+      <h3>Historia zadań</h3>
+      <button class="close-btn" id="closeHistory">×</button>
+      <div id="historyBox"></div>
     </div>
   </div>
 
-  <!-- DRUK/KOPIUJ -->
+  <!-- DRUK -->
   <div id="actionSheet" class="sheet" aria-hidden="true">
     <div class="card">
-      <h3 id="actionTitle">Wybierz listy</h3>
-      <div class="opt-row">
-        <label class="name"><input type="checkbox" id="includeDone" checked> Uwzględnij zrobione</label>
-        <span class="sub"></span>
+      <h3>Drukuj listy</h3>
+      <button class="close-btn" id="closeAction">×</button>
+      <div style="display:flex; flex-direction:column; gap:16px">
+        <label style="display:flex; align-items:center; gap:8px">
+          <input type="checkbox" id="includeDone" checked>
+          <span>Uwzględnij ukończone</span>
+        </label>
+        
+        <div id="pickLists" class="list-rows"></div>
+        
+        <div style="display:flex; flex-direction:column; gap:12px">
+          <label style="display:flex; align-items:center; gap:8px">
+            <input type="checkbox" id="showTitle" checked>
+            <span>Pokaż tytuł</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px">
+            <input type="checkbox" id="showDate" checked>
+            <span>Pokaż datę</span>
+          </label>
+        </div>
       </div>
-      <div id="pickLists" class="list-rows" style="margin-top:8px"></div>
-      <div id="printOpts" class="row" style="margin-top:8px">
-        <label class="name"><input type="checkbox" id="showTitle" checked> Pokaż tytuł</label>
-        <label class="name"><input type="checkbox" id="showDate" checked> Pokaż datę</label>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <button id="doAction" class="btn primary">OK</button>
-        <button id="closeAction" class="btn" style="margin-left:auto">Zamknij</button>
+      <div style="margin-top:20px; display:flex; gap:12px">
+        <button id="doAction" class="btn primary">Drukuj</button>
       </div>
     </div>
   </div>
 
   <script>
     // Storage keys
-    const K_APP='list.app.v3'; // lists, items, history, saved, color
+    const K_APP='list.app.v3';
     const K_HIDE='list.hide'; const K_THEME='list.theme';
-    const K_STYLE='list.style.v1'; // {density:'normal'|'compact', size:'normal'|'big'}
+    const K_STYLE='list.style.v1'; const K_STATS='list.stats';
+    const K_HIDE_INPUT='list.hideInput';
+
+    // Predefiniowane kolory
+    const COLORS = [
+      '#10b981', // zielony
+      '#3b82f6', // niebieski
+      '#8b5cf6', // fioletowy
+      '#f59e0b', // żółty
+      '#ef4444', // czerwony
+      '#06b6d4', // cyjan
+      '#84cc16', // limonkowy
+      '#f97316', // pomarańczowy
+      '#ec4899', // różowy
+      '#6b7280'  // szary
+    ];
 
     // State
     let app = loadApp();
     let items = getList().items || [];
     let hideDone = loadJSON(K_HIDE, false);
+    let showStats = loadJSON(K_STATS, false);
     let style = loadJSON(K_STYLE, { density:'normal', size:'normal' });
+    let inputHidden = loadJSON(K_HIDE_INPUT, false);
 
     // Elements
     const listEl = document.getElementById('list');
@@ -239,6 +382,9 @@
     const addInput = document.getElementById('addInput');
     const titleEl = document.getElementById('title');
     const hdrDot = document.getElementById('hdr-dot');
+    const statsEl = document.getElementById('stats');
+    const progressContainer = document.getElementById('progressContainer');
+    const toggleInputBtn = document.getElementById('toggleInputBtn');
 
     const menuBtn = document.getElementById('menuBtn');
     const menuSheet = document.getElementById('menuSheet');
@@ -246,6 +392,7 @@
     const newListBtn = document.getElementById('newListBtn');
     const deleteListBtn = document.getElementById('deleteListBtn');
     const toggleHide = document.getElementById('toggleHide');
+    const toggleStats = document.getElementById('toggleStats');
     const closeMenu = document.getElementById('closeMenu');
 
     const styleSheet = document.getElementById('styleSheet');
@@ -254,17 +401,28 @@
     const densCompact = document.getElementById('densCompact');
     const sizeNormal = document.getElementById('sizeNormal');
     const sizeBig = document.getElementById('sizeBig');
-    const colorPick = document.getElementById('colorPick');
     const closeStyle = document.getElementById('closeStyle');
 
-    const savedBtn = document.getElementById('savedBtn'); const savedSheet = document.getElementById('savedSheet'); const savedBox = document.getElementById('savedBox'); const closeSaved = document.getElementById('closeSaved');
-    const historyBtn = document.getElementById('historyBtn'); const historySheet = document.getElementById('historySheet'); const historyBox = document.getElementById('historyBox'); const closeHistory = document.getElementById('closeHistory');
+    const colorSheet = document.getElementById('colorSheet');
+    const closeColor = document.getElementById('closeColor');
 
-    const actionSheet = document.getElementById('actionSheet'); const actionTitle = document.getElementById('actionTitle'); const includeDone = document.getElementById('includeDone'); const pickLists = document.getElementById('pickLists'); const printOpts = document.getElementById('printOpts'); const showTitle = document.getElementById('showTitle'); const showDate = document.getElementById('showDate'); const doAction = document.getElementById('doAction'); const closeActionBtn = document.getElementById('closeAction');
+    const historyBtn = document.getElementById('historyBtn');
+    const historySheet = document.getElementById('historySheet');
+    const historyBox = document.getElementById('historyBox');
+    const closeHistory = document.getElementById('closeHistory');
 
-    const copyBtn = document.getElementById('copyBtn'); const printBtn = document.getElementById('printBtn');
-    const themeLight = document.getElementById('themeLight'); const themeDark = document.getElementById('themeDark'); const themeSystem = document.getElementById('themeSystem');
-    const resetBtn = document.getElementById('resetBtn'); const hardResetBtn = document.getElementById('hardResetBtn');
+    const actionSheet = document.getElementById('actionSheet');
+    const includeDone = document.getElementById('includeDone');
+    const pickLists = document.getElementById('pickLists');
+    const showTitle = document.getElementById('showTitle');
+    const showDate = document.getElementById('showDate');
+    const doAction = document.getElementById('doAction');
+    const closeActionBtn = document.getElementById('closeAction');
+
+    const printBtn = document.getElementById('printBtn');
+    const themeLight = document.getElementById('themeLight');
+    const themeDark = document.getElementById('themeDark');
+    const resetBtn = document.getElementById('resetBtn');
 
     // Utils
     function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-'+Math.random().toString(36).slice(2)+Date.now().toString(36) }
@@ -288,7 +446,29 @@
       setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
-      }, 1400); // Zmienione na 1.4 sekundy
+      }, 1400);
+    }
+
+    // Statystyki
+    function updateStats() {
+      const items = getList().items || [];
+      const total = items.length;
+      const done = items.filter(item => item.done).length;
+      const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+      
+      document.getElementById('totalCount').textContent = total;
+      document.getElementById('doneCount').textContent = done;
+      document.getElementById('progressPercent').textContent = progress + '%';
+      document.getElementById('progressBar').style.width = progress + '%';
+      
+      // Pokazuj/ukryj statystyki w zależności od ustawienia
+      if (showStats) {
+        statsEl.classList.add('show');
+        progressContainer.style.display = 'block';
+      } else {
+        statsEl.classList.remove('show');
+        progressContainer.style.display = 'none';
+      }
     }
 
     // App load/repair
@@ -327,21 +507,50 @@
     }
 
     // UI apply
-    function applyTheme(mode){ const m= mode==='system'? systemTheme(): mode; document.documentElement.setAttribute('data-theme', m==='dark'?'dark':'light'); saveJSON(K_THEME, mode) }
+    function applyTheme(mode){ 
+      const m= mode==='system'? systemTheme(): mode; 
+      document.documentElement.setAttribute('data-theme', m==='dark'?'dark':'light'); 
+      saveJSON(K_THEME, mode);
+    }
     function applyHide(){ document.getElementById('toggleHide').checked = !!hideDone }
+    function applyStats(){ document.getElementById('toggleStats').checked = !!showStats }
     function applyStyle(){
       document.documentElement.setAttribute('data-density', style.density==='compact'?'compact':'normal');
       document.documentElement.setAttribute('data-size', style.size==='big'?'big':'normal');
+    }
+    function applyInputHidden() {
+      if (inputHidden) {
+        addForm.classList.add('hidden');
+        toggleInputBtn.classList.add('eye-hidden');
+        toggleInputBtn.textContent = '+';
+        toggleInputBtn.title = 'Pokaż pole dodawania';
+      } else {
+        addForm.classList.remove('hidden');
+        toggleInputBtn.classList.remove('eye-hidden');
+        toggleInputBtn.textContent = '−';
+        toggleInputBtn.title = 'Ukryj pole dodawania';
+      }
     }
 
     function refreshHeader(){
       const l=getList();
       titleEl.textContent=l.name||'Lista';
       hdrDot.style.background = l.color || '#10b981';
-      // USUNIĘTE: chipName.textContent - już nie używamy chipa
+      
+      // Aktualizuj zaznaczenie koloru
+      updateColorSelection();
     }
 
-    // Render list - BEZPIECZNIE bez innerHTML
+    // Aktualizuj zaznaczenie koloru
+    function updateColorSelection() {
+      const currentColor = getList().color || '#10b981';
+      document.querySelectorAll('.color-option').forEach(option => {
+        option.classList.remove('selected');
+        option.innerHTML = option.dataset.color === currentColor ? '✓' : '';
+      });
+    }
+
+    // Render list - UPROSZCZONE bez drag & drop
     function renderList(){
       const arr=sync();
       listEl.innerHTML='';
@@ -352,29 +561,45 @@
         li.className='item'+(it.done?' done':'');
         li.dataset.id=it.id;
 
-        // Checkbox
-        const check=document.createElement('input');
-        check.className='check';
-        check.type='checkbox';
-        check.checked=it.done;
+        // PROSTA IMPLEMENTACJA CHECKBOXA
+        const check=document.createElement('div');
+        check.className='check'+(it.done?' checked':'');
+        check.title='Kliknij aby oznaczyć';
         
-        // Text element - BEZPIECZNIE
         const txt=document.createElement('div');
         txt.className='txt';
-        txt.textContent=it.text; // Bez innerHTML!
+        txt.textContent=it.text;
         
-        // Delete button
         const del=document.createElement('button');
         del.className='del';
         del.setAttribute('aria-label','Usuń');
-        del.textContent='✕'; // Bez innerHTML!
+        del.textContent='×';
 
         li.appendChild(check);
         li.appendChild(txt);
         li.appendChild(del);
         listEl.appendChild(li);
 
-        // Edycja zadania - podwójne kliknięcie
+        // PROSTA OBSŁUGA CHECKBOXA - kliknięcie
+        check.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const id = li.dataset.id;
+          const l = getList();
+          const idx = l.items.findIndex(i => i.id === id);
+          if (idx === -1) return;
+          
+          l.items[idx].done = !l.items[idx].done;
+          const it = l.items.splice(idx, 1)[0];
+          const act = l.items.filter(i => !i.done);
+          const done = l.items.filter(i => i.done);
+          l.items = it.done ? [...act, ...done, it] : [it, ...act, ...done];
+          
+          if (save()) {
+            renderList();
+          }
+        });
+
+        // Edycja zadania
         txt.addEventListener('dblclick', () => {
           if (txt.isContentEditable) return;
           txt.setAttribute('contenteditable', 'true');
@@ -403,12 +628,41 @@
               showToast('Zadanie zaktualizowane', 'success');
             }
           } else if (!newText) {
-            txt.textContent = it.text; // Przywróć poprzedni tekst jeśli pusty
+            txt.textContent = it.text;
           }
           txt.removeAttribute('contenteditable');
         });
+
+        // Usuwanie zadania
+        del.addEventListener('click', function(e) {
+          e.stopPropagation();
+          const id = li.dataset.id;
+          const l = getList();
+          const idx = l.items.findIndex(i => i.id === id);
+          if (idx === -1) return;
+          
+          const it = l.items[idx];
+          l.items.splice(idx, 1);
+          const n = norm(it.text);
+          const hist = l.history || (l.history = []);
+          const ex = hist.find(h => norm(h.text) === n);
+          
+          if (ex) {
+            ex.lastAt = Date.now();
+            ex.count = (ex.count || 1) + 1;
+          } else {
+            hist.push({ id: uid(), text: it.text, lastAt: Date.now(), count: 1 });
+          }
+          
+          if (save()) {
+            renderList();
+            showToast('Zadanie usunięte', 'success');
+          }
+        });
       });
-      emptyEl.hidden = listEl.children.length>0;
+      
+      emptyEl.hidden = listEl.children.length > 0;
+      updateStats();
     }
 
     // Lists in menu
@@ -444,160 +698,153 @@
             renderList(); 
             applyHide();
             showToast(`Aktywna lista: ${l.name}`, 'success');
+            menuSheet.setAttribute('aria-hidden','true');
           }
         });
         listsBox.appendChild(row);
       });
     }
 
-    // Saved
-    function renderSaved(){
-      savedBox.innerHTML='';
-      if(app.saved.length===0){
-        const r=document.createElement('div'); 
-        r.className='small'; 
-        r.style.color='var(--muted)'; 
-        r.textContent='Brak zapisanych'; 
-        savedBox.appendChild(r); 
-        return;
-      }
-      app.saved.slice().sort((a,b)=>b.createdAt-a.createdAt).forEach(s=>{
-        const el=document.createElement('div'); 
-        el.className='card-row'; 
-        el.dataset.id=s.id;
-        
-        const count=s.items.length, pv=s.items.slice(0,8).map(x=> x.text).join(' • ');
-        
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'row';
-        rowDiv.style.justifyContent = 'space-between';
-        
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'name';
-        
-        const dot = document.createElement('span');
-        dot.className = 'dot-s';
-        dot.style.background = s.color||'#10b981';
-        
-        const strong = document.createElement('strong');
-        strong.textContent = s.name;
-        
-        nameDiv.appendChild(dot);
-        nameDiv.appendChild(strong);
-        
-        const sub = document.createElement('span');
-        sub.className = 'sub';
-        sub.textContent = `${fmt(s.createdAt)} • ${count}`;
-        
-        rowDiv.appendChild(nameDiv);
-        rowDiv.appendChild(sub);
-        
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        actions.style.marginTop = '8px';
-        
-        const addBtn = document.createElement('button');
-        addBtn.className = 'btn';
-        addBtn.dataset.act = 'add';
-        addBtn.textContent = '➕ Dodaj';
-        
-        const replaceBtn = document.createElement('button');
-        replaceBtn.className = 'btn';
-        replaceBtn.dataset.act = 'replace';
-        replaceBtn.textContent = '♻️ Zastąp';
-        
-        const newBtn = document.createElement('button');
-        newBtn.className = 'btn';
-        newBtn.dataset.act = 'new';
-        newBtn.textContent = '🆕 Nowa lista';
-        
-        const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn danger';
-        deleteBtn.dataset.act = 'delete';
-        deleteBtn.textContent = '🗑️ Usuń';
-        
-        actions.appendChild(addBtn);
-        actions.appendChild(replaceBtn);
-        actions.appendChild(newBtn);
-        actions.appendChild(deleteBtn);
-        
-        const preview = document.createElement('div');
-        preview.className = 'preview';
-        preview.textContent = pv + (count>8? ' …':'');
-        
-        el.appendChild(rowDiv);
-        el.appendChild(actions);
-        el.appendChild(preview);
-        savedBox.appendChild(el);
-      });
-    }
-
-    // History
+    // Historia - scalona według list z możliwością usuwania
     function renderHistory(){
       historyBox.innerHTML='';
-      const all = [];
-      app.lists.forEach(l=>{
-        (l.history||[]).forEach(h=> all.push({ ...h, listName:l.name, color:l.color }));
+      
+      // Grupowanie historii według list
+      const historyByList = new Map();
+      
+      app.lists.forEach(l => {
+        (l.history || []).forEach(h => {
+          if (!historyByList.has(l.id)) {
+            historyByList.set(l.id, {
+              listName: l.name,
+              color: l.color,
+              listId: l.id,
+              items: []
+            });
+          }
+          historyByList.get(l.id).items.push({...h, listId: l.id});
+        });
       });
-      if(all.length===0){ 
-        const r=document.createElement('div'); 
-        r.className='small'; 
-        r.style.color='var(--muted)'; 
-        r.textContent='Brak historii'; 
-        historyBox.appendChild(r); 
-        return; 
+      
+      if(historyByList.size === 0){ 
+        const empty = document.createElement('div');
+        empty.className = 'empty';
+        empty.textContent = 'Brak historii zadań';
+        historyBox.appendChild(empty);
+        return;
       }
-      all.sort((a,b)=> (b.lastAt||0)-(a.lastAt||0)).forEach(h=>{
-        const el=document.createElement('div'); 
-        el.className='card-row';
+      
+      // Sortowanie list według najnowszej aktywności
+      const sortedLists = Array.from(historyByList.entries())
+        .map(([listId, data]) => {
+          const latestItem = data.items.reduce((latest, item) => 
+            item.lastAt > latest.lastAt ? item : latest, data.items[0]
+          );
+          return {
+            listId,
+            ...data,
+            latestDate: latestItem.lastAt
+          };
+        })
+        .sort((a, b) => b.latestDate - a.latestDate);
+      
+      sortedLists.forEach(listData => {
+        const section = document.createElement('div');
+        section.className = 'history-section';
         
-        const rowDiv = document.createElement('div');
-        rowDiv.className = 'row';
-        rowDiv.style.justifyContent = 'space-between';
-        
-        const nameDiv = document.createElement('div');
-        nameDiv.className = 'name';
+        // Nagłówek sekcji z nazwą listy i kolorem
+        const header = document.createElement('div');
+        header.className = 'history-section-header';
         
         const dot = document.createElement('span');
         dot.className = 'dot-s';
-        dot.style.background = h.color||'#10b981';
+        dot.style.background = listData.color || '#10b981';
         
-        nameDiv.appendChild(dot);
-        nameDiv.appendChild(document.createTextNode(' ' + h.listName));
+        const title = document.createElement('span');
+        title.className = 'history-section-title';
+        title.textContent = listData.listName;
         
-        const sub = document.createElement('span');
-        sub.className = 'sub';
-        sub.textContent = `${fmt(h.lastAt)} • ×${h.count||1}`;
+        header.appendChild(dot);
+        header.appendChild(title);
+        section.appendChild(header);
         
-        rowDiv.appendChild(nameDiv);
-        rowDiv.appendChild(sub);
+        // Zadania w sekcji
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'history-items';
         
-        const textRow = document.createElement('div');
-        textRow.className = 'row';
-        textRow.style.margin = '6px 0 8px 0';
+        // Sortowanie zadań w sekcji od najnowszych
+        listData.items
+          .sort((a, b) => b.lastAt - a.lastAt)
+          .slice(0, 10) // Limit do 10 zadań na listę
+          .forEach(h => {
+            const item = document.createElement('div');
+            item.className = 'history-item';
+            
+            const text = document.createElement('div');
+            text.className = 'history-text';
+            text.textContent = h.text;
+            
+            const meta = document.createElement('div');
+            meta.className = 'history-meta';
+            
+            const date = document.createElement('span');
+            date.textContent = fmt(h.lastAt);
+            
+            const count = document.createElement('span');
+            count.textContent = `użyto ${h.count || 1}×`;
+            
+            const actions = document.createElement('div');
+            actions.className = 'history-actions';
+            
+            const addBtn = document.createElement('button');
+            addBtn.className = 'history-btn history-add';
+            addBtn.innerHTML = '+';
+            addBtn.title = 'Dodaj do listy';
+            addBtn.addEventListener('click', () => {
+              const cur = getList();
+              const arr = cur.items || [];
+              const exists = arr.find(i => norm(i.text) === norm(h.text));
+              if (!exists) {
+                const act = arr.filter(i => !i.done), done = arr.filter(i => i.done);
+                cur.items = [{id: uid(), text: h.text, done: false, createdAt: Date.now()}, ...act, ...done];
+                if (save()) {
+                  renderList();
+                  showToast('Zadanie dodane z historii', 'success');
+                }
+              } else {
+                showToast('Zadanie już istnieje na liście', 'info');
+              }
+            });
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'history-btn history-delete';
+            deleteBtn.innerHTML = '×';
+            deleteBtn.title = 'Usuń z historii';
+            deleteBtn.addEventListener('click', () => {
+              const list = app.lists.find(l => l.id === h.listId);
+              if (list && list.history) {
+                list.history = list.history.filter(hist => hist.id !== h.id);
+                if (save()) {
+                  renderHistory();
+                  showToast('Usunięto z historii', 'success');
+                }
+              }
+            });
+            
+            actions.appendChild(addBtn);
+            actions.appendChild(deleteBtn);
+            
+            meta.appendChild(date);
+            meta.appendChild(count);
+            
+            item.appendChild(text);
+            item.appendChild(meta);
+            item.appendChild(actions);
+            itemsContainer.appendChild(item);
+          });
         
-        const textDiv = document.createElement('div');
-        textDiv.textContent = h.text;
-        
-        textRow.appendChild(textDiv);
-        
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        
-        const addBtn = document.createElement('button');
-        addBtn.className = 'btn';
-        addBtn.dataset.act = 'add';
-        addBtn.textContent = '➕ Dodaj do bieżącej';
-        
-        actions.appendChild(addBtn);
-        
-        el.appendChild(rowDiv);
-        el.appendChild(textRow);
-        el.appendChild(actions);
-        
-        // zapisz tekst w dataset do późniejszego dodania
-        el.dataset.text = h.text;
-        historyBox.appendChild(el);
+        section.appendChild(itemsContainer);
+        historyBox.appendChild(section);
       });
     }
 
@@ -615,38 +862,7 @@
       }
     });
 
-    listEl.addEventListener('change', e=>{
-      if(!e.target.classList.contains('check')) return;
-      const id=e.target.closest('.item').dataset.id;
-      const l=getList(); const idx=l.items.findIndex(i=>i.id===id);
-      if(idx===-1) return;
-      l.items[idx].done = e.target.checked;
-      const it=l.items.splice(idx,1)[0];
-      const act=l.items.filter(i=>!i.done), done=l.items.filter(i=>i.done);
-      l.items = it.done ? [...act, ...done, it] : [it, ...act, ...done];
-      if (save()) {
-        renderList();
-        showToast(it.done ? 'Zadanie ukończone' : 'Zadanie przywrócone', 'success');
-      }
-    });
-
-    listEl.addEventListener('click', e=>{
-      if(!e.target.classList.contains('del')) return;
-      const id=e.target.closest('.item').dataset.id;
-      const l=getList(); const idx=l.items.findIndex(i=>i.id===id); if(idx===-1) return;
-      const it=l.items[idx];
-      l.items.splice(idx,1);
-      // historia
-      const n=norm(it.text); const hist=l.history||(l.history=[]);
-      const ex=hist.find(h=> norm(h.text)===n);
-      if(ex){ ex.lastAt=Date.now(); ex.count=(ex.count||1)+1 } else { hist.push({ id:uid(), text:it.text, lastAt:Date.now(), count:1 }) }
-      if (save()) {
-        renderList();
-        showToast('Zadanie usunięte', 'success');
-      }
-    });
-
-    // Title edit - teraz cały nagłówek jest edytowalny
+    // Title edit
     titleEl.parentElement.addEventListener('dblclick', ()=>{
       titleEl.setAttribute('contenteditable','true'); 
       placeCaret(titleEl); 
@@ -668,6 +884,57 @@
       }
       titleEl.removeAttribute('contenteditable');
     });
+
+    // Zmiana koloru listy przez kliknięcie kropki
+    hdrDot.addEventListener('click', () => {
+      updateColorSelection();
+      colorSheet.setAttribute('aria-hidden','false');
+    });
+
+    // Obsługa wyboru koloru
+    document.querySelectorAll('.color-option').forEach(option => {
+      option.addEventListener('click', () => {
+        const newColor = option.dataset.color;
+        const l = getList();
+        l.color = newColor;
+        if (save()) {
+          refreshHeader();
+          colorSheet.setAttribute('aria-hidden','true');
+          showToast('Kolor listy zmieniony', 'success');
+        }
+      });
+    });
+
+    // Zamykanie arkusza kolorów
+    colorSheet.addEventListener('click', (e) => {
+      if (e.target === colorSheet) {
+        colorSheet.setAttribute('aria-hidden','true');
+      }
+    });
+    
+    closeColor.addEventListener('click', () => {
+      colorSheet.setAttribute('aria-hidden','true');
+    });
+
+    // Przycisk przełączania widoczności pola dodawania - BEZ TOASTÓW
+    toggleInputBtn.addEventListener('click', () => {
+      inputHidden = !inputHidden;
+      
+      if (inputHidden) {
+        addForm.classList.add('hidden');
+        toggleInputBtn.classList.add('eye-hidden');
+        toggleInputBtn.textContent = '+';
+        toggleInputBtn.title = 'Pokaż pole dodawania';
+      } else {
+        addForm.classList.remove('hidden');
+        toggleInputBtn.classList.remove('eye-hidden');
+        toggleInputBtn.textContent = '−';
+        toggleInputBtn.title = 'Ukryj pole dodawania';
+      }
+      
+      saveJSON(K_HIDE_INPUT, inputHidden);
+    });
+
     function placeCaret(el){ 
       const r=document.createRange(); 
       r.selectNodeContents(el); 
@@ -679,117 +946,76 @@
 
     // Menu
     menuBtn.addEventListener('click', openMenu);
-    function openMenu(){ renderListsBox(); applyHide(); menuSheet.setAttribute('aria-hidden','false'); }
+    function openMenu(){ renderListsBox(); applyHide(); applyStats(); menuSheet.setAttribute('aria-hidden','false'); }
+    
+    // Zamykanie menu po kliknięciu w tło
+    menuSheet.addEventListener('click', (e) => {
+      if (e.target === menuSheet) {
+        menuSheet.setAttribute('aria-hidden','true');
+      }
+    });
+    
     closeMenu.addEventListener('click', ()=> menuSheet.setAttribute('aria-hidden','true'));
+    
     toggleHide.addEventListener('change', ()=>{ 
       hideDone = toggleHide.checked; 
       saveJSON(K_HIDE, hideDone); 
       renderList(); 
       showToast(hideDone ? 'Ukryto ukończone' : 'Pokazano ukończone', 'info');
     });
+    
+    toggleStats.addEventListener('change', ()=>{ 
+      showStats = toggleStats.checked; 
+      saveJSON(K_STATS, showStats); 
+      updateStats();
+      showToast(showStats ? 'Pokazano statystyki' : 'Ukryto statystyki', 'info');
+    });
 
     // Styl strony
     styleBtn.addEventListener('click', ()=>{
       menuSheet.setAttribute('aria-hidden','true');
-      colorPick.value = getList().color || '#10b981';
       styleSheet.setAttribute('aria-hidden','false');
     });
+    
+    styleSheet.addEventListener('click', (e) => {
+      if (e.target === styleSheet) {
+        styleSheet.setAttribute('aria-hidden','true');
+      }
+    });
+    
     densNormal.addEventListener('click', ()=>{ style.density='normal'; applyStyle(); saveJSON(K_STYLE, style); showToast('Gęstość: normalna', 'info') });
     densCompact.addEventListener('click', ()=>{ style.density='compact'; applyStyle(); saveJSON(K_STYLE, style); showToast('Gęstość: kompaktowa', 'info') });
     sizeNormal.addEventListener('click', ()=>{ style.size='normal'; applyStyle(); saveJSON(K_STYLE, style); showToast('Rozmiar: normalny', 'info') });
     sizeBig.addEventListener('click', ()=>{ style.size='big'; applyStyle(); saveJSON(K_STYLE, style); showToast('Rozmiar: duży', 'info') });
-    colorPick.addEventListener('input', ()=>{
-      const l=getList(); l.color = colorPick.value; 
-      if (save()) {
-        refreshHeader();
-        showToast('Kolor listy zaktualizowany', 'success');
-      }
-    });
     closeStyle.addEventListener('click', ()=> styleSheet.setAttribute('aria-hidden','true'));
 
-    // Saved sheet
-    savedBtn.addEventListener('click', ()=>{ renderSaved(); savedSheet.setAttribute('aria-hidden','false') });
-    closeSaved.addEventListener('click', ()=> savedSheet.setAttribute('aria-hidden','true'));
-    savedBox.addEventListener('click', e=>{
-      const row=e.target.closest('.card-row'); if(!row) return; const id=row.dataset.id;
-      const s=app.saved.find(x=>x.id===id); if(!s) return;
-      if(e.target.dataset.act==='delete'){
-        app.saved=app.saved.filter(x=>x.id!==id); 
-        if (save()) {
-          renderSaved(); 
-          showToast('Zapis usunięty', 'success');
-        }
-        return;
-      }
-      if(e.target.dataset.act==='add'){
-        const cur=getList(); const arr=cur.items||[]; const exist=new Set(arr.map(i=>norm(i.text)));
-        const toAdd=(s.items||[]).reduce((acc,it)=>{ const t=norm(it.text); if(!t||exist.has(t)) return acc; exist.add(t); acc.push({id:uid(),text:it.text,done:false,createdAt:Date.now()}); return acc },[]);
-        const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done);
-        cur.items=[...toAdd, ...act, ...done]; 
-        if (save()) {
-          savedSheet.setAttribute('aria-hidden','true'); 
-          renderList();
-          showToast(`Dodano ${toAdd.length} zadań`, 'success');
-        }
-        return;
-      }
-      if(e.target.dataset.act==='replace'){
-        if(!confirm('Zastąpić bieżącą listę tym zapisem?')) return;
-        const cur=getList(); cur.items=(s.items||[]).map(it=>({id:uid(),text:it.text,done:!!it.done,createdAt:Date.now()})); 
-        if (save()) {
-          savedSheet.setAttribute('aria-hidden','true'); 
-          renderList();
-          showToast('Lista zastąpiona', 'success');
-        }
-        return;
-      }
-      if(e.target.dataset.act==='new'){
-        const name=uniqueName(s.name||'Lista'); const idNew=uid();
-        app.lists.push({ id:idNew, name, color: s.color || '#10b981', items: (s.items||[]).map(it=>({id:uid(),text:it.text,done:!!it.done,createdAt:Date.now()})), history:[] });
-        app.active=idNew; 
-        if (save()) {
-          savedSheet.setAttribute('aria-hidden','true'); 
-          refreshHeader(); 
-          renderList();
-          showToast(`Utworzono nową listę: ${name}`, 'success');
-        }
-      }
-    });
-    function uniqueName(base){
-      const names=new Set(app.lists.map(l=>l.name.trim().toLowerCase()));
-      if(!names.has(base.trim().toLowerCase())) return base;
-      let i=1; while(names.has((base+' ('+i+')').toLowerCase())) i++; return base+' ('+i+')';
-    }
-
-    // Historia sheet (dodawanie do listy)
+    // Historia
     historyBtn.addEventListener('click', ()=>{ renderHistory(); historySheet.setAttribute('aria-hidden','false') });
-    closeHistory.addEventListener('click', ()=> historySheet.setAttribute('aria-hidden','true'));
-    historyBox.addEventListener('click', e=>{
-      const row=e.target.closest('.card-row'); if(!row) return;
-      if(e.target.dataset.act!=='add') return;
-      const text = row.querySelector('.row div')?.textContent || row.dataset.text;
-      if(!text) return;
-      const cur=getList(); const arr=cur.items||[]; const exists=arr.find(i=> norm(i.text)===norm(text));
-      if(!exists){
-        const act=arr.filter(i=>!i.done), done=arr.filter(i=>i.done);
-        cur.items=[{id:uid(), text, done:false, createdAt:Date.now()}, ...act, ...done];
-        if (save()) {
-          renderList();
-          showToast('Zadanie dodane z historii', 'success');
-        }
-      } else {
-        showToast('Zadanie już istnieje na liście', 'info');
+    
+    historySheet.addEventListener('click', (e) => {
+      if (e.target === historySheet) {
+        historySheet.setAttribute('aria-hidden','true');
       }
     });
+    
+    closeHistory.addEventListener('click', ()=> historySheet.setAttribute('aria-hidden','true'));
 
-    // Copy / Print
-    copyBtn.addEventListener('click', ()=> openAction('copy'));
-    printBtn.addEventListener('click', ()=> openAction('print'));
+    // Druk
+    printBtn.addEventListener('click', ()=> openAction());
+    
+    actionSheet.addEventListener('click', (e) => {
+      if (e.target === actionSheet) {
+        actionSheet.setAttribute('aria-hidden','true');
+      }
+    });
+    
     closeActionBtn.addEventListener('click', ()=> actionSheet.setAttribute('aria-hidden','true'));
-    function openAction(kind){
+    
+    function openAction(){
       pickLists.innerHTML='';
       app.lists.forEach(l=>{
-        const row=document.createElement('div'); row.className='row-item';
+        const row=document.createElement('div'); 
+        row.className='row-item';
         
         const label = document.createElement('label');
         label.className = 'name';
@@ -811,85 +1037,105 @@
         pickLists.appendChild(row);
       });
       includeDone.checked=true;
-      if(kind==='copy'){ actionTitle.textContent='Kopiuj listy'; printOpts.style.display='none' }
-      else{ actionTitle.textContent='Drukuj listy'; printOpts.style.display='flex' }
-      doAction.onclick = ()=> kind==='copy' ? doCopy() : doPrint();
       actionSheet.setAttribute('aria-hidden','false');
     }
-    function selectedIds(){ return Array.from(pickLists.querySelectorAll('input[type=checkbox]:checked')).map(i=> i.dataset.id) }
-    function doCopy(){
-      const ids=selectedIds(); if(ids.length===0){ showToast('Wybierz listy', 'error'); return }
-      const include=includeDone.checked;
-      const now=fmt(Date.now());
-      const parts=[`Zestawienie list • ${now}`, ''];
-      ids.forEach(id=>{
-        const l=app.lists.find(x=>x.id===id); if(!l) return;
-        parts.push(l.name||'Lista');
-        (l.items||[]).forEach(it=>{ if(!include && it.done) return; parts.push(`- [${it.done?'x':' '}] ${it.text}`) });
-        parts.push('');
-      });
-      const text=parts.join('\n').replace(/\n{3,}/g,'\n\n');
-      try{
-        if(navigator.clipboard && window.isSecureContext){ 
-          navigator.clipboard.writeText(text).then(() => {
-            showToast('Skopiowano do schowka', 'success');
-          }).catch(() => {
-            fallbackCopy(text);
-          });
-        } else { 
-          fallbackCopy(text);
-        }
-      }catch(e){ 
-        showToast('Nie udało się skopiować', 'error');
-      }
-      actionSheet.setAttribute('aria-hidden','true');
+    
+    function selectedIds(){ 
+      return Array.from(pickLists.querySelectorAll('input[type=checkbox]:checked')).map(i=> i.dataset.id) 
     }
-    function fallbackCopy(text) {
-      const ta=document.createElement('textarea'); 
-      ta.value=text; 
-      document.body.appendChild(ta); 
-      ta.select(); 
-      document.execCommand('copy'); 
-      document.body.removeChild(ta);
-      showToast('Skopiowano do schowka', 'success');
-    }
+    
     function doPrint(){
-      const ids=selectedIds(); if(ids.length===0){ showToast('Wybierz listy', 'error'); return }
+      const ids=selectedIds(); 
+      if(ids.length===0){ 
+        showToast('Wybierz listy', 'error'); 
+        return 
+      }
       const include=includeDone.checked;
       const st=showTitle.checked, sd=showDate.checked;
       const now=fmt(Date.now());
-      const cont=document.getElementById('printContainer');
-      cont.innerHTML='';
+      
+      // Tworzymy nowe okno do druku z poprawkami dla kolorów
+      const printWindow = window.open('', '_blank');
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Listy zadań</title>
+          <meta charset="utf-8">
+          <style>
+            @page { margin: 15mm; }
+            body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 1.4; color: #000; background: white; margin: 0; padding: 0; }
+            .prn-list { margin: 0 0 8mm; break-inside: avoid; }
+            .prn-head { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #000; padding-bottom: 1mm; margin-bottom: 2mm; }
+            .prn-title { font-weight: bold; font-size: 14pt; display: flex; align-items: center; gap: 6px; }
+            .prn-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+            .prn-meta { font-size: 10pt; color: #666; }
+            .prn-ul { list-style: none; padding: 0; margin: 0; }
+            .prn-li { margin: 1mm 0; padding: 0.5mm 0; break-inside: avoid; font-size: 11pt; }
+            .prn-li.done { text-decoration: line-through; color: #666; }
+            @media print {
+              body { margin: 0; }
+              * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+            }
+          </style>
+        </head>
+        <body>
+      `);
+      
       ids.forEach(id=>{
-        const l=app.lists.find(x=>x.id===id); if(!l) return;
-        const sec=document.createElement('section'); sec.className='prn-list prn-wrap';
-        const head=document.createElement('div'); head.className='prn-head'+(!st&&!sd?' hidden':'');
-        head.innerHTML=`<div class="prn-title">${st? esc(l.name||'Lista'): ''}</div><div class="prn-meta">${sd? 'Data: '+esc(now): ''}</div>`;
-        const ul=document.createElement('ul'); ul.className='prn-ul';
-        (l.items||[]).forEach(it=>{ if(!include&&it.done) return; const li=document.createElement('li'); li.className='prn-li'+(it.done?' done':''); li.textContent=it.text||''; ul.appendChild(li) });
-        sec.appendChild(head); sec.appendChild(ul); cont.appendChild(sec);
+        const l=app.lists.find(x=>x.id===id); 
+        if(!l) return;
+        
+        printWindow.document.write(`<section class="prn-list">`);
+        
+        if(st || sd){
+          printWindow.document.write(`
+            <div class="prn-head">
+              <div class="prn-title">
+                <span class="prn-dot" style="background: ${l.color || '#10b981'}"></span>
+                ${st? esc(l.name||'Lista'): ''}
+              </div>
+              <div class="prn-meta">${sd? 'Data: '+esc(now): ''}</div>
+            </div>
+          `);
+        }
+        
+        printWindow.document.write(`<ul class="prn-ul">`);
+        
+        (l.items||[]).forEach(it=>{ 
+          if(!include&&it.done) return; 
+          const doneClass = it.done ? 'done' : '';
+          printWindow.document.write(`
+            <li class="prn-li ${doneClass}">
+              ${it.done ? '✓' : '○'} ${esc(it.text)}
+            </li>
+          `);
+        });
+        
+        printWindow.document.write(`</ul></section>`);
       });
-      actionSheet.setAttribute('aria-hidden','true');
-      requestAnimationFrame(()=> setTimeout(()=> window.print?.(), 0));
+      
+      printWindow.document.write('</body></html>');
+      printWindow.document.close();
+      
+      setTimeout(() => {
+        printWindow.print();
+        actionSheet.setAttribute('aria-hidden','true');
+      }, 250);
     }
+    
+    doAction.addEventListener('click', doPrint);
 
     // Theme
-    document.getElementById('themeLight').addEventListener('click', ()=> { applyTheme('light'); showToast('Motyw: jasny', 'info') });
-    document.getElementById('themeDark').addEventListener('click', ()=> { applyTheme('dark'); showToast('Motyw: ciemny', 'info') });
-    document.getElementById('themeSystem').addEventListener('click', ()=> { applyTheme('system'); showToast('Motyw: systemowy', 'info') });
-    applyTheme(loadJSON(K_THEME,'system'));
+    themeLight.addEventListener('click', ()=> applyTheme('light'));
+    themeDark.addEventListener('click', ()=> applyTheme('dark'));
+    applyTheme(loadJSON(K_THEME,'light'));
 
-    // Reset
+    // Reset - twardy reset do ustawień fabrycznych
     resetBtn.addEventListener('click', ()=>{
-      if(!confirm('Zresetować dane tej aplikacji?')) return;
-      [K_APP, K_HIDE, K_THEME, K_STYLE].forEach(k=> localStorage.removeItem(k));
-      showToast('Dane zresetowane', 'success');
-      setTimeout(() => location.reload(), 1000);
-    });
-    hardResetBtn.addEventListener('click', ()=>{
-      if(!confirm('Twardy reset: usunie cały localStorage tej strony. Kontynuować?')) return;
+      if(!confirm('Przywrócić ustawienia fabryczne? Wszystkie dane zostaną usunięte.')) return;
       localStorage.clear(); 
-      showToast('Wszystkie dane usunięte', 'success');
+      showToast('Przywrócono ustawienia fabryczne', 'success');
       setTimeout(() => location.reload(), 1000);
     });
 
@@ -904,6 +1150,7 @@
         renderList();
         renderListsBox();
         showToast(`Utworzono listę: ${name}`, 'success');
+        menuSheet.setAttribute('aria-hidden','true');
       }
     });
 
@@ -914,7 +1161,7 @@
         return;
       }
       const currentList = getList();
-      if (!confirm(`Czy na pewno chcesz usunąć listę "${currentList.name}"?`)) return;
+      if (!confirm(`Usunąć listę "${currentList.name}"?`)) return;
       
       app.lists = app.lists.filter(l => l.id !== currentList.id);
       app.active = app.lists[0].id;
@@ -923,13 +1170,22 @@
         renderList();
         renderListsBox();
         showToast('Lista usunięta', 'success');
+        menuSheet.setAttribute('aria-hidden','true');
       }
     });
+
+    function uniqueName(base){
+      const names=new Set(app.lists.map(l=>l.name.trim().toLowerCase()));
+      if(!names.has(base.trim().toLowerCase())) return base;
+      let i=1; while(names.has((base+' ('+i+')').toLowerCase())) i++; return base+' ('+i+')';
+    }
 
     // Init
     function init(){
       applyHide();
+      applyStats();
       applyStyle();
+      applyInputHidden();
       refreshHeader();
       renderList();
     }
@@ -938,12 +1194,9 @@
     // ESC zamyka arkusze
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
-        [menuSheet, savedSheet, historySheet, actionSheet, styleSheet].forEach(s=> s.setAttribute('aria-hidden','true'));
+        [menuSheet, historySheet, actionSheet, styleSheet, colorSheet].forEach(s=> s.setAttribute('aria-hidden','true'));
       }
     });
   </script>
-
-  <!-- Kontener druku -->
-  <div id="printContainer" style="display:none"></div>
 </body>
 </html>

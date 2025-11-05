@@ -20,17 +20,22 @@
     body{margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.5}
     .wrap{max-width:480px; margin:0 auto; padding:24px 20px; min-height:100vh}
     
-    /* Header */
-    header{display:flex; align-items:center; justify-content:space-between; margin-bottom:32px}
-    h1{margin:0; font-size:24px; font-weight:600; display:flex; align-items:center; gap:12px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:background-color 0.15s}
-    h1:hover{background:var(--border)}
-    .dot{width:12px; height:12px; border-radius:50%; cursor:pointer; transition:transform 0.15s}
+    /* Header - POPRAWIONE z wieloliniowym tekstem */
+    header{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; gap:12px}
+    .header-title{display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:background-color 0.15s; flex:1; min-width:0}
+    .header-title:hover{background:var(--border)}
+    .header-text{font-weight:600; margin:0; word-wrap:break-word; word-break:break-word; flex:1; min-width:0; line-height:1.3; font-size:24px; max-height:none; overflow:visible}
+    .header-text.medium{font-size:22px}
+    .header-text.small{font-size:20px}
+    .header-text.xsmall{font-size:18px}
+    .dot{width:12px; height:12px; border-radius:50%; cursor:pointer; transition:transform 0.15s; flex-shrink:0; margin-top:8px}
     .dot:hover{transform:scale(1.2)}
     
     /* Przyciski */
-    .icon-btn{height:40px; width:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:16px}
+    .icon-btn{height:40px; width:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:16px; flex-shrink:0}
     .icon-btn:hover{background:var(--border)}
     .icon-btn.eye-hidden{opacity:0.6; background:var(--border)}
+    .icon-btn.edit-mode{background:var(--accent); color:white; border-color:var(--accent)}
     .add-btn{height:48px; width:48px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:20px; display:flex; align-items:center; justify-content:center}
     .add-btn:hover{background:var(--border); transform:scale(1.02)}
     
@@ -41,10 +46,16 @@
     .input:focus{outline:none; border-color:var(--accent)}
     .input::placeholder{color:var(--muted)}
     
-    /* Lista zadań - UPROSZCZONE bez drag & drop */
+    /* Lista zadań - WERSJA NORMALNA */
     .list{list-style:none; padding:0; margin:0 0 40px 0}
     .item{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:8px; padding:16px 12px; margin:8px 0; transition:all 0.15s; border:1px solid var(--border); position:relative; min-height:60px}
     .item:hover{border-color:var(--accent)}
+    
+    /* Lista zadań - WERSJA TRYBU EDYCJI */
+    .edit-mode-enabled .item{cursor:grab; border:2px dashed var(--border)}
+    .edit-mode-enabled .item:hover{border-color:var(--accent); background:var(--bg)}
+    .edit-mode-enabled .item.dragging{opacity:0.5; transform:rotate(3deg); cursor:grabbing}
+    .edit-mode-enabled .item.drag-over{border:2px dashed var(--accent)}
     
     /* PROSTE CHECKBOXY które działają na Androidzie */
     .check{width:24px; height:24px; border:2px solid var(--border); border-radius:4px; background:var(--card); cursor:pointer; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; transition:all 0.15s}
@@ -164,16 +175,42 @@
         width: 30px;
         height: 30px;
       }
+      
+      header {
+        gap: 8px;
+      }
+      
+      .header-text {
+        font-size: 22px;
+      }
+      
+      .header-text.medium {
+        font-size: 20px;
+      }
+      
+      .header-text.small {
+        font-size: 18px;
+      }
+      
+      .header-text.xsmall {
+        font-size: 16px;
+      }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
-      <h1><span id="hdr-dot" class="dot" style="background:#10b981" title="Kliknij aby zmienić kolor"></span><span id="title" class="title">Lista</span></h1>
+      <div class="header-title">
+        <span id="hdr-dot" class="dot" style="background:#10b981" title="Kliknij aby zmienić kolor"></span>
+        <span id="title" class="header-text">Lista</span>
+      </div>
       <div style="display:flex; gap:8px;">
-        <!-- Nowy przycisk oko - zmieniona ikonka -->
+        <!-- Przycisk trybu edycji -->
+        <button id="editModeBtn" class="icon-btn" title="Tryb edycji">✎</button>
+        <!-- Przycisk ukrywania pola -->
         <button id="toggleInputBtn" class="icon-btn" title="Ukryj/pokaż pole dodawania">−</button>
+        <!-- Menu -->
         <button id="menuBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false" title="Menu">⋯</button>
       </div>
     </header>
@@ -352,6 +389,7 @@
     const K_HIDE='list.hide'; const K_THEME='list.theme';
     const K_STYLE='list.style.v1'; const K_STATS='list.stats';
     const K_HIDE_INPUT='list.hideInput';
+    const K_EDIT_MODE='list.editMode';
 
     // Predefiniowane kolory
     const COLORS = [
@@ -374,6 +412,8 @@
     let showStats = loadJSON(K_STATS, false);
     let style = loadJSON(K_STYLE, { density:'normal', size:'normal' });
     let inputHidden = loadJSON(K_HIDE_INPUT, false);
+    let editMode = loadJSON(K_EDIT_MODE, false);
+    let dragSrcEl = null;
 
     // Elements
     const listEl = document.getElementById('list');
@@ -385,6 +425,7 @@
     const statsEl = document.getElementById('stats');
     const progressContainer = document.getElementById('progressContainer');
     const toggleInputBtn = document.getElementById('toggleInputBtn');
+    const editModeBtn = document.getElementById('editModeBtn');
 
     const menuBtn = document.getElementById('menuBtn');
     const menuSheet = document.getElementById('menuSheet');
@@ -435,6 +476,25 @@
     function norm(s){ return String(s||'').trim().toLowerCase() }
     function systemTheme(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light' }
 
+    // Funkcja do inteligentnego dopasowania rozmiaru czcionki
+    function adjustTitleFontSize() {
+      const text = titleEl.textContent || '';
+      const length = text.length;
+      
+      // Usuń wszystkie klasy rozmiaru
+      titleEl.classList.remove('medium', 'small', 'xsmall');
+      
+      // Dopasuj rozmiar czcionki na podstawie długości tekstu
+      if (length > 40) {
+        titleEl.classList.add('xsmall');
+      } else if (length > 25) {
+        titleEl.classList.add('small');
+      } else if (length > 15) {
+        titleEl.classList.add('medium');
+      }
+      // Dla tekstu do 15 znaków - domyślny rozmiar (24px)
+    }
+
     // Toast notifications - 1.4 sekundy
     function showToast(message, type = 'info') {
       const toast = document.createElement('div');
@@ -447,6 +507,70 @@
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
       }, 1400);
+    }
+
+    // Drag & Drop functions - tylko dla trybu edycji
+    function handleDragStart(e) {
+      if (!editMode) return;
+      dragSrcEl = this;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', this.outerHTML);
+      
+      this.classList.add('dragging');
+    }
+
+    function handleDragOver(e) {
+      if (!editMode) return;
+      if (e.preventDefault) {
+        e.preventDefault();
+      }
+      e.dataTransfer.dropEffect = 'move';
+      return false;
+    }
+
+    function handleDragEnter(e) {
+      if (!editMode) return;
+      this.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      if (!editMode) return;
+      this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+      if (!editMode) return;
+      if (e.stopPropagation) {
+        e.stopPropagation();
+      }
+      
+      if (dragSrcEl !== this) {
+        const list = getList();
+        const draggedId = dragSrcEl.dataset.id;
+        const targetId = this.dataset.id;
+        
+        const draggedIndex = list.items.findIndex(item => item.id === draggedId);
+        const targetIndex = list.items.findIndex(item => item.id === targetId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+          // Zamiana pozycji
+          [list.items[draggedIndex], list.items[targetIndex]] = [list.items[targetIndex], list.items[draggedIndex]];
+          save();
+          renderList();
+          showToast('Pozycja przeniesiona', 'success');
+        }
+      }
+      
+      this.classList.remove('drag-over');
+      return false;
+    }
+
+    function handleDragEnd(e) {
+      if (!editMode) return;
+      document.querySelectorAll('.item').forEach(item => {
+        item.classList.remove('dragging');
+        item.classList.remove('drag-over');
+      });
     }
 
     // Statystyki
@@ -531,11 +655,27 @@
         toggleInputBtn.title = 'Ukryj pole dodawania';
       }
     }
+    function applyEditMode() {
+      if (editMode) {
+        document.body.classList.add('edit-mode-enabled');
+        editModeBtn.classList.add('edit-mode');
+        editModeBtn.title = 'Wyłącz tryb edycji';
+        showToast('Tryb edycji włączony', 'info');
+      } else {
+        document.body.classList.remove('edit-mode-enabled');
+        editModeBtn.classList.remove('edit-mode');
+        editModeBtn.title = 'Włącz tryb edycji';
+        showToast('Tryb edycji wyłączony', 'info');
+      }
+    }
 
     function refreshHeader(){
       const l=getList();
       titleEl.textContent=l.name||'Lista';
       hdrDot.style.background = l.color || '#10b981';
+      
+      // Dostosuj rozmiar czcionki
+      adjustTitleFontSize();
       
       // Aktualizuj zaznaczenie koloru
       updateColorSelection();
@@ -550,7 +690,7 @@
       });
     }
 
-    // Render list - UPROSZCZONE bez drag & drop
+    // Render list
     function renderList(){
       const arr=sync();
       listEl.innerHTML='';
@@ -580,7 +720,18 @@
         li.appendChild(del);
         listEl.appendChild(li);
 
-        // PROSTA OBSŁUGA CHECKBOXA - kliknięcie
+        // Drag & Drop events - tylko w trybie edycji
+        if (editMode) {
+          li.setAttribute('draggable', 'true');
+          li.addEventListener('dragstart', handleDragStart);
+          li.addEventListener('dragenter', handleDragEnter);
+          li.addEventListener('dragover', handleDragOver);
+          li.addEventListener('dragleave', handleDragLeave);
+          li.addEventListener('drop', handleDrop);
+          li.addEventListener('dragend', handleDragEnd);
+        }
+
+        // OBSŁUGA CHECKBOXA - kliknięcie
         check.addEventListener('click', function(e) {
           e.stopPropagation();
           const id = li.dataset.id;
@@ -599,7 +750,7 @@
           }
         });
 
-        // Edycja zadania
+        // Edycja zadania - podwójne kliknięcie
         txt.addEventListener('dblclick', () => {
           if (txt.isContentEditable) return;
           txt.setAttribute('contenteditable', 'true');
@@ -862,21 +1013,48 @@
       }
     });
 
-    // Title edit
+    // Title edit - z limitem znaków i automatycznym dopasowaniem
     titleEl.parentElement.addEventListener('dblclick', ()=>{
+      const currentName = titleEl.textContent;
       titleEl.setAttribute('contenteditable','true'); 
-      placeCaret(titleEl); 
       titleEl.focus();
+      placeCaret(titleEl);
+      
+      // Ogranicz długość podczas edycji
+      titleEl.addEventListener('input', function() {
+        if (this.textContent.length > 50) {
+          this.textContent = this.textContent.substring(0, 50);
+          placeCaret(this);
+          showToast('Maksymalnie 50 znaków', 'info');
+        }
+        adjustTitleFontSize();
+      });
     });
+    
     titleEl.addEventListener('keydown', e=>{
       if(!titleEl.isContentEditable) return;
-      if(e.key==='Enter'){ e.preventDefault(); titleEl.blur() }
-      if(e.key==='Escape'){ titleEl.textContent=getList().name||'Lista'; titleEl.blur() }
+      if(e.key==='Enter'){ 
+        e.preventDefault(); 
+        titleEl.blur() 
+      }
+      if(e.key==='Escape'){ 
+        titleEl.textContent=getList().name||'Lista'; 
+        adjustTitleFontSize();
+        titleEl.blur() 
+      }
     });
+    
     titleEl.addEventListener('blur', ()=>{
       if(!titleEl.isContentEditable) return;
       const l=getList();
       let n = (titleEl.textContent||'').trim()||'Lista';
+      
+      // Limit 50 znaków
+      if (n.length > 50) {
+        n = n.substring(0, 50);
+        showToast('Nazwa skrócona do 50 znaków', 'info');
+      }
+      
       l.name=n; 
       if (save()) {
         refreshHeader();
@@ -933,6 +1111,14 @@
       }
       
       saveJSON(K_HIDE_INPUT, inputHidden);
+    });
+
+    // Przycisk trybu edycji
+    editModeBtn.addEventListener('click', () => {
+      editMode = !editMode;
+      applyEditMode();
+      saveJSON(K_EDIT_MODE, editMode);
+      renderList(); // Przerenderuj listę aby dodać/usunąć drag & drop
     });
 
     function placeCaret(el){ 
@@ -1186,6 +1372,7 @@
       applyStats();
       applyStyle();
       applyInputHidden();
+      applyEditMode();
       refreshHeader();
       renderList();
     }

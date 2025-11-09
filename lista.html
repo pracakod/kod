@@ -19,8 +19,11 @@
     html,body{height:100%}
     body{margin:0; font-family:Inter,system-ui,sans-serif; background:var(--bg); color:var(--text); line-height:1.5}
     .wrap{max-width:480px; margin:0 auto; padding:24px 20px; min-height:100vh}
-    
-    /* Header - POPRAWIONE z wieloliniowym tekstem */
+
+    /* Widoczna obwódka focus dla klawiatury */
+    :focus-visible{ outline:2px solid var(--accent); outline-offset:2px }
+
+    /* Header - pop. z wieloliniowym tekstem */
     header{display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:32px; gap:12px}
     .header-title{display:flex; align-items:flex-start; gap:12px; cursor:pointer; padding:8px 12px; border-radius:8px; transition:background-color 0.15s; flex:1; min-width:0}
     .header-title:hover{background:var(--border)}
@@ -30,7 +33,7 @@
     .header-text.xsmall{font-size:18px}
     .dot{width:12px; height:12px; border-radius:50%; cursor:pointer; transition:transform 0.15s; flex-shrink:0; margin-top:8px}
     .dot:hover{transform:scale(1.2)}
-    
+
     /* Przyciski */
     .icon-btn{height:40px; width:40px; display:flex; align-items:center; justify-content:center; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:16px; flex-shrink:0}
     .icon-btn:hover{background:var(--border)}
@@ -38,38 +41,38 @@
     .icon-btn.edit-mode{background:var(--accent); color:white; border-color:var(--accent)}
     .add-btn{height:48px; width:48px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-size:20px; display:flex; align-items:center; justify-content:center}
     .add-btn:hover{background:var(--border); transform:scale(1.02)}
-    
+
     /* Formularz */
     .input-row{display:flex; gap:12px; margin-bottom:24px; align-items:center; transition:all 0.3s ease}
     .input-row.hidden{display:none}
     .input{height:48px; padding:0 16px; flex:1; border:1px solid var(--border); background:var(--card); color:var(--text); font-size:16px; border-radius:8px; transition:border-color 0.15s; font-family:inherit}
     .input:focus{outline:none; border-color:var(--accent)}
     .input::placeholder{color:var(--muted)}
-    
-    /* Lista zadań - WERSJA NORMALNA */
+
+    /* Lista zadań - normalna */
     .list{list-style:none; padding:0; margin:0 0 40px 0}
     .item{display:flex; align-items:center; gap:12px; background:var(--card); border-radius:8px; padding:16px 12px; margin:8px 0; transition:all 0.15s; border:1px solid var(--border); position:relative; min-height:60px}
     .item:hover{border-color:var(--accent)}
-    
-    /* Lista zadań - WERSJA TRYBU EDYCJI */
+
+    /* Lista zadań - tryb edycji */
     .edit-mode-enabled .item{cursor:grab; border:2px dashed var(--border)}
     .edit-mode-enabled .item:hover{border-color:var(--accent); background:var(--bg)}
     .edit-mode-enabled .item.dragging{opacity:0.5; transform:rotate(3deg); cursor:grabbing}
     .edit-mode-enabled .item.drag-over{border:2px dashed var(--accent)}
-    
-    /* PROSTE CHECKBOXY które działają na Androidzie */
+
+    /* Proste CHECKBOXY */
     .check{width:24px; height:24px; border:2px solid var(--border); border-radius:4px; background:var(--card); cursor:pointer; flex-shrink:0; position:relative; display:flex; align-items:center; justify-content:center; transition:all 0.15s}
     .check.checked{background:var(--accent); border-color:var(--accent)}
     .check.checked::after{content:"✓"; color:white; font-size:14px; font-weight:bold; line-height:1}
-    
+
     .txt{flex:1; min-height:20px; word-break:break-word; font-size:15px; padding:2px 0}
     .txt[contenteditable="true"]{outline:2px solid var(--accent); border-radius:4px; padding:4px 8px; background:var(--bg); margin:-2px -4px}
     .del{width:28px; height:28px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:4px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-size:16px}
     .del:hover{background:var(--danger); color:white}
     .item.done .txt{text-decoration:line-through; color:var(--muted)}
     .empty{text-align:center; color:var(--muted); font-size:15px; padding:40px 20px}
-    
-    /* Statystyki - początkowo ukryte */
+
+    /* Statystyki */
     .stats{display:none; justify-content:space-between; align-items:center; margin:24px 0 16px; padding:16px; background:var(--card); border-radius:8px; border:1px solid var(--border)}
     .stats.show{display:flex}
     .stat-item{display:flex; flex-direction:column; align-items:center; gap:4px}
@@ -77,23 +80,23 @@
     .stat-label{font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
     .progress{height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin:8px 0}
     .progress-bar{height:100%; background:var(--accent); transition:width 0.3s ease}
-    
-    /* Arkusze */
+
+    /* Arkusze (modale) */
     .sheet{position:fixed; inset:0; background:rgba(0,0,0,0.4); display:none; align-items:flex-end; z-index:50}
     .sheet[aria-hidden="false"]{display:flex}
     .card{width:100%; max-width:480px; margin:0 auto; background:var(--card); color:var(--text); border-top-left-radius:16px; border-top-right-radius:16px; padding:20px; border:1px solid var(--border); max-height:80vh; overflow-y:auto; position:relative}
     .card h3{margin:0 0 16px; font-size:18px; font-weight:600; padding-right:40px}
-    
-    /* Przycisk zamknij X u góry po prawej */
+
+    /* Przycisk zamknij X */
     .close-btn{position:absolute; top:16px; right:16px; width:32px; height:32px; border:none; background:transparent; color:var(--muted); cursor:pointer; border-radius:6px; display:flex; align-items:center; justify-content:center; transition:all 0.15s; font-size:20px}
     .close-btn:hover{background:var(--border); color:var(--text)}
-    
-    /* Menu - Nowy układ */
+
+    /* Menu - układ */
     .menu-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:16px 0}
     .menu-section{margin:20px 0}
     .menu-section:first-child{margin-top:0}
     .menu-section-title{margin:0 0 12px 0; font-size:14px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px}
-    
+
     /* Przyciski w menu */
     .btn{height:44px; padding:0 16px; border:1px solid var(--border); background:var(--card); color:var(--text); border-radius:8px; cursor:pointer; transition:all 0.15s; font-family:inherit; font-size:14px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:8px; width:100%}
     .btn:hover{background:var(--border)}
@@ -101,7 +104,7 @@
     .btn.primary:hover{background:var(--accent); opacity:0.9}
     .btn.danger{border-color:var(--danger); color:var(--danger)}
     .btn.danger:hover{background:var(--danger); color:white}
-    
+
     /* Listy w menu */
     .list-rows{display:flex; flex-direction:column; gap:8px; max-height:200px; overflow:auto; border:1px solid var(--border); border-radius:8px; padding:8px}
     .row-item{display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px; border-radius:6px; cursor:pointer; transition:background-color 0.15s}
@@ -109,8 +112,8 @@
     .name{display:flex; align-items:center; gap:8px; font-weight:500}
     .dot-s{width:8px; height:8px; border-radius:50%}
     .sub{font-size:12px; color:var(--muted)}
-    
-    /* Historia - scalona */
+
+    /* Historia */
     .history-section{margin:16px 0}
     .history-section:first-child{margin-top:0}
     .history-section-header{display:flex; align-items:center; gap:8px; margin-bottom:8px; padding:8px 12px; background:var(--bg); border-radius:6px; border:1px solid var(--border)}
@@ -125,31 +128,31 @@
     .history-add:hover{opacity:0.8}
     .history-delete{background:var(--danger); color:white}
     .history-delete:hover{opacity:0.8}
-    
+
     /* Wybór koloru */
     .color-picker{display:grid; grid-template-columns:repeat(5, 1fr); gap:12px; margin:16px 0}
     .color-option{width:44px; height:44px; border-radius:8px; cursor:pointer; border:2px solid transparent; transition:all 0.15s; display:flex; align-items:center; justify-content:center}
     .color-option:hover{transform:scale(1.1)}
     .color-option.selected{border-color:var(--text); transform:scale(1.1)}
-    
+
     /* Toasty */
     .toast{position:fixed; top:20px; right:20px; padding:12px 16px; background:var(--card); border:1px solid var(--border); border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.1); z-index:1000; transform:translateX(120%); transition:transform 0.3s ease}
     .toast.show{transform:translateX(0)}
     .toast.success{border-left:4px solid var(--accent)}
     .toast.error{border-left:4px solid var(--danger)}
     .toast.info{border-left:4px solid var(--muted)}
-    
+
     /* Gęstość */
     [data-density="compact"] .item{padding:12px; margin:6px 0; min-height:52px}
     [data-density="compact"] .input-row{margin-bottom:20px}
     [data-density="compact"] .check{width:20px; height:20px}
-    
+
     /* Rozmiar tekstu */
     [data-size="big"] body{font-size:17px}
     [data-size="big"] .input{font-size:17px}
     [data-size="big"] .txt{font-size:16px}
     [data-size="big"] .check{width:26px; height:26px}
-    
+
     /* Druk - poprawki dla kolorów */
     @media print {
       * {
@@ -158,65 +161,36 @@
         color-adjust: exact !important;
       }
     }
-    
-    /* Responsywność dla urządzeń mobilnych */
+
+    /* Responsywność */
     @media (max-width: 768px) {
-      .item {
-        padding: 18px 12px;
-        min-height: 64px;
-      }
-      
-      .check {
-        width: 28px;
-        height: 28px;
-      }
-      
-      [data-size="big"] .check {
-        width: 30px;
-        height: 30px;
-      }
-      
-      header {
-        gap: 8px;
-      }
-      
-      .header-text {
-        font-size: 22px;
-      }
-      
-      .header-text.medium {
-        font-size: 20px;
-      }
-      
-      .header-text.small {
-        font-size: 18px;
-      }
-      
-      .header-text.xsmall {
-        font-size: 16px;
-      }
+      .item { padding: 18px 12px; min-height: 64px; }
+      .check { width: 28px; height: 28px; }
+      [data-size="big"] .check { width: 30px; height: 30px; }
+      header { gap: 8px; }
+      .header-text { font-size: 22px; }
+      .header-text.medium { font-size: 20px; }
+      .header-text.small { font-size: 18px; }
+      .header-text.xsmall { font-size: 16px; }
     }
   </style>
 </head>
 <body>
   <main class="wrap">
     <header>
-      <div class="header-title">
+      <div class="header-title" title="Kliknij dwa razy aby edytować nazwę">
         <span id="hdr-dot" class="dot" style="background:#10b981" title="Kliknij aby zmienić kolor"></span>
         <span id="title" class="header-text">Lista</span>
       </div>
       <div style="display:flex; gap:8px;">
-        <!-- Przycisk trybu edycji -->
-        <button id="editModeBtn" class="icon-btn" title="Tryb edycji">✎</button>
-        <!-- Przycisk ukrywania pola -->
-        <button id="toggleInputBtn" class="icon-btn" title="Ukryj/pokaż pole dodawania">−</button>
-        <!-- Menu -->
-        <button id="menuBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false" title="Menu">⋯</button>
+        <button id="editModeBtn" class="icon-btn" title="Tryb edycji" aria-pressed="false">✎</button>
+        <button id="toggleInputBtn" class="icon-btn" title="Ukryj/pokaż pole dodawania" aria-pressed="false">−</button>
+        <button id="menuBtn" class="icon-btn" aria-haspopup="dialog" aria-expanded="false" aria-controls="menuSheet" title="Menu">⋯</button>
       </div>
     </header>
 
-    <!-- Statystyki - początkowo ukryte -->
-    <div id="stats" class="stats">
+    <!-- Statystyki -->
+    <div id="stats" class="stats" aria-live="polite">
       <div class="stat-item">
         <span id="totalCount" class="stat-number">0</span>
         <span class="stat-label">Wszystkie</span>
@@ -247,11 +221,11 @@
   </main>
 
   <!-- MENU -->
-  <div id="menuSheet" class="sheet" aria-hidden="true">
+  <div id="menuSheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="menuTitle">
     <div class="card">
-      <h3>Menu</h3>
-      <button class="close-btn" id="closeMenu">×</button>
-      
+      <h3 id="menuTitle">Menu</h3>
+      <button class="close-btn" id="closeMenu" aria-label="Zamknij">×</button>
+
       <div class="menu-section">
         <div class="menu-section-title">Listy</div>
         <div id="listsBox" class="list-rows"></div>
@@ -277,9 +251,10 @@
             <div style="display:flex; gap:4px">
               <button data-theme="light" class="btn" id="themeLight" style="width:auto; padding:0 12px">Jasny</button>
               <button data-theme="dark" class="btn" id="themeDark" style="width:auto; padding:0 12px">Ciemny</button>
+              <button data-theme="system" class="btn" id="themeSystem" style="width:auto; padding:0 12px">Systemowy</button>
             </div>
           </div>
-          
+
           <label style="display:flex; align-items:center; gap:8px; padding:8px 0; cursor:pointer">
             <input type="checkbox" id="toggleHide">
             <span>Ukryj ukończone</span>
@@ -290,7 +265,7 @@
             <span>Pokaż statystyki</span>
           </label>
         </div>
-        
+
         <div class="menu-grid" style="margin-top:16px">
           <button id="styleBtn" class="btn">Styl</button>
           <button id="resetBtn" class="btn danger">Resetuj</button>
@@ -299,11 +274,11 @@
     </div>
   </div>
 
-  <!-- STYL STRONY - bez zmiany koloru -->
-  <div id="styleSheet" class="sheet" aria-hidden="true">
+  <!-- STYL STRONY -->
+  <div id="styleSheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="styleTitle">
     <div class="card">
-      <h3>Styl strony</h3>
-      <button class="close-btn" id="closeStyle">×</button>
+      <h3 id="styleTitle">Styl strony</h3>
+      <button class="close-btn" id="closeStyle" aria-label="Zamknij">×</button>
       <div style="display:flex; flex-direction:column; gap:16px">
         <div style="display:flex; align-items:center; justify-content:space-between">
           <span>Gęstość</span>
@@ -312,7 +287,7 @@
             <button class="btn" id="densCompact" style="width:auto; padding:0 16px">Kompaktowa</button>
           </div>
         </div>
-        
+
         <div style="display:flex; align-items:center; justify-content:space-between">
           <span>Rozmiar tekstu</span>
           <div style="display:flex; gap:8px">
@@ -325,10 +300,10 @@
   </div>
 
   <!-- WYBÓR KOLORU -->
-  <div id="colorSheet" class="sheet" aria-hidden="true">
+  <div id="colorSheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="colorTitle">
     <div class="card">
-      <h3>Wybierz kolor listy</h3>
-      <button class="close-btn" id="closeColor">×</button>
+      <h3 id="colorTitle">Wybierz kolor listy</h3>
+      <button class="close-btn" id="closeColor" aria-label="Zamknij">×</button>
       <div class="color-picker">
         <div class="color-option" data-color="#10b981" style="background:#10b981" title="Zielony">✓</div>
         <div class="color-option" data-color="#3b82f6" style="background:#3b82f6" title="Niebieski"></div>
@@ -345,27 +320,32 @@
   </div>
 
   <!-- HISTORIA -->
-  <div id="historySheet" class="sheet" aria-hidden="true">
+  <div id="historySheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="historyTitle">
     <div class="card">
-      <h3>Historia zadań</h3>
-      <button class="close-btn" id="closeHistory">×</button>
+      <h3 id="historyTitle">Historia zadań</h3>
+      <button class="close-btn" id="closeHistory" aria-label="Zamknij">×</button>
       <div id="historyBox"></div>
     </div>
   </div>
 
   <!-- DRUK -->
-  <div id="actionSheet" class="sheet" aria-hidden="true">
+  <div id="actionSheet" class="sheet" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="printTitle">
     <div class="card">
-      <h3>Drukuj listy</h3>
-      <button class="close-btn" id="closeAction">×</button>
+      <h3 id="printTitle">Drukuj listy</h3>
+      <button class="close-btn" id="closeAction" aria-label="Zamknij">×</button>
       <div style="display:flex; flex-direction:column; gap:16px">
         <label style="display:flex; align-items:center; gap:8px">
           <input type="checkbox" id="includeDone" checked>
           <span>Uwzględnij ukończone</span>
         </label>
-        
+
+        <label style="display:flex; align-items:center; gap:8px">
+          <input type="checkbox" id="hideEmpty" checked>
+          <span>Ukryj puste listy</span>
+        </label>
+
         <div id="pickLists" class="list-rows"></div>
-        
+
         <div style="display:flex; flex-direction:column; gap:12px">
           <label style="display:flex; align-items:center; gap:8px">
             <input type="checkbox" id="showTitle" checked>
@@ -393,16 +373,8 @@
 
     // Predefiniowane kolory
     const COLORS = [
-      '#10b981', // zielony
-      '#3b82f6', // niebieski
-      '#8b5cf6', // fioletowy
-      '#f59e0b', // żółty
-      '#ef4444', // czerwony
-      '#06b6d4', // cyjan
-      '#84cc16', // limonkowy
-      '#f97316', // pomarańczowy
-      '#ec4899', // różowy
-      '#6b7280'  // szary
+      '#10b981','#3b82f6','#8b5cf6','#f59e0b','#ef4444',
+      '#06b6d4','#84cc16','#f97316','#ec4899','#6b7280'
     ];
 
     // State
@@ -414,6 +386,9 @@
     let inputHidden = loadJSON(K_HIDE_INPUT, false);
     let editMode = loadJSON(K_EDIT_MODE, false);
     let dragSrcEl = null;
+
+    // Do obsługi edycji tytułu (uniknięcie dublowania handlera)
+    let titleInputHandler = null;
 
     // Elements
     const listEl = document.getElementById('list');
@@ -454,6 +429,7 @@
 
     const actionSheet = document.getElementById('actionSheet');
     const includeDone = document.getElementById('includeDone');
+    const hideEmpty = document.getElementById('hideEmpty');
     const pickLists = document.getElementById('pickLists');
     const showTitle = document.getElementById('showTitle');
     const showDate = document.getElementById('showDate');
@@ -463,7 +439,48 @@
     const printBtn = document.getElementById('printBtn');
     const themeLight = document.getElementById('themeLight');
     const themeDark = document.getElementById('themeDark');
+    const themeSystem = document.getElementById('themeSystem');
     const resetBtn = document.getElementById('resetBtn');
+
+    // Focus trap/otwieranie/zamykanie sheetów
+    const sheetOpeners = new WeakMap();
+    function getFocusable(container){
+      return Array.from(container.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      )).filter(el => !el.hasAttribute('disabled') && el.offsetParent !== null);
+    }
+    function trapFocusHandler(e){
+      if(e.key !== 'Tab') return;
+      const card = e.currentTarget;
+      const focusables = getFocusable(card);
+      if(!focusables.length) return;
+      const first = focusables[0], last = focusables[focusables.length-1];
+      if(e.shiftKey && document.activeElement === first){
+        e.preventDefault(); last.focus();
+      } else if(!e.shiftKey && document.activeElement === last){
+        e.preventDefault(); first.focus();
+      }
+    }
+    function openSheet(sheet, openerBtn=null){
+      sheet.setAttribute('aria-hidden','false');
+      if(openerBtn) sheetOpeners.set(sheet, openerBtn);
+      const card = sheet.querySelector('.card');
+      card.addEventListener('keydown', trapFocusHandler);
+      const focusables = getFocusable(card);
+      if(focusables.length) focusables[0].focus();
+    }
+    function closeSheet(sheet){
+      sheet.setAttribute('aria-hidden','true');
+      const card = sheet.querySelector('.card');
+      card.removeEventListener('keydown', trapFocusHandler);
+      const opener = sheetOpeners.get(sheet);
+      if(opener && typeof opener.focus==='function'){
+        opener.focus();
+      }
+      sheetOpeners.delete(sheet);
+      // Dodatkowo aktualizacje aria-expanded dla menu
+      if(sheet === menuSheet) menuBtn.setAttribute('aria-expanded','false');
+    }
 
     // Utils
     function uid(){ return (crypto && crypto.randomUUID) ? crypto.randomUUID() : 'id-'+Math.random().toString(36).slice(2)+Date.now().toString(36) }
@@ -476,15 +493,11 @@
     function norm(s){ return String(s||'').trim().toLowerCase() }
     function systemTheme(){ return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light' }
 
-    // Funkcja do inteligentnego dopasowania rozmiaru czcionki
+    // Dopasowanie rozmiaru czcionki tytułu
     function adjustTitleFontSize() {
       const text = titleEl.textContent || '';
       const length = text.length;
-      
-      // Usuń wszystkie klasy rozmiaru
       titleEl.classList.remove('medium', 'small', 'xsmall');
-      
-      // Dopasuj rozmiar czcionki na podstawie długości tekstu
       if (length > 40) {
         titleEl.classList.add('xsmall');
       } else if (length > 25) {
@@ -492,16 +505,17 @@
       } else if (length > 15) {
         titleEl.classList.add('medium');
       }
-      // Dla tekstu do 15 znaków - domyślny rozmiar (24px)
     }
 
-    // Toast notifications - 1.4 sekundy
+    // Toast (a11y: role="status")
     function showToast(message, type = 'info') {
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
+      toast.setAttribute('role','status');
+      toast.setAttribute('aria-live','polite');
       toast.textContent = message;
       document.body.appendChild(toast);
-      
+
       setTimeout(() => toast.classList.add('show'), 100);
       setTimeout(() => {
         toast.classList.remove('show');
@@ -509,63 +523,52 @@
       }, 1400);
     }
 
-    // Drag & Drop functions - tylko dla trybu edycji
+    // Drag & Drop (tylko w trybie edycji)
     function handleDragStart(e) {
       if (!editMode) return;
       dragSrcEl = this;
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/html', this.outerHTML);
-      
       this.classList.add('dragging');
     }
-
     function handleDragOver(e) {
       if (!editMode) return;
-      if (e.preventDefault) {
-        e.preventDefault();
-      }
+      if (e.preventDefault) e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       return false;
     }
-
-    function handleDragEnter(e) {
+    function handleDragEnter() {
       if (!editMode) return;
       this.classList.add('drag-over');
     }
-
-    function handleDragLeave(e) {
+    function handleDragLeave() {
       if (!editMode) return;
       this.classList.remove('drag-over');
     }
-
     function handleDrop(e) {
       if (!editMode) return;
-      if (e.stopPropagation) {
-        e.stopPropagation();
-      }
-      
+      if (e.stopPropagation) e.stopPropagation();
       if (dragSrcEl !== this) {
         const list = getList();
         const draggedId = dragSrcEl.dataset.id;
         const targetId = this.dataset.id;
-        
+
         const draggedIndex = list.items.findIndex(item => item.id === draggedId);
         const targetIndex = list.items.findIndex(item => item.id === targetId);
-        
+
         if (draggedIndex !== -1 && targetIndex !== -1) {
           // Zamiana pozycji
-          [list.items[draggedIndex], list.items[targetIndex]] = [list.items[targetIndex], list.items[draggedIndex]];
+          [list.items[draggedIndex], list.items[targetIndex]] =
+            [list.items[targetIndex], list.items[draggedIndex]];
           save();
           renderList();
           showToast('Pozycja przeniesiona', 'success');
         }
       }
-      
       this.classList.remove('drag-over');
       return false;
     }
-
-    function handleDragEnd(e) {
+    function handleDragEnd() {
       if (!editMode) return;
       document.querySelectorAll('.item').forEach(item => {
         item.classList.remove('dragging');
@@ -579,13 +582,12 @@
       const total = items.length;
       const done = items.filter(item => item.done).length;
       const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-      
+
       document.getElementById('totalCount').textContent = total;
       document.getElementById('doneCount').textContent = done;
       document.getElementById('progressPercent').textContent = progress + '%';
       document.getElementById('progressBar').style.width = progress + '%';
-      
-      // Pokazuj/ukryj statystyki w zależności od ustawienia
+
       if (showStats) {
         statsEl.classList.add('show');
         progressContainer.style.display = 'block';
@@ -600,42 +602,66 @@
       const raw = loadJSON(K_APP,null);
       if(raw){
         const a = repair(raw);
-        if (!saveJSON(K_APP, a)) {
-          showToast('Błąd ładowania danych', 'error');
-        }
+        if (!saveJSON(K_APP, a)) showToast('Błąd ładowania danych', 'error');
         return a;
       }
       const id = uid();
       const a = { active:id, lists:[{ id, name:'Lista', color:'#10b981', items:[], history:[] }], saved:[] };
-      if (!saveJSON(K_APP,a)) {
-        showToast('Błąd inicjalizacji danych', 'error');
-      }
+      if (!saveJSON(K_APP,a)) showToast('Błąd inicjalizacji danych', 'error');
       return a;
     }
     function repair(a){
-      if(!a || typeof a!=='object') return { active: uid(), lists:[{id:uid(),name:'Lista',color:'#10b981',items:[],history:[]}], saved:[] };
-      if(!Array.isArray(a.lists)||a.lists.length===0) a.lists=[{id:uid(),name:'Lista',color:'#10b981',items:[],history:[]}];
-      a.lists=a.lists.map(l=>({ id:l.id||uid(), name:String(l.name||'Lista'), color: validColor(l.color)?l.color:'#10b981', items:Array.isArray(l.items)? l.items.map(it=>({ id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now() })) : [], history:Array.isArray(l.history)? l.history.map(h=>({ id:h?.id||uid(), text:String(h?.text||''), lastAt:h?.lastAt||Date.now(), count:h?.count||1 })) : [] }));
+      if(!a || typeof a!=='object')
+        return { active: uid(), lists:[{id:uid(),name:'Lista',color:'#10b981',items:[],history:[]}], saved:[] };
+      if(!Array.isArray(a.lists)||a.lists.length===0)
+        a.lists=[{id:uid(),name:'Lista',color:'#10b981',items:[],history:[]}];
+      a.lists=a.lists.map(l=>({
+        id:l.id||uid(),
+        name:String(l.name||'Lista'),
+        color: validColor(l.color)?l.color:'#10b981',
+        items:Array.isArray(l.items)? l.items.map(it=>({
+          id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now()
+        })) : [],
+        history:Array.isArray(l.history)? l.history.map(h=>({
+          id:h?.id||uid(), text:String(h?.text||''), lastAt:h?.lastAt||Date.now(), count:h?.count||1
+        })) : []
+      }));
       if(!Array.isArray(a.saved)) a.saved=[];
-      a.saved=a.saved.map(s=>({ id:s?.id||uid(), name:String(s?.name||'Lista'), color: validColor(s?.color)?s.color:null, items:Array.isArray(s?.items)? s.items.map(it=>({ id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now() })) : [], createdAt: s?.createdAt||Date.now() }));
+      a.saved=a.saved.map(s=>({
+        id:s?.id||uid(),
+        name:String(s?.name||'Lista'),
+        color: validColor(s?.color)?s.color:null,
+        items:Array.isArray(s?.items)? s.items.map(it=>({
+          id:it?.id||uid(), text:String(it?.text||''), done:!!it?.done, createdAt: it?.createdAt||Date.now()
+        })) : [],
+        createdAt: s?.createdAt||Date.now()
+      }));
       if(!a.active || !a.lists.find(x=>x.id===a.active)) a.active=a.lists[0].id;
       return a;
     }
     function validColor(c){ return typeof c==='string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(c) }
     function save(){ 
-      if (!saveJSON(K_APP, app)) {
-        showToast('Błąd zapisu danych', 'error');
-        return false;
-      }
+      if (!saveJSON(K_APP, app)) { showToast('Błąd zapisu danych', 'error'); return false; }
       return true;
     }
 
-    // UI apply
-    function applyTheme(mode){ 
-      const m= mode==='system'? systemTheme(): mode; 
-      document.documentElement.setAttribute('data-theme', m==='dark'?'dark':'light'); 
+    // Theme
+    function applyTheme(mode){
+      const m = mode==='system' ? systemTheme() : mode;
+      document.documentElement.setAttribute('data-theme', m==='dark'?'dark':'light');
       saveJSON(K_THEME, mode);
     }
+    function watchSystemTheme(){
+      if (!window.matchMedia) return;
+      const mql = window.matchMedia('(prefers-color-scheme: dark)');
+      const handler = () => {
+        const pref = loadJSON(K_THEME, 'light');
+        if (pref === 'system') applyTheme('system');
+      };
+      if (mql.addEventListener) mql.addEventListener('change', handler);
+      else if (mql.addListener) mql.addListener(handler);
+    }
+
     function applyHide(){ document.getElementById('toggleHide').checked = !!hideDone }
     function applyStats(){ document.getElementById('toggleStats').checked = !!showStats }
     function applyStyle(){
@@ -648,24 +674,28 @@
         toggleInputBtn.classList.add('eye-hidden');
         toggleInputBtn.textContent = '+';
         toggleInputBtn.title = 'Pokaż pole dodawania';
+        toggleInputBtn.setAttribute('aria-pressed','true');
       } else {
         addForm.classList.remove('hidden');
         toggleInputBtn.classList.remove('eye-hidden');
         toggleInputBtn.textContent = '−';
         toggleInputBtn.title = 'Ukryj pole dodawania';
+        toggleInputBtn.setAttribute('aria-pressed','false');
       }
     }
-    function applyEditMode() {
+    function applyEditMode(silent = false) {
       if (editMode) {
         document.body.classList.add('edit-mode-enabled');
         editModeBtn.classList.add('edit-mode');
         editModeBtn.title = 'Wyłącz tryb edycji';
-        showToast('Tryb edycji włączony', 'info');
+        editModeBtn.setAttribute('aria-pressed','true');
+        if (!silent) showToast('Tryb edycji włączony', 'info');
       } else {
         document.body.classList.remove('edit-mode-enabled');
         editModeBtn.classList.remove('edit-mode');
         editModeBtn.title = 'Włącz tryb edycji';
-        showToast('Tryb edycji wyłączony', 'info');
+        editModeBtn.setAttribute('aria-pressed','false');
+        if (!silent) showToast('Tryb edycji wyłączony', 'info');
       }
     }
 
@@ -673,15 +703,10 @@
       const l=getList();
       titleEl.textContent=l.name||'Lista';
       hdrDot.style.background = l.color || '#10b981';
-      
-      // Dostosuj rozmiar czcionki
       adjustTitleFontSize();
-      
-      // Aktualizuj zaznaczenie koloru
       updateColorSelection();
     }
 
-    // Aktualizuj zaznaczenie koloru
     function updateColorSelection() {
       const currentColor = getList().color || '#10b981';
       document.querySelectorAll('.color-option').forEach(option => {
@@ -696,20 +721,23 @@
       listEl.innerHTML='';
       arr.forEach(it=>{
         if(hideDone && it.done) return;
-        
+
         const li=document.createElement('li');
         li.className='item'+(it.done?' done':'');
         li.dataset.id=it.id;
 
-        // PROSTA IMPLEMENTACJA CHECKBOXA
         const check=document.createElement('div');
         check.className='check'+(it.done?' checked':'');
         check.title='Kliknij aby oznaczyć';
-        
+        // A11y dla custom checkboxa
+        check.setAttribute('role','checkbox');
+        check.setAttribute('tabindex','0');
+        check.setAttribute('aria-checked', it.done ? 'true':'false');
+
         const txt=document.createElement('div');
         txt.className='txt';
         txt.textContent=it.text;
-        
+
         const del=document.createElement('button');
         del.className='del';
         del.setAttribute('aria-label','Usuń');
@@ -729,24 +757,34 @@
           li.addEventListener('dragleave', handleDragLeave);
           li.addEventListener('drop', handleDrop);
           li.addEventListener('dragend', handleDragEnd);
+        } else {
+          li.removeAttribute('draggable');
         }
 
-        // OBSŁUGA CHECKBOXA - kliknięcie
+        // Checkbox: klik
         check.addEventListener('click', function(e) {
           e.stopPropagation();
           const id = li.dataset.id;
           const l = getList();
           const idx = l.items.findIndex(i => i.id === id);
           if (idx === -1) return;
-          
+
           l.items[idx].done = !l.items[idx].done;
-          const it = l.items.splice(idx, 1)[0];
+          check.setAttribute('aria-checked', l.items[idx].done ? 'true':'false');
+
+          const moved = l.items.splice(idx, 1)[0];
           const act = l.items.filter(i => !i.done);
           const done = l.items.filter(i => i.done);
-          l.items = it.done ? [...act, ...done, it] : [it, ...act, ...done];
-          
-          if (save()) {
-            renderList();
+          l.items = moved.done ? [...act, ...done, moved] : [moved, ...act, ...done];
+
+          if (save()) renderList();
+        });
+
+        // Checkbox: klawiatura
+        check.addEventListener('keydown', (e) => {
+          if (e.key === ' ' || e.key === 'Enter') {
+            e.preventDefault();
+            check.click();
           }
         });
 
@@ -775,9 +813,7 @@
           const newText = (txt.textContent || '').trim();
           if (newText && newText !== it.text) {
             it.text = newText;
-            if (save()) {
-              showToast('Zadanie zaktualizowane', 'success');
-            }
+            if (save()) showToast('Zadanie zaktualizowane', 'success');
           } else if (!newText) {
             txt.textContent = it.text;
           }
@@ -791,27 +827,27 @@
           const l = getList();
           const idx = l.items.findIndex(i => i.id === id);
           if (idx === -1) return;
-          
+
           const it = l.items[idx];
           l.items.splice(idx, 1);
           const n = norm(it.text);
           const hist = l.history || (l.history = []);
           const ex = hist.find(h => norm(h.text) === n);
-          
+
           if (ex) {
             ex.lastAt = Date.now();
             ex.count = (ex.count || 1) + 1;
           } else {
             hist.push({ id: uid(), text: it.text, lastAt: Date.now(), count: 1 });
           }
-          
+
           if (save()) {
             renderList();
             showToast('Zadanie usunięte', 'success');
           }
         });
       });
-      
+
       emptyEl.hidden = listEl.children.length > 0;
       updateStats();
     }
@@ -822,47 +858,50 @@
       app.lists.forEach(l=>{
         const row=document.createElement('div'); 
         row.className='row-item';
-        
+        row.setAttribute('role','button');
+        row.setAttribute('tabindex','0');
+
         const nameSpan = document.createElement('span');
         nameSpan.className = 'name';
-        
+
         const dot = document.createElement('span');
         dot.className = 'dot-s';
         dot.style.background = l.color||'#10b981';
-        
+
         nameSpan.appendChild(dot);
         nameSpan.appendChild(document.createTextNode(' ' + (l.name||'Lista')));
-        
+
         row.appendChild(nameSpan);
-        
+
         if(app.active===l.id){
           const sub = document.createElement('span');
           sub.className = 'sub';
           sub.textContent = 'bieżąca';
           row.appendChild(sub);
         }
-        
-        row.addEventListener('click',()=>{ 
+
+        const activate = ()=>{ 
           app.active=l.id; 
           if (save()) {
             refreshHeader(); 
             renderList(); 
             applyHide();
             showToast(`Aktywna lista: ${l.name}`, 'success');
-            menuSheet.setAttribute('aria-hidden','true');
+            closeSheet(menuSheet);
           }
-        });
+        };
+        row.addEventListener('click', activate);
+        row.addEventListener('keydown', (e)=>{ if(e.key==='Enter' || e.key===' ') { e.preventDefault(); activate(); } });
+
         listsBox.appendChild(row);
       });
     }
 
-    // Historia - scalona według list z możliwością usuwania
+    // Historia - grupowanie wg list
     function renderHistory(){
       historyBox.innerHTML='';
-      
-      // Grupowanie historii według list
       const historyByList = new Map();
-      
+
       app.lists.forEach(l => {
         (l.history || []).forEach(h => {
           if (!historyByList.has(l.id)) {
@@ -876,7 +915,7 @@
           historyByList.get(l.id).items.push({...h, listId: l.id});
         });
       });
-      
+
       if(historyByList.size === 0){ 
         const empty = document.createElement('div');
         empty.className = 'empty';
@@ -884,8 +923,7 @@
         historyBox.appendChild(empty);
         return;
       }
-      
-      // Sortowanie list według najnowszej aktywności
+
       const sortedLists = Array.from(historyByList.entries())
         .map(([listId, data]) => {
           const latestItem = data.items.reduce((latest, item) => 
@@ -898,55 +936,52 @@
           };
         })
         .sort((a, b) => b.latestDate - a.latestDate);
-      
+
       sortedLists.forEach(listData => {
         const section = document.createElement('div');
         section.className = 'history-section';
-        
-        // Nagłówek sekcji z nazwą listy i kolorem
+
         const header = document.createElement('div');
         header.className = 'history-section-header';
-        
+
         const dot = document.createElement('span');
         dot.className = 'dot-s';
         dot.style.background = listData.color || '#10b981';
-        
+
         const title = document.createElement('span');
         title.className = 'history-section-title';
         title.textContent = listData.listName;
-        
+
         header.appendChild(dot);
         header.appendChild(title);
         section.appendChild(header);
-        
-        // Zadania w sekcji
+
         const itemsContainer = document.createElement('div');
         itemsContainer.className = 'history-items';
-        
-        // Sortowanie zadań w sekcji od najnowszych
+
         listData.items
           .sort((a, b) => b.lastAt - a.lastAt)
-          .slice(0, 10) // Limit do 10 zadań na listę
+          .slice(0, 10)
           .forEach(h => {
             const item = document.createElement('div');
             item.className = 'history-item';
-            
+
             const text = document.createElement('div');
             text.className = 'history-text';
             text.textContent = h.text;
-            
+
             const meta = document.createElement('div');
             meta.className = 'history-meta';
-            
+
             const date = document.createElement('span');
             date.textContent = fmt(h.lastAt);
-            
+
             const count = document.createElement('span');
             count.textContent = `użyto ${h.count || 1}×`;
-            
+
             const actions = document.createElement('div');
             actions.className = 'history-actions';
-            
+
             const addBtn = document.createElement('button');
             addBtn.className = 'history-btn history-add';
             addBtn.innerHTML = '+';
@@ -966,7 +1001,7 @@
                 showToast('Zadanie już istnieje na liście', 'info');
               }
             });
-            
+
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'history-btn history-delete';
             deleteBtn.innerHTML = '×';
@@ -981,30 +1016,37 @@
                 }
               }
             });
-            
+
             actions.appendChild(addBtn);
             actions.appendChild(deleteBtn);
-            
+
             meta.appendChild(date);
             meta.appendChild(count);
-            
+
             item.appendChild(text);
             item.appendChild(meta);
             item.appendChild(actions);
             itemsContainer.appendChild(item);
           });
-        
+
         section.appendChild(itemsContainer);
         historyBox.appendChild(section);
       });
     }
 
-    // Actions
+    // Dodawanie zadania
     addForm.addEventListener('submit', e=>{
       e.preventDefault();
       const t=(addInput.value||'').trim().replace(/\s+/g,' ');
       if(!t) return;
-      const l=getList(); const act=(l.items||[]).filter(i=>!i.done), done=(l.items||[]).filter(i=>i.done);
+      const l=getList();
+      const arr = l.items || [];
+      const exists = arr.some(i => norm(i.text) === norm(t));
+      if (exists) {
+        showToast('Zadanie już istnieje na liście', 'info');
+        return;
+      }
+      const act=(arr).filter(i=>!i.done), done=(arr).filter(i=>i.done);
       l.items=[{id:uid(), text:t, done:false, createdAt:Date.now()}, ...act, ...done];
       if (save()) {
         addInput.value=''; 
@@ -1013,48 +1055,54 @@
       }
     });
 
-    // Title edit - z limitem znaków i automatycznym dopasowaniem
+    // Edycja tytułu (bez dublowania handlera input)
     titleEl.parentElement.addEventListener('dblclick', ()=>{
-      const currentName = titleEl.textContent;
       titleEl.setAttribute('contenteditable','true'); 
       titleEl.focus();
       placeCaret(titleEl);
-      
-      // Ogranicz długość podczas edycji
-      titleEl.addEventListener('input', function() {
+
+      // Usuń poprzedni handler input (jeśli był)
+      if (titleInputHandler) {
+        titleEl.removeEventListener('input', titleInputHandler);
+        titleInputHandler = null;
+      }
+      // Dodaj tymczasowy handler input
+      titleInputHandler = function() {
         if (this.textContent.length > 50) {
           this.textContent = this.textContent.substring(0, 50);
           placeCaret(this);
           showToast('Maksymalnie 50 znaków', 'info');
         }
         adjustTitleFontSize();
-      });
+      };
+      titleEl.addEventListener('input', titleInputHandler);
     });
-    
+
     titleEl.addEventListener('keydown', e=>{
       if(!titleEl.isContentEditable) return;
-      if(e.key==='Enter'){ 
-        e.preventDefault(); 
-        titleEl.blur() 
-      }
+      if(e.key==='Enter'){ e.preventDefault(); titleEl.blur() }
       if(e.key==='Escape'){ 
         titleEl.textContent=getList().name||'Lista'; 
         adjustTitleFontSize();
-        titleEl.blur() 
+        titleEl.blur();
       }
     });
-    
+
     titleEl.addEventListener('blur', ()=>{
       if(!titleEl.isContentEditable) return;
+
+      // Zdejmij tymczasowy handler input
+      if (titleInputHandler) {
+        titleEl.removeEventListener('input', titleInputHandler);
+        titleInputHandler = null;
+      }
+
       const l=getList();
       let n = (titleEl.textContent||'').trim()||'Lista';
-      
-      // Limit 50 znaków
       if (n.length > 50) {
         n = n.substring(0, 50);
         showToast('Nazwa skrócona do 50 znaków', 'info');
       }
-      
       l.name=n; 
       if (save()) {
         refreshHeader();
@@ -1063,13 +1111,12 @@
       titleEl.removeAttribute('contenteditable');
     });
 
-    // Zmiana koloru listy przez kliknięcie kropki
+    // Zmiana koloru listy
     hdrDot.addEventListener('click', () => {
       updateColorSelection();
-      colorSheet.setAttribute('aria-hidden','false');
+      openSheet(colorSheet, hdrDot);
     });
 
-    // Obsługa wyboru koloru
     document.querySelectorAll('.color-option').forEach(option => {
       option.addEventListener('click', () => {
         const newColor = option.dataset.color;
@@ -1077,48 +1124,32 @@
         l.color = newColor;
         if (save()) {
           refreshHeader();
-          colorSheet.setAttribute('aria-hidden','true');
+          closeSheet(colorSheet);
           showToast('Kolor listy zmieniony', 'success');
         }
       });
     });
 
-    // Zamykanie arkusza kolorów
-    colorSheet.addEventListener('click', (e) => {
-      if (e.target === colorSheet) {
-        colorSheet.setAttribute('aria-hidden','true');
-      }
-    });
-    
-    closeColor.addEventListener('click', () => {
-      colorSheet.setAttribute('aria-hidden','true');
+    // Zamykanie arkuszy klik w tło
+    [menuSheet, styleSheet, colorSheet, historySheet, actionSheet].forEach(sheet=>{
+      sheet.addEventListener('click', (e) => {
+        if (e.target === sheet) closeSheet(sheet);
+      });
     });
 
-    // Przycisk przełączania widoczności pola dodawania - BEZ TOASTÓW
+    // Przycisk pole dodawania
     toggleInputBtn.addEventListener('click', () => {
       inputHidden = !inputHidden;
-      
-      if (inputHidden) {
-        addForm.classList.add('hidden');
-        toggleInputBtn.classList.add('eye-hidden');
-        toggleInputBtn.textContent = '+';
-        toggleInputBtn.title = 'Pokaż pole dodawania';
-      } else {
-        addForm.classList.remove('hidden');
-        toggleInputBtn.classList.remove('eye-hidden');
-        toggleInputBtn.textContent = '−';
-        toggleInputBtn.title = 'Ukryj pole dodawania';
-      }
-      
+      applyInputHidden();
       saveJSON(K_HIDE_INPUT, inputHidden);
     });
 
-    // Przycisk trybu edycji
+    // Tryb edycji
     editModeBtn.addEventListener('click', () => {
       editMode = !editMode;
-      applyEditMode();
+      applyEditMode(false);
       saveJSON(K_EDIT_MODE, editMode);
-      renderList(); // Przerenderuj listę aby dodać/usunąć drag & drop
+      renderList(); // aby dodać/usunąć DnD
     });
 
     function placeCaret(el){ 
@@ -1130,26 +1161,23 @@
       s.addRange(r); 
     }
 
-    // Menu
+    // Menu otwórz/zamknij + aria-expanded
+    function openMenu(){
+      renderListsBox(); applyHide(); applyStats();
+      menuBtn.setAttribute('aria-expanded','true');
+      openSheet(menuSheet, menuBtn);
+    }
+    function closeMenuSheet(){ closeSheet(menuSheet); }
     menuBtn.addEventListener('click', openMenu);
-    function openMenu(){ renderListsBox(); applyHide(); applyStats(); menuSheet.setAttribute('aria-hidden','false'); }
-    
-    // Zamykanie menu po kliknięciu w tło
-    menuSheet.addEventListener('click', (e) => {
-      if (e.target === menuSheet) {
-        menuSheet.setAttribute('aria-hidden','true');
-      }
-    });
-    
-    closeMenu.addEventListener('click', ()=> menuSheet.setAttribute('aria-hidden','true'));
-    
+    closeMenu.addEventListener('click', closeMenuSheet);
+
     toggleHide.addEventListener('change', ()=>{ 
       hideDone = toggleHide.checked; 
       saveJSON(K_HIDE, hideDone); 
       renderList(); 
       showToast(hideDone ? 'Ukryto ukończone' : 'Pokazano ukończone', 'info');
     });
-    
+
     toggleStats.addEventListener('change', ()=>{ 
       showStats = toggleStats.checked; 
       saveJSON(K_STATS, showStats); 
@@ -1159,88 +1187,71 @@
 
     // Styl strony
     styleBtn.addEventListener('click', ()=>{
-      menuSheet.setAttribute('aria-hidden','true');
-      styleSheet.setAttribute('aria-hidden','false');
+      closeMenuSheet();
+      openSheet(styleSheet, styleBtn);
     });
-    
-    styleSheet.addEventListener('click', (e) => {
-      if (e.target === styleSheet) {
-        styleSheet.setAttribute('aria-hidden','true');
-      }
-    });
-    
+
     densNormal.addEventListener('click', ()=>{ style.density='normal'; applyStyle(); saveJSON(K_STYLE, style); showToast('Gęstość: normalna', 'info') });
     densCompact.addEventListener('click', ()=>{ style.density='compact'; applyStyle(); saveJSON(K_STYLE, style); showToast('Gęstość: kompaktowa', 'info') });
     sizeNormal.addEventListener('click', ()=>{ style.size='normal'; applyStyle(); saveJSON(K_STYLE, style); showToast('Rozmiar: normalny', 'info') });
     sizeBig.addEventListener('click', ()=>{ style.size='big'; applyStyle(); saveJSON(K_STYLE, style); showToast('Rozmiar: duży', 'info') });
-    closeStyle.addEventListener('click', ()=> styleSheet.setAttribute('aria-hidden','true'));
+    closeStyle.addEventListener('click', ()=> closeSheet(styleSheet));
 
     // Historia
-    historyBtn.addEventListener('click', ()=>{ renderHistory(); historySheet.setAttribute('aria-hidden','false') });
-    
-    historySheet.addEventListener('click', (e) => {
-      if (e.target === historySheet) {
-        historySheet.setAttribute('aria-hidden','true');
-      }
-    });
-    
-    closeHistory.addEventListener('click', ()=> historySheet.setAttribute('aria-hidden','true'));
+    historyBtn.addEventListener('click', ()=>{ renderHistory(); openSheet(historySheet, historyBtn) });
+    closeHistory.addEventListener('click', ()=> closeSheet(historySheet));
 
     // Druk
     printBtn.addEventListener('click', ()=> openAction());
-    
-    actionSheet.addEventListener('click', (e) => {
-      if (e.target === actionSheet) {
-        actionSheet.setAttribute('aria-hidden','true');
-      }
-    });
-    
-    closeActionBtn.addEventListener('click', ()=> actionSheet.setAttribute('aria-hidden','true'));
-    
+    closeActionBtn.addEventListener('click', ()=> closeSheet(actionSheet));
+
     function openAction(){
       pickLists.innerHTML='';
       app.lists.forEach(l=>{
         const row=document.createElement('div'); 
         row.className='row-item';
-        
+
         const label = document.createElement('label');
         label.className = 'name';
-        
+
         const input = document.createElement('input');
         input.type = 'checkbox';
         input.dataset.id = l.id;
         input.checked = l.id===app.active;
-        
+
         const dot = document.createElement('span');
         dot.className = 'dot-s';
         dot.style.background = l.color||'#10b981';
-        
+
         label.appendChild(input);
         label.appendChild(dot);
         label.appendChild(document.createTextNode(' ' + l.name));
-        
+
         row.appendChild(label);
         pickLists.appendChild(row);
       });
       includeDone.checked=true;
-      actionSheet.setAttribute('aria-hidden','false');
+      hideEmpty.checked=true;
+      showTitle.checked=true;
+      showDate.checked=true;
+      openSheet(actionSheet, printBtn);
     }
-    
+
     function selectedIds(){ 
       return Array.from(pickLists.querySelectorAll('input[type=checkbox]:checked')).map(i=> i.dataset.id) 
     }
-    
+
     function doPrint(){
       const ids=selectedIds(); 
       if(ids.length===0){ 
         showToast('Wybierz listy', 'error'); 
-        return 
+        return;
       }
       const include=includeDone.checked;
+      const hideE = hideEmpty.checked;
       const st=showTitle.checked, sd=showDate.checked;
       const now=fmt(Date.now());
-      
-      // Tworzymy nowe okno do druku z poprawkami dla kolorów
+
       const printWindow = window.open('', '_blank');
       printWindow.document.write(`
         <!DOCTYPE html>
@@ -1267,13 +1278,17 @@
         </head>
         <body>
       `);
-      
+
       ids.forEach(id=>{
         const l=app.lists.find(x=>x.id===id); 
         if(!l) return;
-        
+
+        // Elementy do druku po filtrze
+        const itemsForList = (l.items||[]).filter(it => include || !it.done);
+        if (hideE && itemsForList.length === 0) return;
+
         printWindow.document.write(`<section class="prn-list">`);
-        
+
         if(st || sd){
           printWindow.document.write(`
             <div class="prn-head">
@@ -1285,11 +1300,9 @@
             </div>
           `);
         }
-        
+
         printWindow.document.write(`<ul class="prn-ul">`);
-        
-        (l.items||[]).forEach(it=>{ 
-          if(!include&&it.done) return; 
+        itemsForList.forEach(it=>{ 
           const doneClass = it.done ? 'done' : '';
           printWindow.document.write(`
             <li class="prn-li ${doneClass}">
@@ -1297,32 +1310,33 @@
             </li>
           `);
         });
-        
         printWindow.document.write(`</ul></section>`);
       });
-      
+
       printWindow.document.write('</body></html>');
       printWindow.document.close();
-      
+
       setTimeout(() => {
         printWindow.print();
-        actionSheet.setAttribute('aria-hidden','true');
+        closeSheet(actionSheet);
       }, 250);
     }
-    
+
     doAction.addEventListener('click', doPrint);
 
-    // Theme
+    // Motyw
     themeLight.addEventListener('click', ()=> applyTheme('light'));
     themeDark.addEventListener('click', ()=> applyTheme('dark'));
+    if (themeSystem) themeSystem.addEventListener('click', ()=> applyTheme('system'));
     applyTheme(loadJSON(K_THEME,'light'));
+    watchSystemTheme();
 
-    // Reset - twardy reset do ustawień fabrycznych
+    // Reset - twardy reset
     resetBtn.addEventListener('click', ()=>{
       if(!confirm('Przywrócić ustawienia fabryczne? Wszystkie dane zostaną usunięte.')) return;
       localStorage.clear(); 
       showToast('Przywrócono ustawienia fabryczne', 'success');
-      setTimeout(() => location.reload(), 1000);
+      setTimeout(() => location.reload(), 800);
     });
 
     // Nowa lista
@@ -1336,7 +1350,7 @@
         renderList();
         renderListsBox();
         showToast(`Utworzono listę: ${name}`, 'success');
-        menuSheet.setAttribute('aria-hidden','true');
+        closeSheet(menuSheet);
       }
     });
 
@@ -1348,7 +1362,7 @@
       }
       const currentList = getList();
       if (!confirm(`Usunąć listę "${currentList.name}"?`)) return;
-      
+
       app.lists = app.lists.filter(l => l.id !== currentList.id);
       app.active = app.lists[0].id;
       if (save()) {
@@ -1356,7 +1370,7 @@
         renderList();
         renderListsBox();
         showToast('Lista usunięta', 'success');
-        menuSheet.setAttribute('aria-hidden','true');
+        closeSheet(menuSheet);
       }
     });
 
@@ -1372,16 +1386,18 @@
       applyStats();
       applyStyle();
       applyInputHidden();
-      applyEditMode();
+      applyEditMode(true); // bez toastów na starcie
       refreshHeader();
       renderList();
     }
     init();
 
-    // ESC zamyka arkusze
+    // ESC zamyka otwarte arkusze z przywróceniem fokusu
     document.addEventListener('keydown', e=>{
       if(e.key==='Escape'){
-        [menuSheet, historySheet, actionSheet, styleSheet, colorSheet].forEach(s=> s.setAttribute('aria-hidden','true'));
+        [menuSheet, historySheet, actionSheet, styleSheet, colorSheet]
+          .filter(s=> s.getAttribute('aria-hidden')==='false')
+          .forEach(s=> closeSheet(s));
       }
     });
   </script>

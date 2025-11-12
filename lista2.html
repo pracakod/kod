@@ -83,7 +83,7 @@
   .grip{opacity:.5; display:grid; place-items:center; cursor:grab}
   .menu-item.drag-over{outline:2px dashed var(--accent); outline-offset:2px}
 
-  /* Aktywna pozycja w menu (wybrana lista) */
+  /* Active item highlight */
   .menu-item.is-active{
     background: color-mix(in oklab, var(--card) 85%, var(--accent) 15%);
     outline: 2px solid var(--accent);
@@ -93,7 +93,6 @@
 
   /* Main content */
   main{flex:1; padding:12px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width:900px; width:100%; margin:0 auto}
-  .print-header{display:none; font-size:18px; font-weight:700; margin:6px 0 12px}
   .list{ display:grid; gap:8px; }
   .empty{ color:var(--muted); text-align:center; margin-top:18vh; font-size:15px; }
 
@@ -107,7 +106,7 @@
   @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
   .item:active{transform:scale(0.995)}
 
-  /* Jasne checkboxy (custom) w pozycjach listy */
+  /* Bright custom checkboxes in list items */
   .item input[type="checkbox"]{
     -webkit-appearance:none; appearance:none;
     width:22px; height:22px; border-radius:6px; flex-shrink:0;
@@ -131,15 +130,11 @@
   .edit-on .item input[type="checkbox"]{display:none}
   .edit-on .item .text{border:1px dashed transparent; border-radius:8px; padding:4px 6px}
   .edit-on .item .text[contenteditable="true"]:focus{border-color: var(--accent); outline:none; box-shadow: var(--focus)}
-  .item .handle{
-    display:none; width:24px; height:24px; opacity:.55; flex-shrink:0; cursor:grab;
-  }
+  .item .handle{ display:none; width:24px; height:24px; opacity:.55; flex-shrink:0; cursor:grab; }
   .edit-on .item .handle{display:block}
   .item .actions{display:none; gap:6px; align-items:center}
   .edit-on .item .actions{display:flex}
-  .i-btn{
-    width:34px; height:34px; display:grid; place-items:center; border-radius:10px; border:1px solid var(--border); background: var(--card);
-  }
+  .i-btn{ width:34px; height:34px; display:grid; place-items:center; border-radius:10px; border:1px solid var(--border); background: var(--card); }
   .i-btn:active{transform:scale(0.96)}
   .i-btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .item.drag-over{ outline:2px dashed var(--accent); outline-offset:2px; }
@@ -179,56 +174,57 @@
   .quick-add input{ flex:1; border:0; background:transparent; outline:none; padding:10px; border-radius:10px; }
 
   /* Dialogs */
-  dialog{
-    border:0; border-radius:18px; padding:0; background: var(--card); color: var(--text); width:min(520px, 92vw);
-    box-shadow: var(--shadow);
-  }
+  dialog{ border:0; border-radius:18px; padding:0; background: var(--card); color: var(--text); width:min(520px, 92vw); box-shadow: var(--shadow); }
   dialog::backdrop{background: rgba(10,12,16,0.45); backdrop-filter: blur(3px)}
   .dlg-head{padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
   .dlg-title{font-weight:700}
   .dlg-body{padding:14px 18px; display:grid; gap:12px}
   .field{display:grid; gap:6px}
   .label{font-size:13px; color:var(--muted)}
-  input[type="text"], select{
-    width:100%; border:1px solid var(--border); background: var(--card); color: var(--text);
-    border-radius:12px; padding:12px; outline:none;
-  }
+  input[type="text"], select{ width:100%; border:1px solid var(--border); background: var(--card); color: var(--text); border-radius:12px; padding:12px; outline:none; }
   .row{display:flex; gap:10px; align-items:center}
   .row.wrap{flex-wrap:wrap}
   .grow{flex:1}
+
+  /* Switch (tylko suwaczek) */
   .switch{
-    position:relative; width:48px; height:28px; background: var(--border); border-radius:999px; cursor:pointer; border:1px solid var(--border);
+    position:relative; width:48px; height:28px; background: var(--border);
+    border-radius:999px; border:1px solid var(--border); display:inline-block;
   }
-  .switch input{display:none}
+  .switch input{
+    position:absolute; inset:0; width:100%; height:100%; margin:0;
+    opacity:0; cursor:pointer; z-index:2;
+  }
   .switch .knob{
-    position:absolute; top:50%; left:4px; transform:translateY(-50%); width:20px; height:20px; border-radius:50%;
-    background:#fff; box-shadow: var(--shadow-soft); transition: left .18s ease, background .18s ease;
+    position:absolute; top:50%; left:4px; transform:translateY(-50%);
+    width:20px; height:20px; border-radius:50%; background:#fff; box-shadow: var(--shadow-soft);
+    transition: left .18s ease, background .18s ease;
+    z-index:1;
   }
   .switch input:checked + .knob{ left:24px; background: var(--accent)}
+
   .dlg-foot{display:flex; gap:10px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border)}
   .btn{ padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--card); cursor:pointer; }
   .btn.primary{ background: var(--accent); border-color: transparent; color:#fff; }
   .btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .hint{font-size:12px; color:var(--muted)}
 
-  /* Jasne checkboxy w dialogach (druk/udostępnij) */
-  dialog input[type="checkbox"]{
+  /* Light checkboxes in dialogs */
+  dialog input[type="checkbox"]:not(.switch input){
     -webkit-appearance:none; appearance:none;
     width:18px; height:18px; border-radius:4px; border:2px solid var(--border); background: var(--card);
     display:inline-grid; place-items:center; vertical-align:middle; margin:0;
   }
-  dialog input[type="checkbox"]:checked{
+  dialog input[type="checkbox"]:not(.switch input):checked{
     background: var(--accent); border-color: var(--accent);
   }
-  dialog input[type="checkbox"]:checked::after{
+  dialog input[type="checkbox"]:not(.switch input):checked::after{
     content:''; width:8px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg);
   }
 
-  /* Color palette (10 kolorów) */
+  /* Color palette */
   .swatch-grid{display:grid; grid-template-columns: repeat(10, 1fr); gap:8px}
-  .swatch{
-    width:28px; height:28px; border-radius:999px; border:2px solid #fff; box-shadow: 0 0 0 2px var(--border); cursor:pointer;
-  }
+  .swatch{ width:28px; height:28px; border-radius:999px; border:2px solid #fff; box-shadow: 0 0 0 2px var(--border); cursor:pointer; }
   .swatch.selected{box-shadow: 0 0 0 2px var(--accent)}
 </style>
 </head>
@@ -280,7 +276,6 @@
   </header>
 
   <main>
-    <div id="printHeader" class="print-header"></div>
     <div id="listContainer" class="list"></div>
     <div id="emptyState" class="empty" hidden>Brak pozycji.</div>
   </main>
@@ -365,7 +360,7 @@
           <div class="hint">Przełącz jasny/ciemny</div>
         </div>
         <label class="switch">
-          <input type="checkbox" id="darkModeToggle">
+          <input type="checkbox" id="darkModeToggle" />
           <span class="knob"></span>
         </label>
       </div>
@@ -376,7 +371,7 @@
           <div class="hint">W widoku listy ukryj odhaczone pozycje</div>
         </div>
         <label class="switch">
-          <input type="checkbox" id="hideCompletedToggle">
+          <input type="checkbox" id="hideCompletedToggle" />
           <span class="knob"></span>
         </label>
       </div>
@@ -387,7 +382,7 @@
           <div class="hint">Delikatny feedback (jeśli urządzenie wspiera)</div>
         </div>
         <label class="switch">
-          <input type="checkbox" id="vibrateToggle">
+          <input type="checkbox" id="vibrateToggle" />
           <span class="knob"></span>
         </label>
       </div>
@@ -512,8 +507,8 @@
 </div>
 
 <script>
-(() => {
-  const LS_KEY = 'todoAppData_v6';
+(()=>{'use strict';
+  const LS_KEY = 'todoAppData_v8';
 
   const el = (id) => document.getElementById(id);
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -549,29 +544,33 @@
       }
     }catch{ Object.assign(state, defaultData()); }
   }
-
   function setTheme(dark){ state.settings.dark = !!dark; document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light'); }
   function setAccent(color){ document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14)); }
   function hexToRgba(hex, a=1){ let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); } const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
-
   function vibrate(ms=20){ if(!state.settings.vibrate) return; if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} } }
   function currentList(){ if(state.currentListId === '__completed__') return null; return state.lists.find(l => l.id === state.currentListId) || state.lists[0]; }
   function listById(id){ return state.lists.find(l => l.id === id); }
   function escapeHtml(str=''){ return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
 
+  /* Quick add refs */
+  const quick = el('quickAdd');
+  const quickInput = el('quickAddInput');
+  function openQuick(){ if(state.currentListId === '__completed__') return; quick.classList.add('open'); setTimeout(()=> quickInput?.focus(), 0); }
+  function closeQuick(){ quick.classList.remove('open'); if(quickInput) quickInput.value = ''; }
+
   function render(){
     document.body.classList.toggle('edit-on', !!state.editMode);
     const isCompletedView = state.currentListId === '__completed__';
     const cl = currentList();
-    el('currentListName').textContent = isCompletedView ? 'Zakończone' : (cl?.name || 'Lista');
     const accent = isCompletedView ? '#7a7f8c' : (cl?.color || '#4a90e2');
     setAccent(accent);
+    el('currentListName').textContent = isCompletedView ? 'Zakończone' : (cl?.name || 'Lista');
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
     el('addBtn').classList.toggle('disabled', isCompletedView);
     el('quickAddBtn').classList.toggle('disabled', isCompletedView);
-    if(isCompletedView){ closeQuick(); }
+    if(isCompletedView) closeQuick();
 
     renderListMenu();
     renderItems();
@@ -579,20 +578,19 @@
     el('darkModeToggle').checked = !!state.settings.dark;
     el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
     el('vibrateToggle').checked = !!state.settings.vibrate;
+
+    // podświetlenie ołówka w trybie edycji
+    el('editModeBtn').classList.toggle('active', !!state.editMode);
   }
 
   function renderListMenu(){
-    const cont = el('listMenuItems');
-    cont.innerHTML = '';
+    const cont = el('listMenuItems'); cont.innerHTML = '';
     let draggingId = null;
 
     state.lists.forEach((l)=>{
       const btn = document.createElement('div');
-      btn.className = 'menu-item';
-      btn.setAttribute('role', 'button');
-      btn.dataset.id = l.id;
-      btn.draggable = true;
-
+      btn.className = 'menu-item'; btn.setAttribute('role', 'button');
+      btn.dataset.id = l.id; btn.draggable = true;
       btn.innerHTML = `
         <span class="grip" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -604,7 +602,6 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
       `;
-
       const isActive = state.currentListId === l.id;
       btn.classList.toggle('is-active', isActive);
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
@@ -632,7 +629,6 @@
       cont.appendChild(btn);
     });
 
-    // Aktywność dla "Zakończone"
     const compl = el('completedViewBtn');
     compl.classList.toggle('is-active', state.currentListId === '__completed__');
     compl.setAttribute('aria-selected', state.currentListId === '__completed__' ? 'true' : 'false');
@@ -640,8 +636,7 @@
   function moveList(fromIdx, toIdx){ if(fromIdx===toIdx) return; const [m] = state.lists.splice(fromIdx,1); state.lists.splice(toIdx,0,m); save(); renderListMenu(); }
 
   function renderItems(){
-    const container = el('listContainer');
-    container.innerHTML = '';
+    const container = el('listContainer'); container.innerHTML = '';
     const isCompletedView = state.currentListId === '__completed__';
     let items = [], lref = null;
 
@@ -767,15 +762,14 @@
     for(const it of list.items){ out.push(isVisible(it) ? (visQueue.shift() || it) : it); }
     list.items = out; vibrate(8); save(); render();
   }
-
   function enableItemDrag(li, handle, visibleIds, onDropOrder){
-    let startY=0, offsetY=0, ph=null, container=null, dragging=false;
+    let offsetY=0, ph=null, container=null, dragging=false;
     const onPointerDown = (e)=>{
       if(!state.editMode || state.currentListId === '__completed__') return;
       if(e.pointerType === 'mouse' && e.button !== 0) return;
       e.preventDefault(); handle.setPointerCapture?.(e.pointerId);
       container = el('listContainer'); const rect = li.getBoundingClientRect();
-      startY = e.clientY; offsetY = startY - rect.top;
+      offsetY = (e.clientY||0) - rect.top;
       ph = document.createElement('div'); ph.className = 'item placeholder'; ph.style.height = rect.height + 'px';
       container.insertBefore(ph, li.nextSibling);
       li.classList.add('dragging'); li.style.width = rect.width+'px'; li.style.position='fixed'; li.style.left = rect.left+'px'; li.style.top = rect.top+'px'; li.style.zIndex=1000; li.style.pointerEvents='none';
@@ -786,7 +780,7 @@
     };
     const onPointerMove = (e)=>{
       if(!dragging) return; e.preventDefault();
-      const y = e.clientY - offsetY; li.style.top = y + 'px';
+      const y = (e.clientY||0) - offsetY; li.style.top = y + 'px';
       const centerY = y + li.offsetHeight/2;
       const children = Array.from(container.children).filter(c=>c!==li);
       let newIndex=0; for(let i=0;i<children.length;i++){ const r = children[i].getBoundingClientRect(); if(centerY > r.top + r.height/2) newIndex = i+1; }
@@ -805,26 +799,17 @@
     };
     handle.addEventListener('pointerdown', onPointerDown);
   }
-
   function findItemListId(itemId){ for(const l of state.lists){ if(l.items.some(i => i.id === itemId)) return l.id; } return null; }
 
-  // Quick add
-  const quick = el('quickAdd'); const quickInput = el('quickAddInput');
-  function openQuick(){ if(state.currentListId === '__completed__') return; quick.classList.add('open'); setTimeout(()=> quickInput.focus(), 0); }
-  function closeQuick(){ quick.classList.remove('open'); quickInput.value = ''; }
-  function addItem(text, toListId){
-    const l = listById(toListId); if(!l) return;
-    l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
-    save(); render();
-  }
-
   // Menu open/close
-  const menuBtn = el('openMenuBtn'); const menu = el('listMenu');
+  const menuBtn = el('openMenuBtn');
+  const menu = el('listMenu');
   function openMenu(){ menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
   menuBtn.addEventListener('click', ()=> menu.classList.contains('open') ? closeMenu() : openMenu());
   document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
 
+  // Menu actions
   el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; closeQuick(); closeMenu(); save(); render(); });
   el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
   el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
@@ -896,7 +881,6 @@
   // Quick add
   el('quickAddBtn').addEventListener('click', openQuick);
   el('quickAddClose').addEventListener('click', closeQuick);
-  const quickInput = el('quickAddInput');
   el('quickAddSubmit').addEventListener('click', ()=>{
     const txt = quickInput.value.trim(); if(!txt) return;
     const toId = (state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId);
@@ -926,6 +910,12 @@
   el('addDlgClose').addEventListener('click', ()=> el('addDialog').close());
   el('addDlgCancel').addEventListener('click', ()=> el('addDialog').close());
 
+  function addItem(text, toListId){
+    const l = listById(toListId); if(!l) return;
+    l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
+    save(); render();
+  }
+
   // Settings
   el('settingsBtn').addEventListener('click', ()=> el('settingsDialog').showModal());
   el('closeSettings').addEventListener('click', ()=> el('settingsDialog').close());
@@ -933,7 +923,7 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Drukowanie (checklista + nowe okno – stabilnie na iOS/Android)
+  // Print (checklista + nowe okno z Blobem — koniec z about:blank)
   el('printBtn').addEventListener('click', ()=>{
     const cont = el('printChecks'); cont.innerHTML = '';
     state.lists.forEach(l=>{
@@ -959,23 +949,20 @@
     const includeDate = el('printDateToggle').checked;
     const html = buildPrintHTML(ids, includeDate);
     el('printDialog').close();
-    printUsingPopup(html);
+    printUsingBlobWindow(html);
   });
-
   function buildPrintHTML(ids, includeDate){
-    const css = `
-      <style>
-        @page { margin: 12mm; }
-        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color:#111; }
-        .pa-date { font-size:12px; color:#555; margin-bottom:8px; }
-        .pa-list { margin-bottom:16px; }
-        h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
-        .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
-        ul{ margin: 0 0 8px 18px; padding:0; }
-        li{ margin:4px 0; }
-        .done{ text-decoration: line-through; color:#777; }
-      </style>
-    `;
+    const css = `<style>
+      @page { margin: 12mm; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color:#111; }
+      .pa-date { font-size:12px; color:#555; margin-bottom:8px; }
+      .pa-list { margin-bottom:16px; }
+      h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
+      .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
+      ul{ margin: 0 0 8px 18px; padding:0; }
+      li{ margin:4px 0; }
+      .done{ text-decoration: line-through; color:#777; }
+    </style>`;
     let body = '';
     if(includeDate){
       const d = new Date();
@@ -988,44 +975,38 @@
         state.lists.forEach(l=> l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); }));
         allDone.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
         body += `<div class="pa-list"><h2><span class="pa-dot" style="background:#7a7f8c"></span>Zakończone</h2>`;
-        if(allDone.length===0){
-          body += `<div>Brak pozycji.</div>`;
-        }else{
-          body += `<ul>` + allDone.map(it=> `<li>${escapeHtml(it.text)} (z listy: ${escapeHtml(it.from)})</li>`).join('') + `</ul>`;
-        }
+        if(allDone.length===0){ body += `<div>Brak pozycji.</div>`; }
+        else{ body += `<ul>` + allDone.map(it=> `<li>${escapeHtml(it.text)} (z listy: ${escapeHtml(it.from)})</li>`).join('') + `</ul>`; }
         body += `</div>`;
       }else{
         const list = listById(id); if(!list) return;
         body += `<div class="pa-list"><h2><span class="pa-dot" style="background:${list.color}"></span>${escapeHtml(list.name)}</h2>`;
         const undone = list.items.filter(i=>!i.done);
         const done = list.items.filter(i=>i.done);
-        if(undone.length===0 && done.length===0){
-          body += `<div>Brak pozycji.</div>`;
-        }else{
-          if(undone.length>0){
-            body += `<ul>` + undone.map(it=> `<li>${escapeHtml(it.text)}</li>`).join('') + `</ul>`;
-          }
-          if(done.length>0){
-            body += `<div>Ukończone:</div><ul>` + done.map(it=> `<li class="done">${escapeHtml(it.text)}</li>`).join('') + `</ul>`;
-          }
+        if(undone.length===0 && done.length===0){ body += `<div>Brak pozycji.</div>`; }
+        else{
+          if(undone.length>0){ body += `<ul>` + undone.map(it=> `<li>${escapeHtml(it.text)}</li>`).join('') + `</ul>`; }
+          if(done.length>0){ body += `<div>Ukończone:</div><ul>` + done.map(it=> `<li class="done">${escapeHtml(it.text)}</li>`).join('') + `</ul>`; }
         }
         body += `</div>`;
       }
     });
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
   }
-
-  function printUsingPopup(html){
-    // Otwórz okno w reakcji na gest użytkownika — stabilne na iOS/Android
-    const win = window.open('', '_blank', 'noopener,noreferrer');
-    if(!win){ alert('Zezwól przeglądarce na otwieranie okien, aby wydrukować.'); return; }
-    win.document.open(); win.document.write(html); win.document.close();
-    const trigger = ()=>{ try{ win.focus(); win.print(); }catch{} };
-    if(win.document.readyState === 'complete') setTimeout(trigger, 80);
-    else win.onload = trigger;
-    // spróbuj zamknąć po wydruku
-    win.addEventListener?.('afterprint', ()=>{ try{ win.close(); }catch{} });
-    setTimeout(()=>{ try{ win.close(); }catch{} }, 4000); // awaryjnie
+  function printUsingBlobWindow(html){
+    try{
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      if(!win){ alert('Zezwól przeglądarce na wyskakujące okna, aby wydrukować.'); URL.revokeObjectURL(url); return; }
+      const trigger = ()=>{ try{ win.focus(); win.print(); }catch{} setTimeout(()=>{ try{ win.close(); }catch{} URL.revokeObjectURL(url); }, 1500); };
+      if(win.document && win.document.readyState === 'complete') setTimeout(trigger, 120);
+      else win.onload = trigger;
+      // awaryjnie
+      setTimeout(()=>{ try{ win.focus(); win.print(); }catch{} }, 800);
+    }catch(e){
+      alert('Drukowanie nie powiodło się. Spróbuj ponownie lub w innej przeglądarce.');
+    }
   }
 
   // Share
@@ -1048,7 +1029,6 @@
     el('shareDialog').showModal();
   });
   el('shareClose').addEventListener('click', ()=> el('shareDialog').close());
-
   el('shareSystemBtn').addEventListener('click', async ()=>{
     const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const text = buildShareText(ids, includeDate);
@@ -1112,7 +1092,7 @@
     state.editMode = !state.editMode; render();
   });
 
-  // Zamykaj dialogi po kliknięciu tła
+  // Close dialogs on backdrop click
   $$('dialog').forEach(d=>{
     d.addEventListener('click', (e)=>{
       const rect = d.getBoundingClientRect();
@@ -1127,7 +1107,6 @@
     state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
   }
   render();
-
 })();
 </script>
 </body>

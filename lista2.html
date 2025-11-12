@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Lista • Zadania i Zakupy</title>
+<meta name="color-scheme" content="light dark" />
+<style>
+  :root{
+    --bg: #f6f7fb;
+    --text: #111318;
+    --muted: #566074;
+    --card: #ffffff;
+    --border: #e6e8f0;
+    --accent: #4a90e2;
+    --accent-soft: rgba(74,144,226,0.12);
+    --shadow: 0 8px 24px rgba(17,19,24,0.08);
+    --shadow-soft: 0 4px 12px rgba(17,19,24,0.06);
+    --radius: 16px;
+    --header-h: 64px;
+    --nav-h: 72px;
+    --safe-bottom: env(safe-area-inset-bottom);
+    --safe-top: env(safe-area-inset-top);
+    --focus: 0 0 0 3px rgba(74,144,226,0.3);
+  }
+  [data-theme="dark"]{
+    --bg: #0c0f14;
+    --text: #e6e8ef;
+    --muted: #9aa3b2;
+    --card: #161a22;
+    --border: #232938;
+    --shadow: 0 8px 24px rgba(0,0,0,0.45);
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.35);
+    --accent-soft: color-mix(in oklab, var(--accent) 15%, transparent);
+  }
+  *{box-sizing: border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent;
+  }
+  button,input,select{font-family:inherit; color:inherit}
+  .app{
+    min-height:100dvh; display:flex; flex-direction:column; padding-top:var(--safe-top);
+  }
+
+  /* Header */
+  .app-header{
+    position:sticky; top:0; z-index:20; height:var(--header-h);
+    backdrop-filter: blur(8px);
+    background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 12%, var(--bg)) 0%, var(--bg) 70%);
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; padding:0 16px;
+  }
+  .title-button{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
+    background: var(--card); box-shadow: var(--shadow-soft); border:1px solid var(--border);
+    cursor:pointer; user-select:none;
+  }
+  .title-button:active{transform:scale(0.98)}
+  .dot{
+    width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .title-text{font-weight:600}
+  .caret{width:16px; height:16px; opacity:0.7}
+
+  /* Dropdown */
+  .dropdown{
+    position:absolute; top: calc(var(--header-h) - 6px); left:12px; right:12px;
+    background: var(--card); border:1px solid var(--border); border-radius:18px;
+    box-shadow: var(--shadow); padding:8px; display:none; max-height:60dvh; overflow:auto;
+  }
+  .dropdown.open{display:block; animation: pop 160ms ease-out}
+  @keyframes pop{from{transform:translateY(-8px); opacity:0} to{transform:translateY(0); opacity:1}}
+
+  .menu-sec-title{font-size:12px; color:var(--muted); padding:6px 10px}
+  .menu-item{
+    display:flex; align-items:center; gap:10px; width:100%; border:0; background:transparent;
+    padding:12px; border-radius:12px; cursor:pointer;
+  }
+  .menu-item:hover{background: color-mix(in oklab, var(--card) 92%, var(--accent) 8%)}
+  .menu-item .name{flex:1; text-align:left}
+  .pill{background: var(--accent-soft); color: var(--accent); border-radius:999px; font-size:12px; padding:2px 8px}
+  .color-dot{width:10px; height:10px; border-radius:50%}
+
+  /* Main content */
+  main{flex:1; padding:12px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width:900px; width:100%; margin:0 auto}
+  .list{
+    display:grid; gap:8px;
+  }
+  .empty{
+    color:var(--muted); text-align:center; margin-top:18vh; font-size:15px;
+  }
+
+  /* Item */
+  .item{
+    display:flex; align-items:center; gap:12px; background: var(--card); border:1px solid var(--border);
+    padding:12px; border-radius:14px; box-shadow: var(--shadow-soft);
+    transition: transform .15s ease, background .2s ease, opacity .2s ease;
+  }
+  .item.new{animation: slideIn .18s ease-out}
+  @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
+  .item:active{transform:scale(0.995)}
+  .item input[type="checkbox"]{width:22px; height:22px; accent-color: var(--accent); flex-shrink:0}
+  .item .texts{display:flex; flex-direction:column; gap:4px; flex:1; min-width:0}
+  .item .text{
+    font-size:16px; line-height:1.35; word-break:break-word;
+    transition: color .2s ease;
+  }
+  .item.done .text{color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1.5px}
+  .sub{color: var(--muted); font-size:12px}
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; height: calc(var(--nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--card); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 20px; z-index:25;
+  }
+  .icon-btn{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); display:grid; place-items:center;
+    box-shadow: var(--shadow-soft);
+  }
+  .icon-btn:active{transform:scale(0.96)}
+  .fab{
+    position:absolute; left:50%; transform: translateX(-50%) translateY(-18%);
+    width:64px; height:64px; border-radius:50%;
+    border:0; background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 60%, #fff));
+    color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .fab:active{transform: translateX(-50%) translateY(-18%) scale(0.97)}
+
+  /* Quick add */
+  .quick-add{
+    position: fixed; left:12px; right:12px; bottom: calc(var(--nav-h) + var(--safe-bottom) + 10px);
+    background: var(--card); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow);
+    display:none; padding:8px; gap:8px; align-items:center;
+  }
+  .quick-add.open{display:flex; animation: pop .12s ease-out}
+  .quick-add input{
+    flex:1; border:0; background:transparent; outline:none; padding:10px; border-radius:10px;
+  }
+  .close-x{
+    width:36px; height:36px; border-radius:10px; border:1px solid var(--border); background:var(--card);
+    display:grid; place-items:center;
+  }
+
+  /* Dialogs */
+  dialog{
+    border:0; border-radius:18px; padding:0; background: var(--card); color: var(--text); width:min(520px, 92vw);
+    box-shadow: var(--shadow);
+  }
+  dialog::backdrop{background: rgba(10,12,16,0.45); backdrop-filter: blur(3px)}
+  .dlg-head{padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
+  .dlg-title{font-weight:700}
+  .dlg-body{padding:14px 18px; display:grid; gap:12px}
+  .field{display:grid; gap:6px}
+  .label{font-size:13px; color:var(--muted)}
+  input[type="text"], select, input[type="color"]{
+    width:100%; border:1px solid var(--border); background: var(--card); color: var(--text);
+    border-radius:12px; padding:12px; outline:none;
+  }
+  .row{display:flex; gap:10px; align-items:center}
+  .grow{flex:1}
+  .switch{
+    position:relative; width:48px; height:28px; background: var(--border); border-radius:999px; cursor:pointer; border:1px solid var(--border);
+  }
+  .switch input{display:none}
+  .switch .knob{
+    position:absolute; top:50%; left:4px; transform:translateY(-50%); width:20px; height:20px; border-radius:50%;
+    background:#fff; box-shadow: var(--shadow-soft); transition: left .18s ease, background .18s ease;
+  }
+  .switch input:checked + .knob{ left:24px; background: var(--accent)}
+  .dlg-foot{display:flex; gap:10px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border)}
+  .btn{
+    padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--card); cursor:pointer;
+  }
+  .btn.primary{
+    background: var(--accent); border-color: transparent; color:#fff;
+  }
+  .btn.danger{color:#d53b3b; border-color: color-mix(in oklab, #d53b3b 30%, var(--border)); background: color-mix(in oklab, #d53b3b 10%, var(--card))}
+  .hint{font-size:12px; color:var(--muted)}
+
+  /* Print */
+  @media print{
+    .app-header, .bottom-nav, .dropdown, .quick-add, dialog{display:none !important}
+    main{padding:0}
+    body{background:#fff}
+    .item{box-shadow:none; border:1px solid #ddd}
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    *{animation:none !important; transition:none !important}
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="app-header">
+    <button class="title-button" id="openMenuBtn" aria-haspopup="true" aria-expanded="false">
+      <span class="dot" id="listDot"></span>
+      <span class="title-text" id="currentListName">Moja lista</span>
+      <svg class="caret" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="dropdown" id="listMenu" role="menu" aria-label="Wybierz listę">
+      <div class="menu-sec">
+        <div class="menu-sec-title">Moje listy</div>
+        <div id="listMenuItems"></div>
+      </div>
+      <div class="menu-sec">
+        <div class="menu-sec-title">Inne</div>
+        <button class="menu-item" id="completedViewBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="name">Zakończone</span>
+        </button>
+      </div>
+      <div class="menu-sec">
+        <button class="menu-item" id="manageListBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.07a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.07a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 115 3.29l.06.06a1.65 1.65 0 001.82.33H7a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.07a1.65 1.65 0 001 1.51h.02a1.65 1.65 0 001.8-.33l.06-.06A2 2 0 1120.71 5l-.06.06a1.65 1.65 0 00-.33 1.82V7c0 .65.39 1.24 1 1.51.31.15.65.24 1 .25H22a2 2 0 110 4h-.07a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.4"/>
+          </svg>
+          <span class="name">Zarządzaj listą</span>
+        </button>
+        <button class="menu-item" id="addListBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="name">Nowa lista</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="listContainer" class="list"></div>
+    <div id="emptyState" class="empty" hidden>Brak pozycji. Dodaj coś przyciskiem +</div>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M11 21l1-7-7-1 15-10-9 18z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <button class="fab" id="addBtn" aria-label="Dodaj">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" stroke="currentColor" stroke-width="2"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.07a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.07a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06A2 2 0 115 3.29l.06.06a1.65 1.65 0 001.82.33H7a1.65 1.65 0 001-1.51V2a2 2 0 114 0v.07a1.65 1.65 0 001 1.51h.02a1.65 1.65 0 001.8-.33l.06-.06A2 2 0 1120.71 5l-.06.06a1.65 1.65 0 00-.33 1.82V7c0 .65.39 1.24 1 1.51.31.15.65.24 1 .25H22a2 2 0 110 4h-.07a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="1.4"/>
+      </svg>
+    </button>
+  </nav>
+
+  <div class="quick-add" id="quickAdd" role="dialog" aria-label="Szybkie dodanie">
+    <input id="quickAddInput" type="text" placeholder="Szybko dodaj do bieżącej listy… (Enter = dodaj)" autocomplete="off" />
+    <button class="close-x" id="quickAddClose" aria-label="Zamknij">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Add item dialog -->
+  <dialog id="addDialog">
+    <form method="dialog" id="addForm">
+      <div class="dlg-head">
+        <div class="dlg-title">Dodaj pozycję</div>
+        <button class="btn" value="cancel" aria-label="Zamknij">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <div class="label">Treść</div>
+          <input type="text" id="addText" placeholder="np. Kupić mleko" required />
+        </div>
+        <div class="field">
+          <div class="label">Dodaj do listy</div>
+          <select id="addListSelect"></select>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" value="cancel">Anuluj</button>
+        <button class="btn primary" id="addSubmitBtn" value="submit">Dodaj</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings dialog -->
+  <dialog id="settingsDialog">
+    <div class="dlg-head">
+      <div class="dlg-title">Ustawienia</div>
+      <button class="btn" id="closeSettings">Zamknij</button>
+    </div>
+    <div class="dlg-body">
+      <div class="row">
+        <div class="grow">
+          <div>Motyw ciemny</div>
+          <div class="hint">Przełącz jasny/ciemny</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="darkModeToggle">
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="grow">
+          <div>Ukrywaj ukończone</div>
+          <div class="hint">W widoku listy ukryj odhaczone pozycje</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="hideCompletedToggle">
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="grow">
+          <div>Wibracje przy odhaczaniu</div>
+          <div class="hint">Delikatny feedback (jeśli urządzenie wspiera)</div>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="vibrateToggle">
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <button class="btn" id="printBtn">
+          Drukuj bieżący widok
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Manage list dialog -->
+  <dialog id="manageDialog">
+    <form method="dialog" id="manageForm">
+      <div class="dlg-head">
+        <div class="dlg-title">Zarządzaj listą</div>
+        <button class="btn" value="cancel">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <div class="label">Nazwa listy</div>
+          <input type="text" id="manageListName" required />
+        </div>
+        <div class="field">
+          <div class="label">Kolor listy</div>
+          <div class="row">
+            <input type="color" id="manageListColor" class="grow" />
+            <button class="btn" type="button" id="suggestColorsBtn">Losuj</button>
+          </div>
+          <div class="hint">Kolor wpływa na akcent, checkboxy i tło nagłówka</div>
+        </div>
+      </div>
+      <div class="dlg-foot" style="justify-content: space-between">
+        <button class="btn danger" type="button" id="deleteListBtn">Usuń listę</button>
+        <div>
+          <button class="btn" value="cancel">Anuluj</button>
+          <button class="btn primary" id="saveManageBtn" value="submit">Zapisz</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- New list dialog -->
+  <dialog id="newListDialog">
+    <form method="dialog" id="newListForm">
+      <div class="dlg-head">
+        <div class="dlg-title">Nowa lista</div>
+        <button class="btn" value="cancel">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <div class="label">Nazwa</div>
+          <input id="newListName" type="text" placeholder="np. Zakupy" required />
+        </div>
+        <div class="field">
+          <div class="label">Kolor</div>
+          <div class="row">
+            <input id="newListColor" type="color" class="grow" value="#4a90e2" />
+            <button class="btn" type="button" id="newListRandom">Losuj</button>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" value="cancel">Anuluj</button>
+        <button class="btn primary" id="createListBtn" value="submit">Utwórz</button>
+      </div>
+    </form>
+  </dialog>
+</div>
+
+<script>
+(() => {
+  const LS_KEY = 'todoAppData_v1';
+
+  const el = (id) => document.getElementById(id);
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  const state = {
+    lists: [],
+    settings: {
+      dark: false,
+      hideCompleted: false,
+      vibrate: true,
+    },
+    currentListId: null, // actual list id or '__completed__'
+    lastActiveListId: null,
+  };
+
+  function uid(prefix='id'){
+    return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`;
+  }
+
+  function defaultData(){
+    const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', items: [] };
+    const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', items: [] };
+    return {
+      lists: [list1, list2],
+      settings: { dark: false, hideCompleted: false, vibrate: true },
+      currentListId: list1.id,
+      lastActiveListId: list1.id
+    };
+  }
+
+  function save(){
+    const toSave = {
+      lists: state.lists,
+      settings: state.settings,
+      currentListId: state.currentListId,
+      lastActiveListId: state.lastActiveListId
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(toSave));
+  }
+
+  function load(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw){
+      Object.assign(state, defaultData());
+      return;
+    }
+    try{
+      const data = JSON.parse(raw);
+      Object.assign(state, data);
+      // sanity when no lists
+      if(!Array.isArray(state.lists) || state.lists.length === 0){
+        const d = defaultData();
+        state.lists = d.lists;
+        state.currentListId = d.currentListId;
+        state.lastActiveListId = d.lastActiveListId;
+      }
+    }catch{
+      Object.assign(state, defaultData());
+    }
+  }
+
+  function setTheme(dark){
+    state.settings.dark = !!dark;
+    document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
+  }
+
+  function setAccent(color){
+    document.documentElement.style.setProperty('--accent', color);
+    document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14));
+  }
+
+  function currentList(){
+    if(state.currentListId === '__completed__') return null;
+    return state.lists.find(l => l.id === state.currentListId) || state.lists[0];
+  }
+
+  function listById(id){
+    return state.lists.find(l => l.id === id);
+  }
+
+  function hexToRgba(hex, a=1){
+    let h = hex.replace('#','');
+    if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    const r = parseInt(h.slice(0,2),16);
+    const g = parseInt(h.slice(2,4),16);
+    const b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+
+  function lighten(hex, factor=0.15){
+    let h = hex.replace('#','');
+    if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    let r = parseInt(h.slice(0,2),16);
+    let g = parseInt(h.slice(2,4),16);
+    let b = parseInt(h.slice(4,6),16);
+    const mix = (c) => Math.min(255, Math.round(c + (255 - c)*factor));
+    return '#' + [mix(r), mix(g), mix(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+  }
+
+  function vibrate(ms=20){
+    if(!state.settings.vibrate) return;
+    if('vibrate' in navigator){
+      try{ navigator.vibrate(ms); }catch{}
+    }
+  }
+
+  function render(){
+    // Header
+    const isCompletedView = state.currentListId === '__completed__';
+    const cl = currentList();
+    el('currentListName').textContent = isCompletedView ? 'Zakończone' : (cl?.name || 'Lista');
+    const accent = isCompletedView ? '#7a7f8c' : (cl?.color || '#4a90e2');
+    setAccent(accent);
+    el('listDot').style.background = accent;
+    el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
+
+    renderListMenu();
+    renderItems();
+
+    // Settings toggles
+    el('darkModeToggle').checked = !!state.settings.dark;
+    el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
+    el('vibrateToggle').checked = !!state.settings.vibrate;
+  }
+
+  function renderListMenu(){
+    const cont = el('listMenuItems');
+    cont.innerHTML = '';
+    const frag = document.createDocumentFragment();
+    state.lists.forEach(l=>{
+      const undoneCount = l.items.filter(i=>!i.done).length;
+      const btn = document.createElement('button');
+      btn.className = 'menu-item';
+      btn.innerHTML = `
+        <span class="color-dot" style="background:${l.color}"></span>
+        <span class="name">${escapeHtml(l.name)}</span>
+        <span class="pill">${undoneCount}</span>
+      `;
+      btn.addEventListener('click', ()=>{
+        state.currentListId = l.id;
+        state.lastActiveListId = l.id;
+        closeMenu();
+        save(); render();
+      });
+      frag.appendChild(btn);
+    });
+    cont.appendChild(frag);
+  }
+
+  function renderItems(){
+    const container = el('listContainer');
+    container.innerHTML = '';
+    const isCompletedView = state.currentListId === '__completed__';
+    let items = [];
+    if(isCompletedView){
+      state.lists.forEach(l=>{
+        l.items.forEach(it=>{
+          if(it.done){
+            items.push({...it, __fromList: l.id});
+          }
+        });
+      });
+      items.sort((a,b)=>(b.completedAt||0) - (a.completedAt||0));
+    }else{
+      const l = currentList();
+      if(!l){ return; }
+      const undone = l.items.filter(i=>!i.done).sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
+      const done = l.items.filter(i=>i.done).sort((a,b)=> (a.completedAt||0) - (b.completedAt||0));
+      items = state.settings.hideCompleted ? undone : [...undone, ...done];
+    }
+
+    if(items.length === 0){
+      el('emptyState').hidden = false;
+      return;
+    }else{
+      el('emptyState').hidden = true;
+    }
+
+    const frag = document.createDocumentFragment();
+    items.forEach(it=>{
+      const li = document.createElement('div');
+      li.className = 'item' + (it.done ? ' done' : '') + ' new';
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!it.done;
+      checkbox.addEventListener('change', ()=>{
+        // Toggle logic – know which list to update
+        if(state.currentListId === '__completed__'){
+          // find original list
+          const listId = findItemListId(it.id) || it.__fromList;
+          const l = listById(listId);
+          const item = l?.items.find(x=>x.id === it.id);
+          if(item){
+            item.done = checkbox.checked;
+            item.completedAt = item.done ? Date.now() : null;
+          }
+        }else{
+          const l = currentList();
+          const item = l.items.find(x=>x.id === it.id);
+          if(item){
+            item.done = checkbox.checked;
+            item.completedAt = item.done ? Date.now() : null;
+          }
+        }
+        vibrate(22);
+        save(); render();
+      });
+
+      const texts = document.createElement('div');
+      texts.className = 'texts';
+      const title = document.createElement('div');
+      title.className = 'text';
+      title.textContent = it.text;
+      texts.appendChild(title);
+
+      if(state.currentListId === '__completed__'){
+        const small = document.createElement('div');
+        small.className = 'sub';
+        const lName = listById(findItemListId(it.id) || it.__fromList)?.name || '—';
+        small.textContent = `z listy: ${lName}`;
+        texts.appendChild(small);
+      }
+
+      li.appendChild(checkbox);
+      li.appendChild(texts);
+      frag.appendChild(li);
+    });
+    container.appendChild(frag);
+  }
+
+  function findItemListId(itemId){
+    for(const l of state.lists){
+      if(l.items.some(i => i.id === itemId)) return l.id;
+    }
+    return null;
+  }
+
+  function escapeHtml(str=''){
+    return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s]));
+  }
+
+  // Quick add
+  const quick = el('quickAdd');
+  const quickInput = el('quickAddInput');
+  function openQuick(){
+    quick.classList.add('open');
+    setTimeout(()=> quickInput.focus(), 0);
+  }
+  function closeQuick(){
+    quick.classList.remove('open');
+    quickInput.value = '';
+  }
+
+  function addItem(text, toListId){
+    const l = listById(toListId);
+    if(!l) return;
+    l.items.push({
+      id: uid('it'),
+      text: text.trim(),
+      done: false,
+      createdAt: Date.now(),
+      completedAt: null
+    });
+    save();
+    render();
+  }
+
+  // Add dialog
+  const addDlg = el('addDialog');
+  const addText = el('addText');
+  const addListSel = el('addListSelect');
+  function openAddDialog(){
+    addListSel.innerHTML = '';
+    state.lists.forEach(l=>{
+      const opt = document.createElement('option');
+      opt.value = l.id; opt.textContent = l.name;
+      addListSel.appendChild(opt);
+    });
+    // Domyślnie bieżąca lista, chyba że jesteśmy w "Zakończone" – wtedy ostatnia aktywna
+    const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
+    addListSel.value = defaultId;
+    addText.value = '';
+    addDlg.showModal();
+    setTimeout(()=>addText.focus(), 0);
+  }
+
+  // Manage list dialog
+  const manageDlg = el('manageDialog');
+  const manageName = el('manageListName');
+  const manageColor = el('manageListColor');
+
+  function openManage(){
+    const cl = currentList();
+    if(!cl){
+      // If in completed view, open last active list
+      const l = listById(state.lastActiveListId) || state.lists[0];
+      state.currentListId = l.id;
+    }
+    const used = currentList();
+    manageName.value = used.name;
+    manageColor.value = used.color;
+    manageDlg.showModal();
+  }
+
+  function randomNiceColor(){
+    const palette = ['#4a90e2','#E86B27','#2ecc71','#9b59b6','#e74c3c','#f39c12','#16a085','#d35400','#27ae60','#8e44ad','#ff6b6b','#00b894','#0984e3'];
+    return palette[Math.floor(Math.random()*palette.length)];
+  }
+
+  // New list dialog
+  const newListDlg = el('newListDialog');
+  const newListName = el('newListName');
+  const newListColor = el('newListColor');
+
+  // Settings dialog
+  const settingsDlg = el('settingsDialog');
+
+  // Menu open/close
+  const menuBtn = el('openMenuBtn');
+  const menu = el('listMenu');
+  function openMenu(){
+    menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true');
+  }
+  function closeMenu(){
+    menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false');
+  }
+
+  // Event bindings
+  menuBtn.addEventListener('click', (e)=>{
+    const open = menu.classList.contains('open');
+    if(open) closeMenu(); else openMenu();
+  });
+
+  document.addEventListener('click', (e)=>{
+    if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)){
+      closeMenu();
+    }
+  });
+
+  el('completedViewBtn').addEventListener('click', ()=>{
+    state.currentListId = '__completed__';
+    closeMenu(); save(); render();
+  });
+
+  el('manageListBtn').addEventListener('click', ()=>{
+    closeMenu(); openManage();
+  });
+
+  el('addListBtn').addEventListener('click', ()=>{
+    closeMenu();
+    newListName.value = '';
+    newListColor.value = randomNiceColor();
+    newListDlg.showModal();
+    setTimeout(()=> newListName.focus(), 0);
+  });
+
+  el('newListRandom').addEventListener('click', ()=>{
+    newListColor.value = randomNiceColor();
+  });
+
+  el('createListBtn').addEventListener('click', (e)=>{
+    e.preventDefault();
+    const name = newListName.value.trim();
+    if(!name) return;
+    const color = newListColor.value || randomNiceColor();
+    const l = { id: uid('list'), name, color, items: [] };
+    state.lists.push(l);
+    state.currentListId = l.id;
+    state.lastActiveListId = l.id;
+    newListDlg.close();
+    save(); render();
+  });
+
+  el('suggestColorsBtn').addEventListener('click', ()=>{
+    manageColor.value = randomNiceColor();
+  });
+
+  el('saveManageBtn').addEventListener('click', (e)=>{
+    e.preventDefault();
+    const cl = currentList();
+    if(!cl) return;
+    cl.name = manageName.value.trim() || cl.name;
+    cl.color = manageColor.value || cl.color;
+    manageDlg.close();
+    save(); render();
+  });
+
+  el('deleteListBtn').addEventListener('click', ()=>{
+    const cl = currentList();
+    if(!cl) return;
+    if(state.lists.length <= 1){
+      alert('Musi pozostać przynajmniej jedna lista.');
+      return;
+    }
+    if(confirm(`Usunąć listę "${cl.name}"? (Nie usunie danych z innych list)`)){
+      const idx = state.lists.findIndex(l=>l.id===cl.id);
+      if(idx>=0){ state.lists.splice(idx,1); }
+      state.currentListId = state.lists[0].id;
+      state.lastActiveListId = state.currentListId;
+      manageDlg.close();
+      save(); render();
+    }
+  });
+
+  // Quick add
+  el('quickAddBtn').addEventListener('click', openQuick);
+  el('quickAddClose').addEventListener('click', closeQuick);
+  quickInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      const txt = quickInput.value.trim();
+      if(!txt) return;
+      const toId = (state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId);
+      addItem(txt, toId);
+      quickInput.value = '';
+      vibrate(12);
+    }else if(e.key==='Escape'){ closeQuick(); }
+  });
+
+  // Add item
+  el('addBtn').addEventListener('click', openAddDialog);
+  el('addForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const txt = addText.value.trim();
+    if(!txt) return;
+    const listId = addListSel.value;
+    addItem(txt, listId);
+    addDlg.close();
+    vibrate(16);
+  });
+
+  // Settings
+  el('settingsBtn').addEventListener('click', ()=> settingsDlg.showModal());
+  el('closeSettings').addEventListener('click', ()=> settingsDlg.close());
+  el('darkModeToggle').addEventListener('change', (e)=>{ setTheme(e.target.checked); save(); });
+  el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
+  el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
+
+  el('printBtn').addEventListener('click', ()=>{
+    window.print();
+  });
+
+  // Close dialogs on backdrop click
+  $$('dialog').forEach(d=>{
+    d.addEventListener('click', (e)=>{
+      const rect = d.getBoundingClientRect();
+      const inDialog = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if(!inDialog){ d.close(); }
+    });
+  });
+
+  // Init
+  load();
+  setTheme(state.settings.dark);
+  // If currentListId invalid, reset
+  if(state.currentListId !== '__completed__' && !listById(state.currentListId)){
+    state.currentListId = state.lists[0].id;
+    state.lastActiveListId = state.currentListId;
+  }
+  render();
+
+})();
+</script>
+</body>
+</html>

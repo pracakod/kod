@@ -83,6 +83,14 @@
   .grip{opacity:.5; display:grid; place-items:center; cursor:grab}
   .menu-item.drag-over{outline:2px dashed var(--accent); outline-offset:2px}
 
+  /* Aktywna pozycja w menu (wybrana lista) */
+  .menu-item.is-active{
+    background: color-mix(in oklab, var(--card) 85%, var(--accent) 15%);
+    outline: 2px solid var(--accent);
+  }
+  .tick{display:none}
+  .menu-item.is-active .tick{display:block}
+
   /* Main content */
   main{flex:1; padding:12px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width:900px; width:100%; margin:0 auto}
   .print-header{display:none; font-size:18px; font-weight:700; margin:6px 0 12px}
@@ -203,12 +211,11 @@
   .btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .hint{font-size:12px; color:var(--muted)}
 
-  /* Lekkie checkboxy w dialogach (druk/udostępnij) */
+  /* Jasne checkboxy w dialogach (druk/udostępnij) */
   dialog input[type="checkbox"]{
     -webkit-appearance:none; appearance:none;
     width:18px; height:18px; border-radius:4px; border:2px solid var(--border); background: var(--card);
-    display:inline-grid; place-items:center; vertical-align:middle;
-    margin:0;
+    display:inline-grid; place-items:center; vertical-align:middle; margin:0;
   }
   dialog input[type="checkbox"]:checked{
     background: var(--accent); border-color: var(--accent);
@@ -249,6 +256,9 @@
             <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <span class="name">Zakończone</span>
+          <span class="tick" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
         </button>
       </div>
       <div class="menu-sec">
@@ -294,16 +304,6 @@
       <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </button>
-      <button class="icon-btn" id="undoBtn" aria-label="Cofnij" hidden disabled>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M8 7l-5 5 5 5M3 12h11a6 6 0 010 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
-        </svg>
-      </button>
-      <button class="icon-btn" id="redoBtn" aria-label="Ponów" hidden disabled>
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-          <path d="M16 7l5 5-5 5M21 12H10a6 6 0 000 12" transform="scale(-1,1) translate(-24,0)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
         </svg>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Opcje">
@@ -513,10 +513,12 @@
 
 <script>
 (() => {
-  const LS_KEY = 'todoAppData_v5'; // zachowuje Twoje dane
+  const LS_KEY = 'todoAppData_v6';
+
   const el = (id) => document.getElementById(id);
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
   const PALETTE10 = ['#4a90e2','#E86B27','#2ecc71','#9b59b6','#e74c3c','#f39c12','#16a085','#d35400','#27ae60','#8e44ad'];
   const NAME_MAX = 40;
 
@@ -526,11 +528,6 @@
     currentListId: null,
     lastActiveListId: null,
     editMode: false,
-  };
-
-  // Historia (cofnij/redo) dla trybu edycji
-  const history = {
-    listId: null, stack: [], idx: -1, suspend: false, max: 50
   };
 
   function uid(prefix='id'){ return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`; }
@@ -552,9 +549,11 @@
       }
     }catch{ Object.assign(state, defaultData()); }
   }
+
   function setTheme(dark){ state.settings.dark = !!dark; document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light'); }
   function setAccent(color){ document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14)); }
   function hexToRgba(hex, a=1){ let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); } const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+
   function vibrate(ms=20){ if(!state.settings.vibrate) return; if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} } }
   function currentList(){ if(state.currentListId === '__completed__') return null; return state.lists.find(l => l.id === state.currentListId) || state.lists[0]; }
   function listById(id){ return state.lists.find(l => l.id === id); }
@@ -570,7 +569,6 @@
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
-    // Disable add in Zakończone
     el('addBtn').classList.toggle('disabled', isCompletedView);
     el('quickAddBtn').classList.toggle('disabled', isCompletedView);
     if(isCompletedView){ closeQuick(); }
@@ -581,10 +579,6 @@
     el('darkModeToggle').checked = !!state.settings.dark;
     el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
     el('vibrateToggle').checked = !!state.settings.vibrate;
-
-    // Edit & historia
-    el('editModeBtn').classList.toggle('active', !!state.editMode);
-    updateHistoryButtons();
   }
 
   function renderListMenu(){
@@ -594,8 +588,11 @@
 
     state.lists.forEach((l)=>{
       const btn = document.createElement('div');
-      btn.className = 'menu-item'; btn.setAttribute('role', 'button');
-      btn.dataset.id = l.id; btn.draggable = true;
+      btn.className = 'menu-item';
+      btn.setAttribute('role', 'button');
+      btn.dataset.id = l.id;
+      btn.draggable = true;
+
       btn.innerHTML = `
         <span class="grip" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -603,9 +600,24 @@
         <span class="color-dot" style="background:${l.color}"></span>
         <span class="name">${escapeHtml(l.name)}</span>
         <span class="pill">${l.items.filter(i=>!i.done).length}</span>
+        <span class="tick" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
       `;
-      btn.addEventListener('click', ()=>{ state.currentListId = l.id; state.lastActiveListId = l.id; closeMenu(); save(); render(); });
-      btn.addEventListener('dragstart', (e)=>{ draggingId = l.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', l.id); });
+
+      const isActive = state.currentListId === l.id;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+
+      btn.addEventListener('click', ()=>{
+        state.currentListId = l.id;
+        state.lastActiveListId = l.id;
+        closeMenu(); save(); render();
+      });
+
+      btn.addEventListener('dragstart', (e)=>{
+        draggingId = l.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', l.id);
+      });
       btn.addEventListener('dragover', (e)=>{ e.preventDefault(); btn.classList.add('drag-over'); });
       btn.addEventListener('dragleave', ()=> btn.classList.remove('drag-over'));
       btn.addEventListener('drop', (e)=>{
@@ -616,8 +628,14 @@
         const toIdx = state.lists.findIndex(x=>x.id===toId);
         if(fromIdx<0 || toIdx<0) return; moveList(fromIdx, toIdx);
       });
+
       cont.appendChild(btn);
     });
+
+    // Aktywność dla "Zakończone"
+    const compl = el('completedViewBtn');
+    compl.classList.toggle('is-active', state.currentListId === '__completed__');
+    compl.setAttribute('aria-selected', state.currentListId === '__completed__' ? 'true' : 'false');
   }
   function moveList(fromIdx, toIdx){ if(fromIdx===toIdx) return; const [m] = state.lists.splice(fromIdx,1); state.lists.splice(toIdx,0,m); save(); renderListMenu(); }
 
@@ -637,7 +655,6 @@
       items = state.settings.hideCompleted ? undone : [...undone, ...done];
     }
 
-    // pusty stan (inny dla Zakończone)
     if(items.length === 0){
       el('emptyState').hidden = false;
       el('emptyState').textContent = isCompletedView ? 'Brak pozycji.' : 'Brak pozycji. Dodaj coś przyciskiem +';
@@ -713,7 +730,7 @@
         });
         actions.querySelector('[data-act="del"]').addEventListener('click', ()=>{
           const idx = lref.items.findIndex(x=>x.id===it.id);
-          if(idx>=0){ lref.items.splice(idx,1); historyPushIfActive(); vibrate(10); save(); render(); }
+          if(idx>=0){ lref.items.splice(idx,1); vibrate(10); save(); render(); }
         });
       }
 
@@ -730,11 +747,10 @@
           const idx = lref.items.findIndex(x=>x.id===it.id);
           if(idx>=0){
             if(newVal.length===0){ title.textContent = lref.items[idx].text; return; }
-            if(lref.items[idx].text !== newVal){
-              lref.items[idx].text = newVal; historyPushIfActive(); save();
-            }
+            if(lref.items[idx].text !== newVal){ lref.items[idx].text = newVal; save(); }
           }
         });
+
         enableItemDrag(li, handle, visibleIds, (visNew)=> applyVisibleOrder(lref, visNew));
       }
 
@@ -749,7 +765,7 @@
     const isVisible = (it)=> state.settings.hideCompleted ? !it.done : true;
     const out = [];
     for(const it of list.items){ out.push(isVisible(it) ? (visQueue.shift() || it) : it); }
-    list.items = out; historyPushIfActive(); vibrate(8); save(); render();
+    list.items = out; vibrate(8); save(); render();
   }
 
   function enableItemDrag(li, handle, visibleIds, onDropOrder){
@@ -792,49 +808,6 @@
 
   function findItemListId(itemId){ for(const l of state.lists){ if(l.items.some(i => i.id === itemId)) return l.id; } return null; }
 
-  // Historia (undo/redo) – snapshoty listy
-  function snapshotOfList(list){ return list.items.map(it => ({ id:it.id, text:it.text, done:it.done, createdAt:it.createdAt, completedAt:it.completedAt })); }
-  function snapshotsEqual(a,b){
-    if(!a || !b || a.length!==b.length) return false;
-    for(let i=0;i<a.length;i++){ const x=a[i], y=b[i]; if(x.id!==y.id || x.text!==y.text || x.done!==y.done) return false; }
-    return true;
-  }
-  function historyInit(listId){
-    const l = listById(listId); if(!l) return;
-    history.listId = listId; history.stack = [ snapshotOfList(l) ]; history.idx = 0; history.suspend = false;
-    updateHistoryButtons();
-  }
-  function historyReset(){ history.listId=null; history.stack=[]; history.idx=-1; history.suspend=false; updateHistoryButtons(); }
-  function historyPushIfActive(){
-    if(history.suspend) return;
-    if(!state.editMode || history.listId !== state.currentListId) return;
-    const l = listById(history.listId); if(!l) return;
-    const snap = snapshotOfList(l);
-    const last = history.stack[history.idx];
-    if(snapshotsEqual(snap, last)) return;
-    if(history.idx < history.stack.length-1) history.stack = history.stack.slice(0, history.idx+1);
-    history.stack.push(snap);
-    if(history.stack.length > history.max){ history.stack.shift(); }
-    history.idx = history.stack.length - 1;
-    updateHistoryButtons();
-  }
-  function historyApply(idx){
-    const l = listById(history.listId); if(!l) return;
-    history.suspend = true;
-    l.items = history.stack[idx].map(x=> ({...x}));
-    history.suspend = false;
-    save(); render();
-  }
-  function historyUndo(){ if(history.idx > 0){ history.idx--; historyApply(history.idx); } }
-  function historyRedo(){ if(history.idx < history.stack.length-1){ history.idx++; historyApply(history.idx); } }
-  function updateHistoryButtons(){
-    const show = state.editMode && history.listId === state.currentListId;
-    const undoBtn = el('undoBtn'), redoBtn = el('redoBtn');
-    undoBtn.hidden = !show; redoBtn.hidden = !show;
-    undoBtn.disabled = !(show && history.idx > 0);
-    redoBtn.disabled = !(show && history.idx < history.stack.length-1);
-  }
-
   // Quick add
   const quick = el('quickAdd'); const quickInput = el('quickAddInput');
   function openQuick(){ if(state.currentListId === '__completed__') return; quick.classList.add('open'); setTimeout(()=> quickInput.focus(), 0); }
@@ -845,16 +818,18 @@
     save(); render();
   }
 
-  // Dialogs/menu
+  // Menu open/close
   const menuBtn = el('openMenuBtn'); const menu = el('listMenu');
   function openMenu(){ menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
   menuBtn.addEventListener('click', ()=> menu.classList.contains('open') ? closeMenu() : openMenu());
   document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
+
   el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; closeQuick(); closeMenu(); save(); render(); });
   el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
   el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
 
+  // Manage/new list
   function openManage(){
     let cl = currentList();
     if(!cl){ const l = listById(state.lastActiveListId) || state.lists[0]; state.currentListId = l.id; cl = l; }
@@ -921,6 +896,7 @@
   // Quick add
   el('quickAddBtn').addEventListener('click', openQuick);
   el('quickAddClose').addEventListener('click', closeQuick);
+  const quickInput = el('quickAddInput');
   el('quickAddSubmit').addEventListener('click', ()=>{
     const txt = quickInput.value.trim(); if(!txt) return;
     const toId = (state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId);
@@ -929,19 +905,18 @@
   quickInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); el('quickAddSubmit').click(); } else if(e.key==='Escape'){ closeQuick(); } });
 
   // Add item dialog
-  function openAddDialog(){
+  el('addBtn').addEventListener('click', ()=>{
     if(state.currentListId === '__completed__') return;
+    if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
+    openAddDialog();
+  });
+  function openAddDialog(){
     const addListSel = el('addListSelect'); addListSel.innerHTML = '';
     state.lists.forEach(l=>{ const opt = document.createElement('option'); opt.value = l.id; opt.textContent = l.name; addListSel.appendChild(opt); });
     const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
     addListSel.value = defaultId; el('addText').value = '';
     el('addDialog').showModal(); setTimeout(()=>el('addText').focus(), 0);
   }
-  el('addBtn').addEventListener('click', ()=>{
-    if(state.currentListId === '__completed__') return;
-    if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
-    openAddDialog();
-  });
   el('addForm').addEventListener('submit', (e)=>{
     e.preventDefault();
     const txt = el('addText').value.trim(); if(!txt) return;
@@ -958,7 +933,7 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Drukowanie (checklista + solid iframe onload)
+  // Drukowanie (checklista + nowe okno – stabilnie na iOS/Android)
   el('printBtn').addEventListener('click', ()=>{
     const cont = el('printChecks'); cont.innerHTML = '';
     state.lists.forEach(l=>{
@@ -984,7 +959,7 @@
     const includeDate = el('printDateToggle').checked;
     const html = buildPrintHTML(ids, includeDate);
     el('printDialog').close();
-    printUsingIframe(html);
+    printUsingPopup(html);
   });
 
   function buildPrintHTML(ids, includeDate){
@@ -1039,16 +1014,18 @@
     });
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
   }
-  function printUsingIframe(html){
-    const frame = document.createElement('iframe');
-    frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
-    frame.style.width='0'; frame.style.height='0'; frame.style.border='0';
-    frame.onload = () => {
-      try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
-      finally{ setTimeout(()=>{ frame.remove(); }, 1000); }
-    };
-    document.body.appendChild(frame);
-    frame.srcdoc = html;
+
+  function printUsingPopup(html){
+    // Otwórz okno w reakcji na gest użytkownika — stabilne na iOS/Android
+    const win = window.open('', '_blank', 'noopener,noreferrer');
+    if(!win){ alert('Zezwól przeglądarce na otwieranie okien, aby wydrukować.'); return; }
+    win.document.open(); win.document.write(html); win.document.close();
+    const trigger = ()=>{ try{ win.focus(); win.print(); }catch{} };
+    if(win.document.readyState === 'complete') setTimeout(trigger, 80);
+    else win.onload = trigger;
+    // spróbuj zamknąć po wydruku
+    win.addEventListener?.('afterprint', ()=>{ try{ win.close(); }catch{} });
+    setTimeout(()=>{ try{ win.close(); }catch{} }, 4000); // awaryjnie
   }
 
   // Share
@@ -1071,6 +1048,7 @@
     el('shareDialog').showModal();
   });
   el('shareClose').addEventListener('click', ()=> el('shareDialog').close());
+
   el('shareSystemBtn').addEventListener('click', async ()=>{
     const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const text = buildShareText(ids, includeDate);
@@ -1128,16 +1106,11 @@
     }catch(e){}
   }
 
-  // Edit toggle + undo/redo
+  // Edit toggle
   el('editModeBtn').addEventListener('click', ()=>{
     if(state.currentListId === '__completed__'){ alert('Tryb edycji jest dostępny w konkretnej liście.'); return; }
-    state.editMode = !state.editMode;
-    if(state.editMode){ historyInit(state.currentListId); }
-    else{ historyReset(); }
-    render();
+    state.editMode = !state.editMode; render();
   });
-  el('undoBtn').addEventListener('click', historyUndo);
-  el('redoBtn').addEventListener('click', historyRedo);
 
   // Zamykaj dialogi po kliknięciu tła
   $$('dialog').forEach(d=>{

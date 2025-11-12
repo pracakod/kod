@@ -42,9 +42,7 @@
   }
   button,input,select{font-family:inherit; color:inherit}
 
-  .app{
-    min-height:100dvh; display:flex; flex-direction:column; padding-top:var(--safe-top);
-  }
+  .app{ min-height:100dvh; display:flex; flex-direction:column; padding-top:var(--safe-top); }
 
   /* Header */
   .app-header{
@@ -84,9 +82,8 @@
   .menu-item .name{flex:1; text-align:left}
   .pill{background: var(--accent-soft); color: var(--accent); border-radius:999px; font-size:12px; padding:2px 8px}
   .color-dot{width:10px; height:10px; border-radius:50%}
-  .grip{opacity:.5; display:grid; place-items:center}
-  .menu-arrows{display:flex; gap:6px}
-  .menu-item.drag-over{outline:2px dashed var(--accent)}
+  .grip{opacity:.5; display:grid; place-items:center; cursor:grab}
+  .menu-item.drag-over{outline:2px dashed var(--accent); outline-offset:2px}
 
   /* Main content */
   main{flex:1; padding:12px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width:900px; width:100%; margin:0 auto}
@@ -103,7 +100,22 @@
   .item.new{animation: slideIn .18s ease-out}
   @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
   .item:active{transform:scale(0.995)}
-  .item input[type="checkbox"]{width:22px; height:22px; accent-color: var(--accent); flex-shrink:0}
+
+  /* Jasne checkboxy (custom) */
+  .item input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:6px; flex-shrink:0;
+    border:2px solid var(--border); background: var(--card);
+    display:grid; place-items:center; transition: background .15s, border-color .15s, transform .1s;
+  }
+  .item input[type="checkbox"]:active{ transform: scale(0.96) }
+  .item input[type="checkbox"]:checked{
+    background: var(--accent); border-color: var(--accent);
+  }
+  .item input[type="checkbox"]:checked::after{
+    content:''; width:10px; height:6px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg); margin-top:-1px;
+  }
+
   .item .texts{display:flex; flex-direction:column; gap:4px; flex:1; min-width:0}
   .item .text{
     font-size:16px; line-height:1.35; word-break:break-word;
@@ -117,7 +129,7 @@
   .edit-on .item .text{border:1px dashed transparent; border-radius:8px; padding:4px 6px}
   .edit-on .item .text[contenteditable="true"]:focus{border-color: var(--accent); outline:none; box-shadow: var(--focus)}
   .item .handle{
-    display:none; width:24px; height:24px; opacity:.55; flex-shrink:0;
+    display:none; width:24px; height:24px; opacity:.55; flex-shrink:0; cursor:grab;
   }
   .edit-on .item .handle{display:block}
   .item .actions{display:none; gap:6px; align-items:center}
@@ -127,6 +139,7 @@
   }
   .i-btn:active{transform:scale(0.96)}
   .i-btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
+  .item.drag-over{ outline:2px dashed var(--accent); outline-offset:2px; }
 
   /* Bottom nav */
   .bottom-nav{
@@ -135,11 +148,13 @@
     background: var(--card); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:25;
     gap:12px;
   }
+  .nav-left, .nav-right{display:flex; gap:10px; align-items:center}
   .icon-btn{
     width:44px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); display:grid; place-items:center;
     box-shadow: var(--shadow-soft);
   }
   .icon-btn:active{transform:scale(0.96)}
+  .icon-btn.active{outline:2px solid var(--accent); outline-offset:2px}
   .fab{
     position:absolute; left:50%; transform: translateX(-50%) translateY(-16%);
     width:56px; height:56px; border-radius:50%;
@@ -147,7 +162,6 @@
     color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
   }
   .fab:active{transform: translateX(-50%) translateY(-16%) scale(0.97)}
-  .icon-btn.active{outline:2px solid var(--accent); outline-offset:2px}
 
   /* Quick add */
   .quick-add{
@@ -190,7 +204,7 @@
   .dlg-foot{display:flex; gap:10px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border)}
   .btn{ padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--card); cursor:pointer; }
   .btn.primary{ background: var(--accent); border-color: transparent; color:#fff; }
-  .btn.danger{color:var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
+  .btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .hint{font-size:12px; color:var(--muted)}
 
   /* Color palette (10 kolorów) */
@@ -201,12 +215,18 @@
   .swatch.selected{box-shadow: 0 0 0 2px var(--accent)}
 
   /* Print */
+  .print-area{ display:none; padding: 8px 16px; }
+  .print-area .pa-date{ font-size:12px; color:#666; margin-bottom:8px; }
+  .print-area .pa-list{ margin-bottom:16px; }
+  .print-area h2{ display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
+  .print-area .pa-dot{ width:12px; height:12px; border-radius:50%; }
+  .print-area ul{ margin: 0 0 8px 18px; padding:0; }
+  .print-area li{ margin:4px 0; }
+  .print-area .done{ text-decoration: line-through; color:#777; }
+
   @media print{
-    .app-header, .bottom-nav, .dropdown, .quick-add, dialog{display:none !important}
-    main{padding:0}
-    body{background:#fff}
-    .print-header{display:block}
-    .item{box-shadow:none; border:1px solid #ddd}
+    .app{display:none !important}
+    .print-area{display:block !important}
   }
 
   /* Reduced motion */
@@ -266,12 +286,13 @@
   </main>
 
   <nav class="bottom-nav">
-    <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
-      <!-- add icon -->
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-      </svg>
-    </button>
+    <div class="nav-left">
+      <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
 
     <button class="fab" id="addBtn" aria-label="Dodaj">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -279,20 +300,22 @@
       </svg>
     </button>
 
-    <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji">
-      <!-- pencil -->
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-        <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    </button>
-
-    <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia">
-      <!-- improved cog -->
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 15.5a3.5 3.5 0 100-7 3.5 3.5 0 000 7z" stroke="currentColor" stroke-width="2"/>
-        <path d="M19.5 12l1.8-.6a8.1 8.1 0 00-.3-1l-1.7.3a6.7 6.7 0 00-.9-1.5l1.1-1.3a8.1 8.1 0 00-.8-.8L16.5 7a6.7 6.7 0 00-1.5-.9l.3-1.7a8.1 8.1 0 00-1-.3L12 3.5l-.6-1.8a8.1 8.1 0 00-1 .3l.3 1.7a6.7 6.7 0 00-1.5.9L7.9 2.9a8.1 8.1 0 00-.8.8L8.4 5a6.7 6.7 0 00-.9 1.5l-1.7-.3a8.1 8.1 0 00-.3 1L5.5 12l-1.8.6a8.1 8.1 0 00.3 1l1.7-.3a6.7 6.7 0 00.9 1.5l-1.1 1.3c.26.3.53.57.83.83L7.5 16a6.7 6.7 0 001.5.9l-.3 1.7c.32.1.66.2 1 .3L12 20.5l.6 1.8c.34-.08.68-.18 1-.3l-.3-1.7a6.7 6.7 0 001.5-.9l1.3 1.1c.3-.26.57-.53.83-.83L16 16.5a6.7 6.7 0 00.9-1.5l1.7.3c.1-.32.2-.66.3-1L19.5 12z" stroke="currentColor" stroke-width="1.2" opacity=".7"/>
-      </svg>
-    </button>
+    <div class="nav-right">
+      <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji">
+        <!-- pencil -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia">
+        <!-- vertical 3 dots -->
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="5.5" r="1.8" fill="currentColor"/>
+          <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+          <circle cx="12" cy="18.5" r="1.8" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
   </nav>
 
   <div class="quick-add" id="quickAdd" role="dialog" aria-label="Szybkie dodanie">
@@ -441,13 +464,19 @@
   <dialog id="printDialog">
     <form id="printForm">
       <div class="dlg-head">
-        <div class="dlg-title">Drukuj listę</div>
+        <div class="dlg-title">Drukuj listy</div>
         <button class="btn" type="button" id="printClose">Zamknij</button>
       </div>
       <div class="dlg-body">
         <div class="field">
-          <div class="label">Wybierz listę do druku</div>
-          <select id="printListSelect"></select>
+          <div class="label">Wybierz listy do druku (możesz zaznaczyć kilka)</div>
+          <select id="printListSelect" multiple size="6"></select>
+        </div>
+        <div class="row">
+          <label class="row" style="gap:8px">
+            <input type="checkbox" id="printDateToggle" checked>
+            <span>Drukuj datę (dziś)</span>
+          </label>
         </div>
       </div>
       <div class="dlg-foot">
@@ -458,9 +487,12 @@
   </dialog>
 </div>
 
+<!-- Obszar do przygotowania widoku druku -->
+<div id="printArea" class="print-area"></div>
+
 <script>
 (() => {
-  const LS_KEY = 'todoAppData_v2';
+  const LS_KEY = 'todoAppData_v3';
 
   const el = (id) => document.getElementById(id);
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -515,7 +547,7 @@
     }
     try{
       const data = JSON.parse(raw);
-      Object.assign(state, defaultData(), data); // fill defaults if missing
+      Object.assign(state, defaultData(), data);
       if(!Array.isArray(state.lists) || state.lists.length === 0){
         const d = defaultData();
         state.lists = d.lists;
@@ -584,7 +616,7 @@
     // Edit button state
     el('editModeBtn').classList.toggle('active', !!state.editMode);
 
-    // Print header (set text; visible only in @media print)
+    // Print header (visible only in @media print if by state)
     const ph = el('printHeader');
     ph.textContent = isCompletedView ? 'Zakończone' : (cl?.name || '');
   }
@@ -596,7 +628,7 @@
 
     let draggingId = null;
 
-    state.lists.forEach((l, idx)=>{
+    state.lists.forEach((l)=>{
       const btn = document.createElement('div');
       btn.className = 'menu-item';
       btn.setAttribute('role', 'button');
@@ -610,33 +642,14 @@
         <span class="color-dot" style="background:${l.color}"></span>
         <span class="name">${escapeHtml(l.name)}</span>
         <span class="pill">${l.items.filter(i=>!i.done).length}</span>
-        <span class="menu-arrows">
-          <button class="i-btn" data-act="up" title="Góra" aria-label="Góra">
-            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="i-btn" data-act="down" title="Dół" aria-label="Dół">
-            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </span>
       `;
 
       // Click select
       btn.addEventListener('click', (e)=>{
-        if(e.target.closest('.i-btn')) return; // ignore arrow clicks
         state.currentListId = l.id;
         state.lastActiveListId = l.id;
         closeMenu();
         save(); render();
-      });
-
-      // Up/down fallback (mobile-friendly)
-      btn.querySelector('[data-act="up"]').addEventListener('click', (e)=>{
-        e.stopPropagation();
-        moveList(idx, Math.max(0, idx-1));
-      });
-      btn.querySelector('[data-act="down"]').addEventListener('click', (e)=>{
-        e.stopPropagation();
-        moveList(idx, Math.min(state.lists.length-1, idx+1));
       });
 
       // Drag & drop reorder
@@ -677,6 +690,9 @@
     renderListMenu();
   }
 
+  // Items (with DnD in edit mode)
+  let draggingItemId = null;
+
   function renderItems(){
     const container = el('listContainer');
     container.innerHTML = '';
@@ -705,6 +721,7 @@
     items.forEach(it=>{
       const li = document.createElement('div');
       li.className = 'item' + (it.done ? ' done' : '') + ' new';
+      li.dataset.id = it.id;
 
       const handle = document.createElement('div');
       handle.className = 'handle';
@@ -748,7 +765,7 @@
         texts.appendChild(small);
       }
 
-      // Edit mode: allow rename, move up/down, delete (only on concrete list view)
+      // Edit mode: rename / move up/down / delete (tylko w konkretnej liście)
       const actions = document.createElement('div');
       actions.className = 'actions';
       if(!isCompletedView){
@@ -786,25 +803,50 @@
       li.appendChild(texts);
       li.appendChild(actions);
 
-      // Enable contenteditable in edit mode (only non-completed view)
+      // Tryb edycji: contenteditable + DnD
       if(state.editMode && !isCompletedView){
+        // edycja nazwy
         title.contentEditable = 'true';
         title.addEventListener('keydown', (e)=>{
-          if(e.key==='Enter'){
-            e.preventDefault(); title.blur();
-          }
+          if(e.key==='Enter'){ e.preventDefault(); title.blur(); }
         });
         title.addEventListener('blur', ()=>{
           const newVal = (title.textContent || '').trim();
           const idx = lref.items.findIndex(x=>x.id===it.id);
           if(idx>=0){
-            if(newVal.length===0){ // empty -> revert to old
+            if(newVal.length===0){
               title.textContent = lref.items[idx].text;
               return;
             }
             lref.items[idx].text = newVal;
             save();
           }
+        });
+
+        // DnD
+        li.draggable = true;
+        li.addEventListener('dragstart', (e)=>{
+          draggingItemId = it.id;
+          e.dataTransfer.effectAllowed = 'move';
+          e.dataTransfer.setData('text/plain', it.id);
+        });
+        li.addEventListener('dragover', (e)=>{
+          e.preventDefault();
+          li.classList.add('drag-over');
+        });
+        li.addEventListener('dragleave', ()=>{
+          li.classList.remove('drag-over');
+        });
+        li.addEventListener('drop', (e)=>{
+          e.preventDefault();
+          li.classList.remove('drag-over');
+          const fromId = draggingItemId || e.dataTransfer.getData('text/plain');
+          const toId = it.id;
+          if(!fromId || fromId===toId) return;
+          const fromIdx = lref.items.findIndex(x=>x.id===fromId);
+          const toIdx = lref.items.findIndex(x=>x.id===toId);
+          if(fromIdx<0 || toIdx<0) return;
+          moveItem(lref, fromIdx, toIdx);
         });
       }
 
@@ -859,7 +901,6 @@
   }
 
   function openAddDialog(){
-    // Fill select
     const addListSel = el('addListSelect');
     addListSel.innerHTML = '';
     state.lists.forEach(l=>{
@@ -867,7 +908,6 @@
       opt.value = l.id; opt.textContent = l.name;
       addListSel.appendChild(opt);
     });
-    // Default to current (or last active if in "Zakończone")
     const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
     addListSel.value = defaultId;
     el('addText').value = '';
@@ -875,7 +915,7 @@
     setTimeout(()=>el('addText').focus(), 0);
   }
 
-  // Color palette helpers
+  // Paleta kolorów
   function renderPalette(container, currentColor){
     container.innerHTML = '';
     PALETTE10.forEach(c=>{
@@ -910,7 +950,7 @@
     menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false');
   }
 
-  // Event bindings
+  // Eventy
   menuBtn.addEventListener('click', ()=>{
     const open = menu.classList.contains('open');
     if(open) closeMenu(); else openMenu();
@@ -1048,7 +1088,7 @@
     el('addDialog').close();
     vibrate(16);
   });
-  // Fix cancel/close so "required" nie blokuje
+  // Cancel/close bez blokady "required"
   el('addDlgClose').addEventListener('click', ()=> el('addDialog').close());
   el('addDlgCancel').addEventListener('click', ()=> el('addDialog').close());
 
@@ -1059,44 +1099,132 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Print flow: choose list -> print -> restore view
+  // Drukowanie (multi-listy + data)
   el('printBtn').addEventListener('click', ()=>{
-    // Fill select
     const sel = el('printListSelect');
     sel.innerHTML = '';
+    // listy użytkownika
     state.lists.forEach(l=>{
       const opt = document.createElement('option');
       opt.value = l.id; opt.textContent = l.name;
       sel.appendChild(opt);
     });
+    // zakończone
     const optC = document.createElement('option');
     optC.value = '__completed__';
     optC.textContent = 'Zakończone';
     sel.appendChild(optC);
 
-    // Preselect current
-    sel.value = state.currentListId === '__completed__' ? '__completed__' : (currentList()?.id || state.lists[0].id);
+    // preselect: bieżąca lista
+    const current = state.currentListId === '__completed__' ? '__completed__' : (currentList()?.id || state.lists[0].id);
+    $$('#printListSelect option').forEach(o=>{ if(o.value===current) o.selected = true; });
+    // ustaw wielkość listy
+    sel.size = Math.min(sel.options.length, 8);
+
+    el('printDateToggle').checked = true;
     el('printDialog').showModal();
   });
   el('printClose').addEventListener('click', ()=> el('printDialog').close());
   el('printCancel').addEventListener('click', ()=> el('printDialog').close());
   el('printForm').addEventListener('submit', (e)=>{
     e.preventDefault();
-    const selected = el('printListSelect').value;
-    const prev = state.currentListId;
-    state.currentListId = selected;
-    render();
+    const sel = el('printListSelect');
+    const selectedIds = Array.from(sel.selectedOptions).map(o=>o.value);
+    if(selectedIds.length===0){ alert('Wybierz przynajmniej jedną listę.'); return; }
+    const includeDate = el('printDateToggle').checked;
+
+    buildPrintArea(selectedIds, includeDate);
     el('printDialog').close();
+
+    const area = el('printArea');
     const restore = ()=>{
-      state.currentListId = prev;
-      render();
+      area.innerHTML = '';
+      area.style.display = 'none';
       window.removeEventListener('afterprint', restore);
     };
     window.addEventListener('afterprint', restore);
-    setTimeout(()=> window.print(), 50);
-    // Fallback restore in case afterprint nie zadziała
-    setTimeout(()=> restore(), 2000);
+    area.style.display = 'block';
+    setTimeout(()=> window.print(), 30);
+    setTimeout(()=> restore(), 2000); // fallback
   });
+
+  function buildPrintArea(ids, includeDate){
+    const area = el('printArea');
+    area.innerHTML = '';
+    // data
+    if(includeDate){
+      const d = new Date();
+      const dateStr = d.toLocaleDateString('pl-PL', { year:'numeric', month:'2-digit', day:'2-digit' });
+      const dateEl = document.createElement('div');
+      dateEl.className = 'pa-date';
+      dateEl.textContent = `Data: ${dateStr}`;
+      area.appendChild(dateEl);
+    }
+
+    ids.forEach(id=>{
+      if(id === '__completed__'){
+        // sekcja Zakończone
+        const section = document.createElement('div');
+        section.className = 'pa-list';
+        const h = document.createElement('h2');
+        const dot = document.createElement('span');
+        dot.className = 'pa-dot'; dot.style.background = '#7a7f8c';
+        h.appendChild(dot);
+        h.appendChild(document.createTextNode('Zakończone'));
+        section.appendChild(h);
+
+        const allDone = [];
+        state.lists.forEach(l=>{
+          l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); });
+        });
+        allDone.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
+
+        if(allDone.length===0){
+          const p = document.createElement('div'); p.textContent = 'Brak pozycji.'; section.appendChild(p);
+        }else{
+          const ul = document.createElement('ul');
+          allDone.forEach(it=>{
+            const li = document.createElement('li');
+            li.textContent = `${it.text} (z listy: ${it.from})`;
+            ul.appendChild(li);
+          });
+          section.appendChild(ul);
+        }
+        area.appendChild(section);
+      }else{
+        const list = listById(id);
+        if(!list) return;
+        const section = document.createElement('div');
+        section.className = 'pa-list';
+        const h = document.createElement('h2');
+        const dot = document.createElement('span');
+        dot.className = 'pa-dot'; dot.style.background = list.color;
+        h.appendChild(dot);
+        h.appendChild(document.createTextNode(list.name));
+        section.appendChild(h);
+
+        const undone = list.items.filter(i=>!i.done).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+        const done = list.items.filter(i=>i.done).sort((a,b)=>(a.completedAt||0)-(b.completedAt||0));
+
+        if(undone.length===0 && done.length===0){
+          const p = document.createElement('div'); p.textContent = 'Brak pozycji.'; section.appendChild(p);
+        }else{
+          if(undone.length>0){
+            const ul1 = document.createElement('ul');
+            undone.forEach(it=>{ const li = document.createElement('li'); li.textContent = it.text; ul1.appendChild(li); });
+            section.appendChild(ul1);
+          }
+          if(done.length>0){
+            const sub = document.createElement('div'); sub.textContent = 'Ukończone:'; sub.style.marginTop = '6px'; section.appendChild(sub);
+            const ul2 = document.createElement('ul');
+            done.forEach(it=>{ const li = document.createElement('li'); li.textContent = it.text; li.className='done'; ul2.appendChild(li); });
+            section.appendChild(ul2);
+          }
+        }
+        area.appendChild(section);
+      }
+    });
+  }
 
   // Edit mode toggle (pencil)
   el('editModeBtn').addEventListener('click', ()=>{
@@ -1108,7 +1236,7 @@
     render();
   });
 
-  // Close dialogs on backdrop click
+  // Zamykaj dialogi po kliknięciu tła
   $$('dialog').forEach(d=>{
     d.addEventListener('click', (e)=>{
       const rect = d.getBoundingClientRect();

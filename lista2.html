@@ -99,7 +99,7 @@
   @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
   .item:active{transform:scale(0.995)}
 
-  /* Jasne checkboxy (custom) */
+  /* Jasne checkboxy (custom) w pozycjach listy */
   .item input[type="checkbox"]{
     -webkit-appearance:none; appearance:none;
     width:22px; height:22px; border-radius:6px; flex-shrink:0;
@@ -159,7 +159,7 @@
     color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
   }
   .fab:active{transform: translateX(-50%) translateY(-16%) scale(0.97)}
-  .disabled{opacity:.45; pointer-events:none; filter: grayscale(.1);}
+  .disabled, .icon-btn[disabled], .btn[disabled]{opacity:.45; pointer-events:none; filter: grayscale(.1);}
 
   /* Quick add */
   .quick-add{
@@ -202,6 +202,20 @@
   .btn.primary{ background: var(--accent); border-color: transparent; color:#fff; }
   .btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .hint{font-size:12px; color:var(--muted)}
+
+  /* Lekkie checkboxy w dialogach (druk/udostępnij) */
+  dialog input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:18px; height:18px; border-radius:4px; border:2px solid var(--border); background: var(--card);
+    display:inline-grid; place-items:center; vertical-align:middle;
+    margin:0;
+  }
+  dialog input[type="checkbox"]:checked{
+    background: var(--accent); border-color: var(--accent);
+  }
+  dialog input[type="checkbox"]:checked::after{
+    content:''; width:8px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg);
+  }
 
   /* Color palette (10 kolorów) */
   .swatch-grid{display:grid; grid-template-columns: repeat(10, 1fr); gap:8px}
@@ -258,7 +272,7 @@
   <main>
     <div id="printHeader" class="print-header"></div>
     <div id="listContainer" class="list"></div>
-    <div id="emptyState" class="empty" hidden>Brak pozycji. Dodaj coś przyciskiem +</div>
+    <div id="emptyState" class="empty" hidden>Brak pozycji.</div>
   </main>
 
   <nav class="bottom-nav">
@@ -282,6 +296,16 @@
           <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
+      <button class="icon-btn" id="undoBtn" aria-label="Cofnij" hidden disabled>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M8 7l-5 5 5 5M3 12h11a6 6 0 010 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="redoBtn" aria-label="Ponów" hidden disabled>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M16 7l5 5-5 5M21 12H10a6 6 0 000 12" transform="scale(-1,1) translate(-24,0)" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+        </svg>
+      </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Opcje">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="5.5" r="1.8" fill="currentColor"/>
@@ -293,7 +317,7 @@
   </nav>
 
   <div class="quick-add" id="quickAdd" role="dialog" aria-label="Szybkie dodanie">
-    <input id="quickAddInput" type="text" placeholder="Szybko dodaj do bieżącej listy… (Enter = dodaj)" autocomplete="off" />
+    <input id="quickAddInput" type="text" placeholder="Dodaj do bieżącej listy." autocomplete="off" />
     <button class="i-btn" id="quickAddSubmit" aria-label="Dodaj">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
         <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -489,12 +513,10 @@
 
 <script>
 (() => {
-  const LS_KEY = 'todoAppData_v5';
-
+  const LS_KEY = 'todoAppData_v5'; // zachowuje Twoje dane
   const el = (id) => document.getElementById(id);
   const $ = (sel, root=document) => root.querySelector(sel);
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-
   const PALETTE10 = ['#4a90e2','#E86B27','#2ecc71','#9b59b6','#e74c3c','#f39c12','#16a085','#d35400','#27ae60','#8e44ad'];
   const NAME_MAX = 40;
 
@@ -506,31 +528,18 @@
     editMode: false,
   };
 
-  function uid(prefix='id'){
-    return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`;
-  }
+  // Historia (cofnij/redo) dla trybu edycji
+  const history = {
+    listId: null, stack: [], idx: -1, suspend: false, max: 50
+  };
 
+  function uid(prefix='id'){ return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`; }
   function defaultData(){
     const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', items: [] };
     const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', items: [] };
-    return {
-      lists: [list1, list2],
-      settings: { dark: false, hideCompleted: false, vibrate: true },
-      currentListId: list1.id,
-      lastActiveListId: list1.id,
-      editMode: false,
-    };
+    return { lists: [list1, list2], settings: { dark:false, hideCompleted:false, vibrate:true }, currentListId: list1.id, lastActiveListId: list1.id, editMode: false };
   }
-
-  function save(){
-    const toSave = {
-      lists: state.lists,
-      settings: state.settings,
-      currentListId: state.currentListId,
-      lastActiveListId: state.lastActiveListId,
-    };
-    localStorage.setItem(LS_KEY, JSON.stringify(toSave));
-  }
+  function save(){ localStorage.setItem(LS_KEY, JSON.stringify({ lists:state.lists, settings:state.settings, currentListId:state.currentListId, lastActiveListId:state.lastActiveListId })); }
   function load(){
     const raw = localStorage.getItem(LS_KEY);
     if(!raw){ Object.assign(state, defaultData()); return; }
@@ -539,42 +548,20 @@
       Object.assign(state, defaultData(), data);
       if(!Array.isArray(state.lists) || state.lists.length === 0){
         const d = defaultData();
-        state.lists = d.lists;
-        state.currentListId = d.currentListId;
-        state.lastActiveListId = d.lastActiveListId;
+        state.lists = d.lists; state.currentListId = d.currentListId; state.lastActiveListId = d.lastActiveListId;
       }
     }catch{ Object.assign(state, defaultData()); }
   }
-
-  function setTheme(dark){
-    state.settings.dark = !!dark;
-    document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
-  }
-  function setAccent(color){
-    document.documentElement.style.setProperty('--accent', color);
-    document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14));
-  }
-  function hexToRgba(hex, a=1){
-    let h = hex.replace('#','');
-    if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
-    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
-    return `rgba(${r},${g},${b},${a})`;
-  }
-
-  function vibrate(ms=20){
-    if(!state.settings.vibrate) return;
-    if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} }
-  }
-
-  function currentList(){
-    if(state.currentListId === '__completed__') return null;
-    return state.lists.find(l => l.id === state.currentListId) || state.lists[0];
-  }
+  function setTheme(dark){ state.settings.dark = !!dark; document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light'); }
+  function setAccent(color){ document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14)); }
+  function hexToRgba(hex, a=1){ let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); } const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+  function vibrate(ms=20){ if(!state.settings.vibrate) return; if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} } }
+  function currentList(){ if(state.currentListId === '__completed__') return null; return state.lists.find(l => l.id === state.currentListId) || state.lists[0]; }
   function listById(id){ return state.lists.find(l => l.id === id); }
+  function escapeHtml(str=''){ return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
 
   function render(){
     document.body.classList.toggle('edit-on', !!state.editMode);
-
     const isCompletedView = state.currentListId === '__completed__';
     const cl = currentList();
     el('currentListName').textContent = isCompletedView ? 'Zakończone' : (cl?.name || 'Lista');
@@ -583,7 +570,7 @@
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
-    // Disable adding in Zakończone
+    // Disable add in Zakończone
     el('addBtn').classList.toggle('disabled', isCompletedView);
     el('quickAddBtn').classList.toggle('disabled', isCompletedView);
     if(isCompletedView){ closeQuick(); }
@@ -594,7 +581,10 @@
     el('darkModeToggle').checked = !!state.settings.dark;
     el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
     el('vibrateToggle').checked = !!state.settings.vibrate;
+
+    // Edit & historia
     el('editModeBtn').classList.toggle('active', !!state.editMode);
+    updateHistoryButtons();
   }
 
   function renderListMenu(){
@@ -604,11 +594,8 @@
 
     state.lists.forEach((l)=>{
       const btn = document.createElement('div');
-      btn.className = 'menu-item';
-      btn.setAttribute('role', 'button');
-      btn.dataset.id = l.id;
-      btn.draggable = true;
-
+      btn.className = 'menu-item'; btn.setAttribute('role', 'button');
+      btn.dataset.id = l.id; btn.draggable = true;
       btn.innerHTML = `
         <span class="grip" aria-hidden="true">
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -617,66 +604,51 @@
         <span class="name">${escapeHtml(l.name)}</span>
         <span class="pill">${l.items.filter(i=>!i.done).length}</span>
       `;
-
-      btn.addEventListener('click', ()=>{
-        state.currentListId = l.id;
-        state.lastActiveListId = l.id;
-        closeMenu();
-        save(); render();
-      });
-
-      btn.addEventListener('dragstart', (e)=>{
-        draggingId = l.id;
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', l.id);
-      });
+      btn.addEventListener('click', ()=>{ state.currentListId = l.id; state.lastActiveListId = l.id; closeMenu(); save(); render(); });
+      btn.addEventListener('dragstart', (e)=>{ draggingId = l.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', l.id); });
       btn.addEventListener('dragover', (e)=>{ e.preventDefault(); btn.classList.add('drag-over'); });
       btn.addEventListener('dragleave', ()=> btn.classList.remove('drag-over'));
       btn.addEventListener('drop', (e)=>{
-        e.preventDefault();
-        btn.classList.remove('drag-over');
+        e.preventDefault(); btn.classList.remove('drag-over');
         const fromId = draggingId || e.dataTransfer.getData('text/plain');
-        const toId = l.id;
-        if(!fromId || fromId===toId) return;
+        const toId = l.id; if(!fromId || fromId===toId) return;
         const fromIdx = state.lists.findIndex(x=>x.id===fromId);
         const toIdx = state.lists.findIndex(x=>x.id===toId);
-        if(fromIdx<0 || toIdx<0) return;
-        moveList(fromIdx, toIdx);
+        if(fromIdx<0 || toIdx<0) return; moveList(fromIdx, toIdx);
       });
-
       cont.appendChild(btn);
     });
   }
-  function moveList(fromIdx, toIdx){
-    if(fromIdx===toIdx) return;
-    const [m] = state.lists.splice(fromIdx, 1);
-    state.lists.splice(toIdx, 0, m);
-    save(); renderListMenu();
-  }
+  function moveList(fromIdx, toIdx){ if(fromIdx===toIdx) return; const [m] = state.lists.splice(fromIdx,1); state.lists.splice(toIdx,0,m); save(); renderListMenu(); }
 
-  // Items with DnD in edit mode
   function renderItems(){
     const container = el('listContainer');
     container.innerHTML = '';
     const isCompletedView = state.currentListId === '__completed__';
-    let items = [];
-    let lref = null;
+    let items = [], lref = null;
 
     if(isCompletedView){
       state.lists.forEach(l=> l.items.forEach(it=> { if(it.done) items.push({...it, __fromList: l.id}); }));
       items.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
     }else{
-      lref = currentList();
-      if(!lref) return;
+      lref = currentList(); if(!lref) return;
       const undone = lref.items.filter(i=>!i.done);
       const done = lref.items.filter(i=>i.done);
       items = state.settings.hideCompleted ? undone : [...undone, ...done];
     }
 
-    el('emptyState').hidden = items.length !== 0;
-    const visibleIds = items.map(i=>i.id);
+    // pusty stan (inny dla Zakończone)
+    if(items.length === 0){
+      el('emptyState').hidden = false;
+      el('emptyState').textContent = isCompletedView ? 'Brak pozycji.' : 'Brak pozycji. Dodaj coś przyciskiem +';
+      return;
+    } else {
+      el('emptyState').hidden = true;
+    }
 
+    const visibleIds = items.map(i=>i.id);
     const frag = document.createDocumentFragment();
+
     items.forEach(it=>{
       const li = document.createElement('div');
       li.className = 'item' + (it.done ? ' done' : '') + ' new';
@@ -741,7 +713,7 @@
         });
         actions.querySelector('[data-act="del"]').addEventListener('click', ()=>{
           const idx = lref.items.findIndex(x=>x.id===it.id);
-          if(idx>=0){ lref.items.splice(idx,1); vibrate(10); save(); render(); }
+          if(idx>=0){ lref.items.splice(idx,1); historyPushIfActive(); vibrate(10); save(); render(); }
         });
       }
 
@@ -758,7 +730,9 @@
           const idx = lref.items.findIndex(x=>x.id===it.id);
           if(idx>=0){
             if(newVal.length===0){ title.textContent = lref.items[idx].text; return; }
-            lref.items[idx].text = newVal; save();
+            if(lref.items[idx].text !== newVal){
+              lref.items[idx].text = newVal; historyPushIfActive(); save();
+            }
           }
         });
         enableItemDrag(li, handle, visibleIds, (visNew)=> applyVisibleOrder(lref, visNew));
@@ -774,170 +748,116 @@
     const visQueue = newVisOrder.map(id => list.items.find(i=>i.id===id)).filter(Boolean);
     const isVisible = (it)=> state.settings.hideCompleted ? !it.done : true;
     const out = [];
-    for(const it of list.items){
-      if(isVisible(it)){ out.push(visQueue.shift() || it); } else { out.push(it); }
-    }
-    list.items = out; vibrate(8); save(); render();
+    for(const it of list.items){ out.push(isVisible(it) ? (visQueue.shift() || it) : it); }
+    list.items = out; historyPushIfActive(); vibrate(8); save(); render();
   }
 
   function enableItemDrag(li, handle, visibleIds, onDropOrder){
     let startY=0, offsetY=0, ph=null, container=null, dragging=false;
-
     const onPointerDown = (e)=>{
       if(!state.editMode || state.currentListId === '__completed__') return;
       if(e.pointerType === 'mouse' && e.button !== 0) return;
-      e.preventDefault();
-      handle.setPointerCapture?.(e.pointerId);
-
-      container = el('listContainer');
-      const rect = li.getBoundingClientRect();
+      e.preventDefault(); handle.setPointerCapture?.(e.pointerId);
+      container = el('listContainer'); const rect = li.getBoundingClientRect();
       startY = e.clientY; offsetY = startY - rect.top;
-
-      ph = document.createElement('div');
-      ph.className = 'item placeholder';
-      ph.style.height = rect.height + 'px';
+      ph = document.createElement('div'); ph.className = 'item placeholder'; ph.style.height = rect.height + 'px';
       container.insertBefore(ph, li.nextSibling);
-
-      li.classList.add('dragging');
-      li.style.width = rect.width+'px';
-      li.style.position='fixed';
-      li.style.left = rect.left+'px';
-      li.style.top = rect.top+'px';
-      li.style.zIndex=1000;
-      li.style.pointerEvents='none';
-
-      document.body.style.userSelect='none';
-      document.body.style.touchAction='none';
-
+      li.classList.add('dragging'); li.style.width = rect.width+'px'; li.style.position='fixed'; li.style.left = rect.left+'px'; li.style.top = rect.top+'px'; li.style.zIndex=1000; li.style.pointerEvents='none';
+      document.body.style.userSelect='none'; document.body.style.touchAction='none';
       document.addEventListener('pointermove', onPointerMove, {passive:false});
       document.addEventListener('pointerup', onPointerUp, {passive:false});
       dragging = true;
     };
-
     const onPointerMove = (e)=>{
-      if(!dragging) return;
-      e.preventDefault();
-      const y = e.clientY - offsetY;
-      li.style.top = y + 'px';
-
+      if(!dragging) return; e.preventDefault();
+      const y = e.clientY - offsetY; li.style.top = y + 'px';
       const centerY = y + li.offsetHeight/2;
       const children = Array.from(container.children).filter(c=>c!==li);
-      let newIndex=0;
-      for(let i=0;i<children.length;i++){
-        const r = children[i].getBoundingClientRect();
-        if(centerY > r.top + r.height/2) newIndex = i+1;
-      }
-      if(container.children[newIndex] !== ph){
-        container.insertBefore(ph, container.children[newIndex]);
-      }
+      let newIndex=0; for(let i=0;i<children.length;i++){ const r = children[i].getBoundingClientRect(); if(centerY > r.top + r.height/2) newIndex = i+1; }
+      if(container.children[newIndex] !== ph){ container.insertBefore(ph, container.children[newIndex]); }
     };
-
     const onPointerUp = (e)=>{
-      if(!dragging) return;
-      e.preventDefault();
-      dragging = false;
-
+      if(!dragging) return; e.preventDefault(); dragging = false;
       document.removeEventListener('pointermove', onPointerMove);
       document.removeEventListener('pointerup', onPointerUp);
       document.body.style.userSelect=''; document.body.style.touchAction='';
-
-      const targetIndex = Array.from(container.children).indexOf(ph);
-      ph.replaceWith(li);
-
-      li.classList.remove('dragging');
-      li.style.position=''; li.style.left=''; li.style.top=''; li.style.width=''; li.style.zIndex=''; li.style.pointerEvents='';
-
-      const id = li.dataset.id;
-      const from = visibleIds.indexOf(id);
+      const targetIndex = Array.from(container.children).indexOf(ph); ph.replaceWith(li);
+      li.classList.remove('dragging'); li.style.position=''; li.style.left=''; li.style.top=''; li.style.width=''; li.style.zIndex=''; li.style.pointerEvents='';
+      const id = li.dataset.id; const from = visibleIds.indexOf(id);
       const to = Math.max(0, Math.min(visibleIds.length-1, targetIndex));
-      if(from>=0 && to>=0 && from!==to){
-        const visNew = moveInArray(visibleIds.slice(), from, to);
-        onDropOrder?.(visNew);
-      }
+      if(from>=0 && to>=0 && from!==to){ const visNew = moveInArray(visibleIds.slice(), from, to); onDropOrder?.(visNew); }
     };
-
     handle.addEventListener('pointerdown', onPointerDown);
   }
 
-  function findItemListId(itemId){
-    for(const l of state.lists){
-      if(l.items.some(i => i.id === itemId)) return l.id;
-    }
-    return null;
+  function findItemListId(itemId){ for(const l of state.lists){ if(l.items.some(i => i.id === itemId)) return l.id; } return null; }
+
+  // Historia (undo/redo) – snapshoty listy
+  function snapshotOfList(list){ return list.items.map(it => ({ id:it.id, text:it.text, done:it.done, createdAt:it.createdAt, completedAt:it.completedAt })); }
+  function snapshotsEqual(a,b){
+    if(!a || !b || a.length!==b.length) return false;
+    for(let i=0;i<a.length;i++){ const x=a[i], y=b[i]; if(x.id!==y.id || x.text!==y.text || x.done!==y.done) return false; }
+    return true;
   }
-  function escapeHtml(str=''){ return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+  function historyInit(listId){
+    const l = listById(listId); if(!l) return;
+    history.listId = listId; history.stack = [ snapshotOfList(l) ]; history.idx = 0; history.suspend = false;
+    updateHistoryButtons();
+  }
+  function historyReset(){ history.listId=null; history.stack=[]; history.idx=-1; history.suspend=false; updateHistoryButtons(); }
+  function historyPushIfActive(){
+    if(history.suspend) return;
+    if(!state.editMode || history.listId !== state.currentListId) return;
+    const l = listById(history.listId); if(!l) return;
+    const snap = snapshotOfList(l);
+    const last = history.stack[history.idx];
+    if(snapshotsEqual(snap, last)) return;
+    if(history.idx < history.stack.length-1) history.stack = history.stack.slice(0, history.idx+1);
+    history.stack.push(snap);
+    if(history.stack.length > history.max){ history.stack.shift(); }
+    history.idx = history.stack.length - 1;
+    updateHistoryButtons();
+  }
+  function historyApply(idx){
+    const l = listById(history.listId); if(!l) return;
+    history.suspend = true;
+    l.items = history.stack[idx].map(x=> ({...x}));
+    history.suspend = false;
+    save(); render();
+  }
+  function historyUndo(){ if(history.idx > 0){ history.idx--; historyApply(history.idx); } }
+  function historyRedo(){ if(history.idx < history.stack.length-1){ history.idx++; historyApply(history.idx); } }
+  function updateHistoryButtons(){
+    const show = state.editMode && history.listId === state.currentListId;
+    const undoBtn = el('undoBtn'), redoBtn = el('redoBtn');
+    undoBtn.hidden = !show; redoBtn.hidden = !show;
+    undoBtn.disabled = !(show && history.idx > 0);
+    redoBtn.disabled = !(show && history.idx < history.stack.length-1);
+  }
 
   // Quick add
-  const quick = el('quickAdd');
-  const quickInput = el('quickAddInput');
+  const quick = el('quickAdd'); const quickInput = el('quickAddInput');
   function openQuick(){ if(state.currentListId === '__completed__') return; quick.classList.add('open'); setTimeout(()=> quickInput.focus(), 0); }
   function closeQuick(){ quick.classList.remove('open'); quickInput.value = ''; }
-
   function addItem(text, toListId){
     const l = listById(toListId); if(!l) return;
     l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
     save(); render();
   }
 
-  function openAddDialog(){
-    if(state.currentListId === '__completed__') return;
-    const addListSel = el('addListSelect');
-    addListSel.innerHTML = '';
-    state.lists.forEach(l=>{
-      const opt = document.createElement('option');
-      opt.value = l.id; opt.textContent = l.name;
-      addListSel.appendChild(opt);
-    });
-    const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
-    addListSel.value = defaultId;
-    el('addText').value = '';
-    el('addDialog').showModal();
-    setTimeout(()=>el('addText').focus(), 0);
-  }
-
-  function renderPalette(container, currentColor){
-    container.innerHTML = '';
-    PALETTE10.forEach(c=>{
-      const sw = document.createElement('button');
-      sw.type = 'button';
-      sw.className = 'swatch' + (c.toLowerCase() === (currentColor||'').toLowerCase() ? ' selected' : '');
-      sw.style.background = c;
-      sw.dataset.color = c;
-      sw.addEventListener('click', ()=>{
-        $$('.swatch', container).forEach(x=>x.classList.remove('selected'));
-        sw.classList.add('selected');
-      });
-      container.appendChild(sw);
-    });
-  }
-  function getSelectedPaletteColor(container){
-    const s = $('.swatch.selected', container); return s ? s.dataset.color : PALETTE10[0];
-  }
-  function selectRandomPalette(container){
-    const idx = Math.floor(Math.random()*PALETTE10.length);
-    $$('.swatch', container).forEach((x,i)=> x.classList.toggle('selected', i===idx));
-  }
-
-  // Menu open/close
-  const menuBtn = el('openMenuBtn');
-  const menu = el('listMenu');
+  // Dialogs/menu
+  const menuBtn = el('openMenuBtn'); const menu = el('listMenu');
   function openMenu(){ menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true'); }
   function closeMenu(){ menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
-
-  // Events
   menuBtn.addEventListener('click', ()=> menu.classList.contains('open') ? closeMenu() : openMenu());
   document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
-
   el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; closeQuick(); closeMenu(); save(); render(); });
   el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
   el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
 
   function openManage(){
     let cl = currentList();
-    if(!cl){
-      const l = listById(state.lastActiveListId) || state.lists[0];
-      state.currentListId = l.id; cl = l;
-    }
+    if(!cl){ const l = listById(state.lastActiveListId) || state.lists[0]; state.currentListId = l.id; cl = l; }
     el('manageListName').value = (cl.name || '').slice(0, NAME_MAX);
     renderPalette(el('managePalette'), cl.color);
     el('manageDialog').showModal();
@@ -949,6 +869,18 @@
     el('newListDialog').showModal();
     setTimeout(()=> el('newListName').focus(), 0);
   }
+  function renderPalette(container, currentColor){
+    container.innerHTML = '';
+    PALETTE10.forEach(c=>{
+      const sw = document.createElement('button'); sw.type='button';
+      sw.className = 'swatch' + (c.toLowerCase() === (currentColor||'').toLowerCase() ? ' selected' : '');
+      sw.style.background = c; sw.dataset.color = c;
+      sw.addEventListener('click', ()=>{ $$('.swatch', container).forEach(x=>x.classList.remove('selected')); sw.classList.add('selected'); });
+      container.appendChild(sw);
+    });
+  }
+  function getSelectedPaletteColor(container){ const s = $('.swatch.selected', container); return s ? s.dataset.color : PALETTE10[0]; }
+  function selectRandomPalette(container){ const idx = Math.floor(Math.random()*PALETTE10.length); $$('.swatch', container).forEach((x,i)=> x.classList.toggle('selected', i===idx)); }
   el('suggestColorsBtn').addEventListener('click', ()=> selectRandomPalette(el('managePalette')));
   el('newListRandom').addEventListener('click', ()=> selectRandomPalette(el('newListPalette')));
 
@@ -997,6 +929,14 @@
   quickInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); el('quickAddSubmit').click(); } else if(e.key==='Escape'){ closeQuick(); } });
 
   // Add item dialog
+  function openAddDialog(){
+    if(state.currentListId === '__completed__') return;
+    const addListSel = el('addListSelect'); addListSel.innerHTML = '';
+    state.lists.forEach(l=>{ const opt = document.createElement('option'); opt.value = l.id; opt.textContent = l.name; addListSel.appendChild(opt); });
+    const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
+    addListSel.value = defaultId; el('addText').value = '';
+    el('addDialog').showModal(); setTimeout(()=>el('addText').focus(), 0);
+  }
   el('addBtn').addEventListener('click', ()=>{
     if(state.currentListId === '__completed__') return;
     if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
@@ -1018,32 +958,22 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Print (checklist + iframe print fix)
+  // Drukowanie (checklista + solid iframe onload)
   el('printBtn').addEventListener('click', ()=>{
-    const cont = el('printChecks');
-    cont.innerHTML = '';
+    const cont = el('printChecks'); cont.innerHTML = '';
     state.lists.forEach(l=>{
-      const label = document.createElement('label');
-      label.className = 'row'; label.style.gap = '8px';
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.value = l.id;
-      if(state.currentListId === l.id) cb.checked = true;
+      const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.value = l.id; if(state.currentListId === l.id) cb.checked = true;
       const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
       const name = document.createElement('span'); name.textContent = l.name;
-      label.appendChild(cb); label.appendChild(dot); label.appendChild(name);
-      cont.appendChild(label);
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
     });
-    // Zakończone
-    const labelC = document.createElement('label');
-    labelC.className='row'; labelC.style.gap='8px';
-    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__';
-    if(state.currentListId === '__completed__') cbC.checked = true;
+    const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
+    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__'; if(state.currentListId === '__completed__') cbC.checked = true;
     const dotC = document.createElement('span'); dotC.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:#7a7f8c';
     const nameC = document.createElement('span'); nameC.textContent = 'Zakończone';
-    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC);
-    cont.appendChild(labelC);
-
-    el('printDateToggle').checked = true;
-    el('printDialog').showModal();
+    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC); cont.appendChild(labelC);
+    el('printDateToggle').checked = true; el('printDialog').showModal();
   });
   el('printClose').addEventListener('click', ()=> el('printDialog').close());
   el('printCancel').addEventListener('click', ()=> el('printDialog').close());
@@ -1064,7 +994,6 @@
         body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color:#111; }
         .pa-date { font-size:12px; color:#555; margin-bottom:8px; }
         .pa-list { margin-bottom:16px; }
-        h1 { font-size:20px; margin: 0 0 8px; }
         h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
         .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
         ul{ margin: 0 0 8px 18px; padding:0; }
@@ -1078,7 +1007,6 @@
       const dateStr = d.toLocaleDateString('pl-PL', {year:'numeric', month:'2-digit', day:'2-digit'});
       body += `<div class="pa-date">Data: ${dateStr}</div>`;
     }
-
     ids.forEach(id=>{
       if(id === '__completed__'){
         const allDone = [];
@@ -1109,156 +1037,109 @@
         body += `</div>`;
       }
     });
-
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
   }
-
   function printUsingIframe(html){
     const frame = document.createElement('iframe');
     frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
     frame.style.width='0'; frame.style.height='0'; frame.style.border='0';
-    document.body.appendChild(frame);
-    const doc = frame.contentDocument || frame.contentWindow.document;
-    doc.open(); doc.write(html); doc.close();
-    const doPrint = ()=>{
-      try{
-        frame.contentWindow.focus();
-        frame.contentWindow.print();
-      }finally{
-        setTimeout(()=>{ document.body.removeChild(frame); }, 1000);
-      }
+    frame.onload = () => {
+      try{ frame.contentWindow.focus(); frame.contentWindow.print(); }
+      finally{ setTimeout(()=>{ frame.remove(); }, 1000); }
     };
-    // Daj czas na render
-    setTimeout(doPrint, 150);
+    document.body.appendChild(frame);
+    frame.srcdoc = html;
   }
 
   // Share
   el('shareBtn').addEventListener('click', ()=>{
-    const cont = el('shareChecks');
-    cont.innerHTML = '';
+    const cont = el('shareChecks'); cont.innerHTML = '';
     state.lists.forEach(l=>{
-      const label = document.createElement('label');
-      label.className='row'; label.style.gap='8px';
-      const cb = document.createElement('input'); cb.type='checkbox'; cb.value=l.id;
-      if(state.currentListId === l.id) cb.checked = true;
+      const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.value=l.id; if(state.currentListId === l.id) cb.checked = true;
       const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
       const name = document.createElement('span'); name.textContent = l.name;
-      label.appendChild(cb); label.appendChild(dot); label.appendChild(name);
-      cont.appendChild(label);
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
     });
-    const labelC = document.createElement('label');
-    labelC.className='row'; labelC.style.gap='8px';
-    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__';
-    if(state.currentListId === '__completed__') cbC.checked = true;
+    const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
+    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__'; if(state.currentListId === '__completed__') cbC.checked = true;
     const dotC = document.createElement('span'); dotC.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:#7a7f8c';
     const nameC = document.createElement('span'); nameC.textContent='Zakończone';
-    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC);
-    cont.appendChild(labelC);
+    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC); cont.appendChild(labelC);
 
     el('shareDateToggle').checked = true;
     el('shareDialog').showModal();
   });
   el('shareClose').addEventListener('click', ()=> el('shareDialog').close());
-
   el('shareSystemBtn').addEventListener('click', async ()=>{
-    const {ids, includeDate} = getShareSelection();
-    if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const text = buildShareText(ids, includeDate);
     try{
-      if(navigator.share){
-        await navigator.share({ title: 'Lista', text });
-      }else{
-        await copyToClipboard(text);
-        alert('Skopiowano do schowka. Wklej w Messengerze.');
-      }
-    }catch(err){
-      // Użytkownik anulował albo błąd – nic
-    }
+      if(navigator.share){ await navigator.share({ title: 'Lista', text }); }
+      else { await copyToClipboard(text); alert('Skopiowano do schowka. Wklej w Messengerze.'); }
+    }catch{}
     el('shareDialog').close();
   });
-
   el('shareWhatsAppBtn').addEventListener('click', ()=>{
-    const {ids, includeDate} = getShareSelection();
-    if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const text = buildShareText(ids, includeDate);
     const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     const base = mobile ? 'https://wa.me/?text=' : 'https://web.whatsapp.com/send?text=';
-    const url = base + encodeURIComponent(text);
-    window.open(url, '_blank');
-    el('shareDialog').close();
+    window.open(base + encodeURIComponent(text), '_blank'); el('shareDialog').close();
   });
-
   el('shareCopyBtn').addEventListener('click', async ()=>{
-    const {ids, includeDate} = getShareSelection();
-    if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const text = buildShareText(ids, includeDate);
-    await copyToClipboard(text);
-    alert('Skopiowano. Wklej w dowolnej rozmowie (Messenger/WhatsApp).');
+    await copyToClipboard(text); alert('Skopiowano. Wklej w dowolnej rozmowie.');
   });
-
   function getShareSelection(){
     const ids = $$('#shareChecks input[type="checkbox"]').filter(cb=>cb.checked).map(cb=>cb.value);
     const includeDate = el('shareDateToggle').checked;
     return {ids, includeDate};
   }
-
   function buildShareText(ids, includeDate){
     const lines = [];
     if(includeDate){
-      const d = new Date();
-      const dateStr = d.toLocaleDateString('pl-PL', {year:'numeric', month:'2-digit', day:'2-digit'});
+      const d = new Date(); const dateStr = d.toLocaleDateString('pl-PL', {year:'numeric', month:'2-digit', day:'2-digit'});
       lines.push(`Data: ${dateStr}`);
     }
     ids.forEach(id=>{
       if(id === '__completed__'){
-        const allDone = [];
-        state.lists.forEach(l=> l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); }));
+        const allDone = []; state.lists.forEach(l=> l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); }));
         allDone.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
-        lines.push(`\nZakończone:`);
-        if(allDone.length===0){ lines.push(`- (brak)`); }
-        else allDone.forEach(it=> lines.push(`- ${it.text} (z listy: ${it.from})`));
+        lines.push(`\nZakończone:`); if(allDone.length===0){ lines.push(`- (brak)`); } else allDone.forEach(it=> lines.push(`- ${it.text} (z listy: ${it.from})`));
       }else{
         const list = listById(id); if(!list) return;
         lines.push(`\n${list.name}:`);
-        const undone = list.items.filter(i=>!i.done);
-        const done = list.items.filter(i=>i.done);
-        if(undone.length===0 && done.length===0){
-          lines.push(`- (brak)`);
-        }else{
+        const undone = list.items.filter(i=>!i.done), done = list.items.filter(i=>i.done);
+        if(undone.length===0 && done.length===0){ lines.push(`- (brak)`); }
+        else{
           undone.forEach(it=> lines.push(`- ${it.text}`));
-          if(done.length>0){
-            lines.push(`Ukończone:`);
-            done.forEach(it=> lines.push(`- ${it.text}`));
-          }
+          if(done.length>0){ lines.push(`Ukończone:`); done.forEach(it=> lines.push(`- ${it.text}`)); }
         }
       }
     });
     return lines.join('\n');
   }
-
   async function copyToClipboard(text){
     try{
-      if(navigator.clipboard && window.isSecureContext){
-        await navigator.clipboard.writeText(text);
-      }else{
-        const ta = document.createElement('textarea');
-        ta.value = text; ta.style.position='fixed'; ta.style.opacity='0';
-        document.body.appendChild(ta); ta.focus(); ta.select();
-        document.execCommand('copy'); document.body.removeChild(ta);
-      }
+      if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); }
+      else{ const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); ta.remove(); }
     }catch(e){}
   }
 
-  // Edit toggle
+  // Edit toggle + undo/redo
   el('editModeBtn').addEventListener('click', ()=>{
-    if(state.currentListId === '__completed__'){
-      alert('Tryb edycji jest dostępny w konkretnej liście.');
-      return;
-    }
-    state.editMode = !state.editMode; render();
+    if(state.currentListId === '__completed__'){ alert('Tryb edycji jest dostępny w konkretnej liście.'); return; }
+    state.editMode = !state.editMode;
+    if(state.editMode){ historyInit(state.currentListId); }
+    else{ historyReset(); }
+    render();
   });
+  el('undoBtn').addEventListener('click', historyUndo);
+  el('redoBtn').addEventListener('click', historyRedo);
 
-  // Close dialogs on backdrop click
+  // Zamykaj dialogi po kliknięciu tła
   $$('dialog').forEach(d=>{
     d.addEventListener('click', (e)=>{
       const rect = d.getBoundingClientRect();
@@ -1268,8 +1149,7 @@
   });
 
   // Init
-  load();
-  setTheme(state.settings.dark);
+  load(); setTheme(state.settings.dark);
   if(state.currentListId !== '__completed__' && !listById(state.currentListId)){
     state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
   }

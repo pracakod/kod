@@ -141,6 +141,15 @@
   .i-btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
   .item.drag-over{ outline:2px dashed var(--accent); outline-offset:2px; }
 
+  /* Dragging visual */
+  .item.dragging{
+    opacity:.98; box-shadow: 0 12px 28px rgba(0,0,0,.18);
+    transform: scale(1.01);
+  }
+  .placeholder{
+    border:2px dashed var(--border) !important; background: color-mix(in oklab, var(--card) 80%, var(--accent) 20%) !important;
+  }
+
   /* Bottom nav */
   .bottom-nav{
     position:fixed; left:0; right:0; bottom:0; height: calc(var(--nav-h) + var(--safe-bottom));
@@ -162,6 +171,7 @@
     color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
   }
   .fab:active{transform: translateX(-50%) translateY(-16%) scale(0.97)}
+  .disabled{opacity:.45; pointer-events:none; filter: grayscale(.1);}
 
   /* Quick add */
   .quick-add{
@@ -288,6 +298,7 @@
   <nav class="bottom-nav">
     <div class="nav-left">
       <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
+        <!-- plus -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
@@ -307,7 +318,7 @@
           <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </button>
-      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia">
+      <button class="icon-btn" id="settingsBtn" aria-label="Opcje">
         <!-- vertical 3 dots -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="5.5" r="1.8" fill="currentColor"/>
@@ -469,8 +480,8 @@
       </div>
       <div class="dlg-body">
         <div class="field">
-          <div class="label">Wybierz listy do druku (możesz zaznaczyć kilka)</div>
-          <select id="printListSelect" multiple size="6"></select>
+          <div class="label">Zaznacz, co drukować</div>
+          <div id="printChecks" class="row wrap"></div>
         </div>
         <div class="row">
           <label class="row" style="gap:8px">
@@ -492,7 +503,7 @@
 
 <script>
 (() => {
-  const LS_KEY = 'todoAppData_v3';
+  const LS_KEY = 'todoAppData_v4';
 
   const el = (id) => document.getElementById(id);
   const $ = (sel, root=document) => root.querySelector(sel);
@@ -605,6 +616,11 @@
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
+    // Disable add when in "Completed"
+    el('addBtn').classList.toggle('disabled', isCompletedView);
+    el('quickAddBtn').classList.toggle('disabled', isCompletedView);
+    if(isCompletedView){ closeQuick(); }
+
     renderListMenu();
     renderItems();
 
@@ -616,7 +632,7 @@
     // Edit button state
     el('editModeBtn').classList.toggle('active', !!state.editMode);
 
-    // Print header (visible only in @media print if by state)
+    // Print header (visible only in @media print)
     const ph = el('printHeader');
     ph.textContent = isCompletedView ? 'Zakończone' : (cl?.name || '');
   }
@@ -645,7 +661,7 @@
       `;
 
       // Click select
-      btn.addEventListener('click', (e)=>{
+      btn.addEventListener('click', ()=>{
         state.currentListId = l.id;
         state.lastActiveListId = l.id;
         closeMenu();
@@ -690,9 +706,7 @@
     renderListMenu();
   }
 
-  // Items (with DnD in edit mode)
-  let draggingItemId = null;
-
+  // Items with mobile-friendly DnD in edit mode
   function renderItems(){
     const container = el('listContainer');
     container.innerHTML = '';
@@ -706,18 +720,22 @@
           if(it.done){ items.push({...it, __fromList: l.id}); }
         });
       });
+      // sort by complete desc for this special view
       items.sort((a,b)=>(b.completedAt||0) - (a.completedAt||0));
     }else{
       lref = currentList();
       if(!lref) return;
-      const undone = lref.items.filter(i=>!i.done).sort((a,b)=> (a.createdAt||0) - (b.createdAt||0));
-      const done = lref.items.filter(i=>i.done).sort((a,b)=> (a.completedAt||0) - (b.completedAt||0));
+      // render in list order, group done to bottom (bez sortowania datą)
+      const undone = lref.items.filter(i=>!i.done);
+      const done = lref.items.filter(i=>i.done);
       items = state.settings.hideCompleted ? undone : [...undone, ...done];
     }
 
     el('emptyState').hidden = items.length !== 0;
 
     const frag = document.createDocumentFragment();
+    const visibleIds = items.map(i=>i.id);
+
     items.forEach(it=>{
       const li = document.createElement('div');
       li.className = 'item' + (it.done ? ' done' : '') + ' new';
@@ -765,7 +783,6 @@
         texts.appendChild(small);
       }
 
-      // Edit mode: rename / move up/down / delete (tylko w konkretnej liście)
       const actions = document.createElement('div');
       actions.className = 'actions';
       if(!isCompletedView){
@@ -781,12 +798,18 @@
           </button>
         `;
         actions.querySelector('[data-act="up"]').addEventListener('click', ()=>{
-          const idx = lref.items.findIndex(x=>x.id===it.id);
-          if(idx>0){ moveItem(lref, idx, idx-1); }
+          const idx = visibleIds.indexOf(it.id);
+          if(idx>0){
+            const visNew = moveInArray(visibleIds.slice(), idx, idx-1);
+            applyVisibleOrder(lref, visNew);
+          }
         });
         actions.querySelector('[data-act="down"]').addEventListener('click', ()=>{
-          const idx = lref.items.findIndex(x=>x.id===it.id);
-          if(idx>=0 && idx<lref.items.length-1){ moveItem(lref, idx, idx+1); }
+          const idx = visibleIds.indexOf(it.id);
+          if(idx>=0 && idx<visibleIds.length-1){
+            const visNew = moveInArray(visibleIds.slice(), idx, idx+1);
+            applyVisibleOrder(lref, visNew);
+          }
         });
         actions.querySelector('[data-act="del"]').addEventListener('click', ()=>{
           const idx = lref.items.findIndex(x=>x.id===it.id);
@@ -803,9 +826,8 @@
       li.appendChild(texts);
       li.appendChild(actions);
 
-      // Tryb edycji: contenteditable + DnD
+      // Tryb edycji: contenteditable + DnD (pointer events – działa na dotyku)
       if(state.editMode && !isCompletedView){
-        // edycja nazwy
         title.contentEditable = 'true';
         title.addEventListener('keydown', (e)=>{
           if(e.key==='Enter'){ e.preventDefault(); title.blur(); }
@@ -824,29 +846,8 @@
         });
 
         // DnD
-        li.draggable = true;
-        li.addEventListener('dragstart', (e)=>{
-          draggingItemId = it.id;
-          e.dataTransfer.effectAllowed = 'move';
-          e.dataTransfer.setData('text/plain', it.id);
-        });
-        li.addEventListener('dragover', (e)=>{
-          e.preventDefault();
-          li.classList.add('drag-over');
-        });
-        li.addEventListener('dragleave', ()=>{
-          li.classList.remove('drag-over');
-        });
-        li.addEventListener('drop', (e)=>{
-          e.preventDefault();
-          li.classList.remove('drag-over');
-          const fromId = draggingItemId || e.dataTransfer.getData('text/plain');
-          const toId = it.id;
-          if(!fromId || fromId===toId) return;
-          const fromIdx = lref.items.findIndex(x=>x.id===fromId);
-          const toIdx = lref.items.findIndex(x=>x.id===toId);
-          if(fromIdx<0 || toIdx<0) return;
-          moveItem(lref, fromIdx, toIdx);
+        enableItemDrag(li, handle, visibleIds, (visNew)=>{
+          applyVisibleOrder(lref, visNew);
         });
       }
 
@@ -855,12 +856,123 @@
     container.appendChild(frag);
   }
 
-  function moveItem(list, fromIdx, toIdx){
-    if(fromIdx===toIdx) return;
-    const [m] = list.items.splice(fromIdx,1);
-    list.items.splice(toIdx,0,m);
+  function moveInArray(arr, from, to){
+    if(from===to) return arr;
+    const [m] = arr.splice(from,1);
+    arr.splice(to,0,m);
+    return arr;
+  }
+
+  // Rekonstrukcja kolejności listy na podstawie widocznych ID
+  function applyVisibleOrder(list, newVisOrder){
+    const idSet = new Set(newVisOrder);
+    const visQueue = newVisOrder.map(id => list.items.find(i=>i.id===id)).filter(Boolean);
+    const isVisible = (it)=>{
+      if(state.currentListId === '__completed__') return false;
+      if(state.settings.hideCompleted) return !it.done;
+      return true; // wszystko widoczne
+    };
+    const newItems = [];
+    for(const it of list.items){
+      if(isVisible(it)){
+        const n = visQueue.shift();
+        newItems.push(n || it);
+      }else{
+        newItems.push(it);
+      }
+    }
+    list.items = newItems;
     vibrate(8);
     save(); render();
+  }
+
+  // Drag na telefonie (pointer events)
+  function enableItemDrag(li, handle, visibleIds, onDropOrder){
+    let startY=0, startX=0, offsetY=0;
+    let ph=null, container=null, dragging=false, startIndex=0, currentIndex=0;
+
+    const onPointerDown = (e)=>{
+      if(!state.editMode || state.currentListId === '__completed__') return;
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault();
+      handle.setPointerCapture?.(e.pointerId);
+
+      container = el('listContainer');
+      startY = e.clientY; startX = e.clientX;
+      const rect = li.getBoundingClientRect();
+      offsetY = startY - rect.top;
+      startIndex = currentIndex = Array.from(container.children).indexOf(li);
+
+      ph = document.createElement('div');
+      ph.className = 'item placeholder';
+      ph.style.height = rect.height + 'px';
+      container.insertBefore(ph, li.nextSibling);
+
+      // wyjmij i pływaj
+      li.classList.add('dragging');
+      li.style.width = rect.width+'px';
+      li.style.position='fixed';
+      li.style.left = rect.left+'px';
+      li.style.top = rect.top+'px';
+      li.style.zIndex=1000;
+      li.style.pointerEvents='none';
+
+      document.body.style.userSelect='none';
+      document.body.style.touchAction='none';
+
+      document.addEventListener('pointermove', onPointerMove, {passive:false});
+      document.addEventListener('pointerup', onPointerUp, {passive:false});
+      dragging = true;
+    };
+
+    const onPointerMove = (e)=>{
+      if(!dragging) return;
+      e.preventDefault();
+      const y = e.clientY - offsetY;
+      li.style.top = y + 'px';
+
+      const centerY = y + li.offsetHeight/2;
+      const children = Array.from(container.children).filter(c=>c!==li);
+      let newIndex=0;
+      for(let i=0;i<children.length;i++){
+        const r = children[i].getBoundingClientRect();
+        if(centerY > r.top + r.height/2) newIndex = i+1;
+      }
+      currentIndex = newIndex;
+      if(container.children[newIndex] !== ph){
+        container.insertBefore(ph, container.children[newIndex]);
+      }
+    };
+
+    const onPointerUp = (e)=>{
+      if(!dragging) return;
+      e.preventDefault();
+      dragging = false;
+
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+      document.body.style.userSelect='';
+      document.body.style.touchAction='';
+
+      // przywróć element na miejsce placeholdera
+      const targetIndex = Array.from(container.children).indexOf(ph);
+      ph.replaceWith(li);
+
+      // reset style
+      li.classList.remove('dragging');
+      li.style.position=''; li.style.left=''; li.style.top=''; li.style.width=''; li.style.zIndex=''; li.style.pointerEvents='';
+
+      // wylicz nową kolejność widocznych
+      const id = li.dataset.id;
+      const from = visibleIds.indexOf(id);
+      const to = Math.max(0, Math.min(visibleIds.length-1, targetIndex));
+      if(from>=0 && to>=0 && from!==to){
+        const visNew = moveInArray(visibleIds.slice(), from, to);
+        onDropOrder?.(visNew);
+      }
+    };
+
+    handle.addEventListener('pointerdown', onPointerDown);
   }
 
   function findItemListId(itemId){
@@ -878,6 +990,7 @@
   const quick = el('quickAdd');
   const quickInput = el('quickAddInput');
   function openQuick(){
+    if(state.currentListId === '__completed__') return; // blokada w Zakończone
     quick.classList.add('open');
     setTimeout(()=> quickInput.focus(), 0);
   }
@@ -901,6 +1014,7 @@
   }
 
   function openAddDialog(){
+    if(state.currentListId === '__completed__') return; // nie dodajemy w Zakończone
     const addListSel = el('addListSelect');
     addListSel.innerHTML = '';
     state.lists.forEach(l=>{
@@ -963,6 +1077,7 @@
 
   el('completedViewBtn').addEventListener('click', ()=>{
     state.currentListId = '__completed__';
+    closeQuick();
     closeMenu(); save(); render();
   });
 
@@ -1073,6 +1188,7 @@
 
   // Add item dialog
   el('addBtn').addEventListener('click', ()=>{
+    if(state.currentListId === '__completed__') return;
     if(state.editMode){
       alert('Wyłącz tryb edycji, aby dodać pozycję.');
       return;
@@ -1088,7 +1204,6 @@
     el('addDialog').close();
     vibrate(16);
   });
-  // Cancel/close bez blokady "required"
   el('addDlgClose').addEventListener('click', ()=> el('addDialog').close());
   el('addDlgCancel').addEventListener('click', ()=> el('addDialog').close());
 
@@ -1099,27 +1214,38 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Drukowanie (multi-listy + data)
+  // Drukowanie – checkboxy + data
   el('printBtn').addEventListener('click', ()=>{
-    const sel = el('printListSelect');
-    sel.innerHTML = '';
+    const cont = el('printChecks');
+    cont.innerHTML = '';
+
     // listy użytkownika
     state.lists.forEach(l=>{
-      const opt = document.createElement('option');
-      opt.value = l.id; opt.textContent = l.name;
-      sel.appendChild(opt);
+      const label = document.createElement('label');
+      label.className = 'row'; label.style.gap = '8px';
+      const cb = document.createElement('input');
+      cb.type = 'checkbox'; cb.value = l.id;
+      // preselect bieżącą listę
+      if(state.currentListId === l.id) cb.checked = true;
+      const dot = document.createElement('span');
+      dot.style.cssText = `width:12px;height:12px;border-radius:50%;background:${l.color};display:inline-block`;
+      const name = document.createElement('span');
+      name.textContent = l.name;
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(name);
+      cont.appendChild(label);
     });
-    // zakończone
-    const optC = document.createElement('option');
-    optC.value = '__completed__';
-    optC.textContent = 'Zakończone';
-    sel.appendChild(optC);
 
-    // preselect: bieżąca lista
-    const current = state.currentListId === '__completed__' ? '__completed__' : (currentList()?.id || state.lists[0].id);
-    $$('#printListSelect option').forEach(o=>{ if(o.value===current) o.selected = true; });
-    // ustaw wielkość listy
-    sel.size = Math.min(sel.options.length, 8);
+    // zakończone
+    const labelC = document.createElement('label');
+    labelC.className = 'row'; labelC.style.gap = '8px';
+    const cbC = document.createElement('input');
+    cbC.type = 'checkbox'; cbC.value = '__completed__';
+    if(state.currentListId === '__completed__') cbC.checked = true;
+    const dotC = document.createElement('span');
+    dotC.style.cssText = `width:12px;height:12px;border-radius:50%;background:#7a7f8c;display:inline-block`;
+    const nameC = document.createElement('span'); nameC.textContent = 'Zakończone';
+    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC);
+    cont.appendChild(labelC);
 
     el('printDateToggle').checked = true;
     el('printDialog').showModal();
@@ -1128,12 +1254,13 @@
   el('printCancel').addEventListener('click', ()=> el('printDialog').close());
   el('printForm').addEventListener('submit', (e)=>{
     e.preventDefault();
-    const sel = el('printListSelect');
-    const selectedIds = Array.from(sel.selectedOptions).map(o=>o.value);
-    if(selectedIds.length===0){ alert('Wybierz przynajmniej jedną listę.'); return; }
+    const ids = $$('#printChecks input[type="checkbox"]')
+                  .filter(cb=>cb.checked)
+                  .map(cb=>cb.value);
+    if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
     const includeDate = el('printDateToggle').checked;
 
-    buildPrintArea(selectedIds, includeDate);
+    buildPrintArea(ids, includeDate);
     el('printDialog').close();
 
     const area = el('printArea');
@@ -1142,16 +1269,16 @@
       area.style.display = 'none';
       window.removeEventListener('afterprint', restore);
     };
-    window.addEventListener('afterprint', restore);
     area.style.display = 'block';
-    setTimeout(()=> window.print(), 30);
-    setTimeout(()=> restore(), 2000); // fallback
+    window.addEventListener('afterprint', restore);
+    // daj przeglądarce czas na zrenderowanie zawartości
+    setTimeout(()=> window.print(), 150);
+    setTimeout(()=> restore(), 3000); // awaryjnie
   });
 
   function buildPrintArea(ids, includeDate){
     const area = el('printArea');
     area.innerHTML = '';
-    // data
     if(includeDate){
       const d = new Date();
       const dateStr = d.toLocaleDateString('pl-PL', { year:'numeric', month:'2-digit', day:'2-digit' });
@@ -1163,7 +1290,6 @@
 
     ids.forEach(id=>{
       if(id === '__completed__'){
-        // sekcja Zakończone
         const section = document.createElement('div');
         section.className = 'pa-list';
         const h = document.createElement('h2');
@@ -1203,8 +1329,8 @@
         h.appendChild(document.createTextNode(list.name));
         section.appendChild(h);
 
-        const undone = list.items.filter(i=>!i.done).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
-        const done = list.items.filter(i=>i.done).sort((a,b)=>(a.completedAt||0)-(b.completedAt||0));
+        const undone = list.items.filter(i=>!i.done);
+        const done = list.items.filter(i=>i.done);
 
         if(undone.length===0 && done.length===0){
           const p = document.createElement('div'); p.textContent = 'Brak pozycji.'; section.appendChild(p);

@@ -27,6 +27,12 @@
     /* Neon gradient – nadpisywane dynamicznie w JS na bazie --accent */
     --neo1: #4ab0ff; /* fallback */
     --neo2: #a14ae2; /* fallback */
+
+    /* Wygląd – domyślne wartości */
+    --ring-blur: 8px;
+    --ring-pad: 1px;
+    --item-radius: 18px;
+    --item-shadow-opa: 0.06;
   }
   [data-theme="dark"]{
     --bg: #0c0f14;
@@ -253,6 +259,8 @@
 :root{
   --ring-blur: 8px;  /* delikatniejsza poświata */
   --ring-pad: 1px;
+  --item-radius: 18px;
+  --item-shadow-opa: 0.06;
 }
 
 /* Globalne wygładzanie */
@@ -292,11 +300,11 @@
   content:'';
   position:absolute; inset:-2px; border-radius:14px;
   background: linear-gradient(90deg, var(--neo1), var(--neo2));
-  filter: blur(10px); /* było 16px */
+  filter: blur(10px);
   opacity: 0; transition: opacity .3s ease;
   z-index:-1;
 }
-.title-button:hover::after{ opacity:.45; } /* było .7 */
+.title-button:hover::after{ opacity:.45; }
 
 /* Dropdown – pływająca karta z lekkim neonem */
 .dropdown{
@@ -309,13 +317,13 @@
   position:relative;
   border: none !important;
   background: transparent !important;
-  border-radius: 18px !important;
+  border-radius: var(--item-radius) !important;
   padding: 12px;
   filter: drop-shadow(0px 6px 16px rgba(17,19,24,0.08));
 }
 .item::before{
   content:'';
-  position:absolute; inset:0; border-radius:18px;
+  position:absolute; inset:0; border-radius: var(--item-radius);
   padding: var(--ring-pad);
   background: linear-gradient(137deg, var(--neo1) 0%, var(--neo2) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -324,9 +332,9 @@
 }
 .item::after{
   content:'';
-  position:absolute; inset:2px; border-radius:16px;
+  position:absolute; inset:2px; border-radius: calc(var(--item-radius) - 2px);
   background: var(--card);
-  box-shadow: var(--shadow-soft);
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa));
   z-index:0; pointer-events:none;
 }
 .item > * { position:relative; z-index:1 }
@@ -371,7 +379,7 @@
   filter: blur(var(--ring-blur));
   opacity: 0; transition: opacity .3s ease; z-index:-1;
 }
-.icon-btn:hover::after, .btn:hover::after{ opacity:.45; } /* było .75 */
+.icon-btn:hover::after, .btn:hover::after{ opacity:.45; }
 .icon-btn.active{ box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent) }
 
 /* Primary – pełny gradient z akcentu */
@@ -388,7 +396,7 @@
   box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 22%, transparent);
   color:#fff;
 }
-.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.01) } /* było 1.03 */
+.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.01) }
 
 /* Szybki add – neonowy chip (cieniej) */
 .quick-add{
@@ -408,6 +416,49 @@
 /* Na wszelki wypadek */
 @media (prefers-reduced-motion: reduce){
   .item, .icon-btn, .btn, .fab, .title-button { transition: none !important; }
+}
+
+/* ========= Tryby wyglądu (obrys elementów) ========= */
+
+/* Klasyczny obrys (bez neonu) */
+:root[data-item-outline="border"] .item{
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa)) !important;
+  filter: none !important;
+}
+:root[data-item-outline="border"] .item::before,
+:root[data-item-outline="border"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="border"] .item:hover{ filter: none !important; }
+
+/* Brak obrysu (minimal) */
+:root[data-item-outline="none"] .item{
+  border: 0 !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+:root[data-item-outline="none"] .item::before,
+:root[data-item-outline="none"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="none"] .item:hover{ filter: none !important; }
+
+/* Neon w przyciskach – możliwość wyłączenia */
+:root[data-neon-buttons="off"] .icon-btn,
+:root[data-neon-buttons="off"] .btn{
+  border:1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+:root[data-neon-buttons="off"] .icon-btn::before,
+:root[data-neon-buttons="off"] .icon-btn::after,
+:root[data-neon-buttons="off"] .btn::before,
+:root[data-neon-buttons="off"] .btn::after{
+  content: none !important;
 }
 </style>
 </head>
@@ -572,6 +623,14 @@
         </label>
       </div>
 
+      <div class="row">
+        <div class="grow">
+          <div>Wygląd</div>
+          <div class="hint">Dostosuj obrys, neon i zaokrąglenia</div>
+        </div>
+        <button class="btn" id="appearanceBtn" type="button">Otwórz…</button>
+      </div>
+
       <div class="row" style="gap:10px">
         <button class="btn" id="printBtn" type="button">Drukuj…</button>
         <button class="btn" id="shareBtn" type="button">Udostępnij…</button>
@@ -696,6 +755,79 @@
       <button class="btn primary" type="button" id="shareSystemBtn">Udostępnij systemowo</button>
     </div>
   </dialog>
+
+  <!-- Appearance dialog -->
+  <dialog id="appearanceDialog">
+    <form id="appearanceForm">
+      <div class="dlg-head">
+        <div class="dlg-title">Wygląd</div>
+        <button class="btn" type="button" id="appearanceClose">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <div class="label">Styl obrysu elementów</div>
+          <div class="row wrap" role="radiogroup" aria-label="Styl obrysu">
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="neon" id="outlineNeon">
+              <span>Neon</span>
+            </label>
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="border" id="outlineBorder">
+              <span>Klasyczny obrys</span>
+            </label>
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="none" id="outlineNone">
+              <span>Brak</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Grubość ringu (neon)</div>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="ringPadRange" min="0" max="4" step="0.5" style="flex:1">
+            <span id="ringPadVal" class="hint" style="width:54px;text-align:right"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Intensywność poświaty (neon)</div>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="ringBlurRange" min="0" max="24" step="1" style="flex:1">
+            <span id="ringBlurVal" class="hint" style="width:54px;text-align:right"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Zaokrąglenie kafelków</div>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="itemRadiusRange" min="6" max="26" step="1" style="flex:1">
+            <span id="itemRadiusVal" class="hint" style="width:54px;text-align:right"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Cień kafelków</div>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="shadowOpacityRange" min="0" max="0.25" step="0.01" style="flex:1">
+            <span id="shadowOpacityVal" class="hint" style="width:54px;text-align:right"></span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="row" style="gap:8px">
+            <input type="checkbox" id="buttonsNeonToggle">
+            <span>Neon w przyciskach</span>
+          </label>
+        </div>
+        <div class="hint">Suwaki działają na żywo i zapisują się automatycznie.</div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="appearanceDefaults">Przywróć domyślne</button>
+        <button class="btn primary" type="button" id="appearanceDone">Gotowe</button>
+      </div>
+    </form>
+  </dialog>
 </div>
 
 <script>
@@ -710,9 +842,18 @@
   const ICONS = ['🛒','🍎','🥦','📦','🏠','🎁','🧹','💡','📚','💼','⚽️','🎵','🍽️','🧪','🎯'];
   const NAME_MAX = 40;
 
+  const APPEAR_DEFAULT = {
+    itemOutline: 'neon',     // 'neon' | 'border' | 'none'
+    ringPad: 1,              // px
+    ringBlur: 8,             // px
+    itemRadius: 18,          // px
+    shadowOpacity: 0.06,     // 0..0.25
+    buttonsNeon: true
+  };
+
   const state = {
     lists: [],
-    settings: { dark:false, hideCompleted:false, vibrate:true },
+    settings: { dark:false, hideCompleted:false, vibrate:true, appearance: {...APPEAR_DEFAULT} },
     currentListId: null,
     lastActiveListId: null,
     editMode: false,
@@ -722,10 +863,16 @@
   function defaultData(){
     const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', icon: '', items: [] };
     const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', icon: '', items: [] };
-    return { lists: [list1, list2], settings: { dark:false, hideCompleted:false, vibrate:true }, currentListId: list1.id, lastActiveListId: list1.id, editMode: false };
+    return {
+      lists: [list1, list2],
+      settings: { dark:false, hideCompleted:false, vibrate:true, appearance: {...APPEAR_DEFAULT} },
+      currentListId: list1.id,
+      lastActiveListId: list1.id,
+      editMode: false
+    };
   }
   function migrateData(){
-    // Uzupełnij brakujące pola (np. icon, completedAt)
+    // Uzupełnij brakujące pola list i pozycji
     state.lists.forEach(l=>{
       if(typeof l.icon !== 'string') l.icon = '';
       if(!Array.isArray(l.items)) l.items = [];
@@ -733,6 +880,15 @@
         if(typeof it.completedAt === 'undefined') it.completedAt = it.done ? Date.now() : null;
       });
     });
+    // Uzupełnij ustawienia wyglądu
+    if(!state.settings) state.settings = {};
+    if(!state.settings.appearance) state.settings.appearance = {...APPEAR_DEFAULT};
+    // Dodaj brakujące klucze (forward-compat)
+    for(const k in APPEAR_DEFAULT){
+      if(typeof state.settings.appearance[k] === 'undefined'){
+        state.settings.appearance[k] = APPEAR_DEFAULT[k];
+      }
+    }
   }
   function save(){
     localStorage.setItem(LS_KEY, JSON.stringify({
@@ -768,6 +924,16 @@
     document.documentElement.style.setProperty('--neo2', neo2);
   }
 
+  function applyAppearance(){
+    const ap = state.settings.appearance || APPEAR_DEFAULT;
+    document.documentElement.dataset.itemOutline = ap.itemOutline;
+    document.documentElement.setAttribute('data-neon-buttons', ap.buttonsNeon ? 'on' : 'off');
+    document.documentElement.style.setProperty('--ring-pad', (ap.ringPad||0) + 'px');
+    document.documentElement.style.setProperty('--ring-blur', (ap.ringBlur||0) + 'px');
+    document.documentElement.style.setProperty('--item-radius', (ap.itemRadius||18) + 'px');
+    document.documentElement.style.setProperty('--item-shadow-opa', String(ap.shadowOpacity ?? 0.06));
+  }
+
   function hexToRgba(hex, a=1){
     let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
     const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
@@ -795,7 +961,6 @@
     }
     return {h, s:s*100, l:l*100};
   }
-  // Bezpieczna konwersja HSL -> HEX
   function hslToHexSafe(h,s,l){
     s/=100; l/=100;
     const c=(1-Math.abs(2*l-1))*s;
@@ -1324,6 +1489,79 @@
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
+  // Appearance
+  el('appearanceBtn').addEventListener('click', openAppearance);
+  el('appearanceClose').addEventListener('click', ()=> el('appearanceDialog').close());
+  el('appearanceDone').addEventListener('click', ()=> el('appearanceDialog').close());
+  el('appearanceDefaults').addEventListener('click', ()=>{
+    state.settings.appearance = {...APPEAR_DEFAULT};
+    fillAppearanceForm();
+    applyAppearance(); save();
+  });
+
+  function openAppearance(){
+    fillAppearanceForm();
+    el('appearanceDialog').showModal();
+  }
+  function fillAppearanceForm(){
+    const ap = state.settings.appearance || APPEAR_DEFAULT;
+    // Radios
+    $('#outlineNeon').checked = ap.itemOutline === 'neon';
+    $('#outlineBorder').checked = ap.itemOutline === 'border';
+    $('#outlineNone').checked = ap.itemOutline === 'none';
+    // Ranges and outputs
+    const pad = ap.ringPad ?? 1;
+    const blur = ap.ringBlur ?? 8;
+    const rad = ap.itemRadius ?? 18;
+    const opa = ap.shadowOpacity ?? 0.06;
+    el('ringPadRange').value = String(pad);
+    el('ringPadVal').textContent = pad + ' px';
+    el('ringBlurRange').value = String(blur);
+    el('ringBlurVal').textContent = blur + ' px';
+    el('itemRadiusRange').value = String(rad);
+    el('itemRadiusVal').textContent = rad + ' px';
+    el('shadowOpacityRange').value = String(opa);
+    el('shadowOpacityVal').textContent = opa.toFixed(2);
+    el('buttonsNeonToggle').checked = !!ap.buttonsNeon;
+  }
+
+  // Live update handlers
+  $$('#appearanceForm input[name="itemOutline"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const val = $('input[name="itemOutline"]:checked', el('appearanceForm')).value;
+      state.settings.appearance.itemOutline = val;
+      applyAppearance(); save();
+    });
+  });
+  el('ringPadRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0') || 0;
+    state.settings.appearance.ringPad = v;
+    el('ringPadVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('ringBlurRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0') || 0;
+    state.settings.appearance.ringBlur = v;
+    el('ringBlurVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('itemRadiusRange').addEventListener('input', (e)=>{
+    const v = parseInt(e.target.value||'18', 10) || 18;
+    state.settings.appearance.itemRadius = v;
+    el('itemRadiusVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('shadowOpacityRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0.06') || 0;
+    state.settings.appearance.shadowOpacity = v;
+    el('shadowOpacityVal').textContent = v.toFixed(2);
+    applyAppearance(); save();
+  });
+  el('buttonsNeonToggle').addEventListener('change', (e)=>{
+    state.settings.appearance.buttonsNeon = !!e.target.checked;
+    applyAppearance(); save();
+  });
+
   // Print
   el('printBtn').addEventListener('click', ()=>{
     const cont = el('printChecks'); cont.innerHTML = '';
@@ -1526,7 +1764,7 @@
   });
 
   // Init
-  load(); migrateData(); setTheme(state.settings.dark);
+  load(); migrateData(); setTheme(state.settings.dark); applyAppearance();
   if(state.currentListId !== '__completed__' && !listById(state.currentListId)){
     state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
   }

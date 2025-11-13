@@ -23,6 +23,10 @@
     --safe-top: env(safe-area-inset-top);
     --focus: 0 0 0 3px rgba(74,144,226,0.3);
     --danger: #d53b3b;
+
+    /* Neon gradient – nadpisywane dynamicznie w JS na bazie --accent */
+    --neo1: #4ab0ff; /* fallback */
+    --neo2: #a14ae2; /* fallback */
   }
   [data-theme="dark"]{
     --bg: #0c0f14;
@@ -106,42 +110,20 @@
   @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
   .item:active{transform:scale(0.995)}
 
-  /* iOS-style checkboxes in list items (zamiast poprzednich) */
-  .item .ios-checkbox{
-    --checkbox-size: 22px;
-    --checkbox-color: var(--accent);
-    --checkbox-bg: color-mix(in oklab, var(--accent) 14%, var(--card));
-    --checkbox-border: color-mix(in oklab, var(--accent) 36%, var(--border));
-    position: relative; display:inline-flex; cursor:pointer; user-select:none;
-    -webkit-tap-highlight-color: transparent;
-    flex-shrink:0;
+  /* Bright custom checkboxes in list items */
+  .item input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:6px; flex-shrink:0;
+    border:2px solid var(--border); background: var(--card);
+    display:grid; place-items:center; transition: background .15s, border-color .15s, transform .1s;
   }
-  .item .ios-checkbox input{ display:none; }
-  .item .ios-checkbox .checkbox-wrapper{
-    position:relative; width:var(--checkbox-size); height:var(--checkbox-size);
-    border-radius:8px; transition: transform .2s ease;
+  .item input[type="checkbox"]:active{ transform: scale(0.96) }
+  .item input[type="checkbox"]:checked{
+    background: var(--accent); border-color: var(--accent);
   }
-  .item .ios-checkbox .checkbox-bg{
-    position:absolute; inset:0; border-radius:8px;
-    border:2px solid var(--checkbox-border); background: var(--card);
-    transition: all .2s ease;
+  .item input[type="checkbox"]:checked::after{
+    content:''; width:10px; height:6px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg); margin-top:-1px;
   }
-  .item .ios-checkbox .checkbox-icon{
-    position:absolute; inset:0; margin:auto; width:80%; height:80%;
-    color:#fff; transform:scale(0); transition: all .2s ease;
-  }
-  .item .ios-checkbox .check-path{
-    stroke-dasharray:40; stroke-dashoffset:40;
-    stroke: currentColor; stroke-width:3; stroke-linecap:round; stroke-linejoin:round;
-    transition: stroke-dashoffset .3s ease .1s;
-  }
-  .item .ios-checkbox:hover .checkbox-wrapper{ transform: scale(1.05) }
-  .item .ios-checkbox:active .checkbox-wrapper{ transform: scale(0.95) }
-  .item .ios-checkbox input:checked + .checkbox-wrapper .checkbox-bg{
-    background: var(--checkbox-color); border-color: var(--checkbox-color);
-  }
-  .item .ios-checkbox input:checked + .checkbox-wrapper .checkbox-icon{ transform: scale(1) }
-  .item .ios-checkbox input:checked + .checkbox-wrapper .check-path{ stroke-dashoffset:0 }
 
   .item .texts{display:flex; flex-direction:column; gap:4px; flex:1; min-width:0}
   .item .text{ font-size:16px; line-height:1.35; word-break:break-word; transition: color .2s ease; }
@@ -149,6 +131,7 @@
   .sub{color: var(--muted); font-size:12px}
 
   /* Edit mode */
+  .edit-on .item input[type="checkbox"]{display:none}
   .edit-on .item .text{border:1px dashed transparent; border-radius:8px; padding:4px 6px}
   .edit-on .item .text[contenteditable="true"]:focus{border-color: var(--accent); outline:none; box-shadow: var(--focus)}
   .item .handle{ display:none; width:24px; height:24px; opacity:.55; flex-shrink:0; cursor:grab; }
@@ -161,98 +144,38 @@
   .item.drag-over{ outline:2px dashed var(--accent); outline-offset:2px; }
   .item.dragging{ opacity:.98; box-shadow: 0 12px 28px rgba(0,0,0,.18); transform: scale(1.01); }
   .placeholder{ border:2px dashed var(--border) !important; background: color-mix(in oklab, var(--card) 80%, var(--accent) 20%) !important; }
-  .edit-on .item .ios-checkbox{ display:none; }
 
-  /* Bottom nav – nowy styl w formie kapsuły z ikonami i FAB pośrodku */
+  /* Bottom nav */
   .bottom-nav{
-    position:fixed; left:0; right:0; bottom:0;
-    height: calc(var(--nav-h) + var(--safe-bottom));
+    position:fixed; left:0; right:0; bottom:0; height: calc(var(--nav-h) + var(--safe-bottom));
     padding-bottom: var(--safe-bottom);
-    display:flex; align-items:flex-end; justify-content:center; z-index:25;
-    border-top: 1px solid var(--border);
-    background: transparent;
+    background: var(--card); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:25;
+    gap:12px;
   }
-  .button-container{
-    display:flex; align-items:center; justify-content:space-around;
-    gap: 6px;
-    background: color-mix(in oklab, var(--accent) 72%, #0a0c10);
-    padding: 0 8px;
-    height:44px; min-width: 220px; border-radius: 14px;
-    box-shadow:
-      0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent),
-      0 4px 10px rgba(0,0,0,.2);
-    transition: width .45s ease;
-    color: #fff;
+  .nav-left, .nav-right{display:flex; gap:10px; align-items:center}
+  .icon-btn{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); display:grid; place-items:center;
+    box-shadow: var(--shadow-soft);
   }
-  .button-container:hover{ min-width:260px }
-  .button{
-    outline:0; border:0; width:40px; height:40px; border-radius:50%;
-    background: transparent; display:flex; align-items:center; justify-content:center;
-    color: inherit; cursor:pointer; transition: transform .25s ease, opacity .2s ease;
-  }
-  .button:hover{ transform: translateY(-3px) }
-  .button:active{ transform: translateY(0) scale(0.97) }
-  .button.active{ outline: 2px solid #fff; outline-offset: 2px; border-radius: 999px }
-
-  /* FAB – wrapper “plus” pośrodku z dymkiem do wpisywania */
-  .wrapper{
-    --background: var(--accent);
+  .icon-btn:active{transform:scale(0.96)}
+  .icon-btn.active{outline:2px solid var(--accent); outline-offset:2px}
+  .fab{
     position:absolute; left:50%; transform: translateX(-50%) translateY(-16%);
-    width:64px; height:64px; border-radius:999px;
-    display:flex; align-items:center; justify-content:center; z-index: 30;
+    width:56px; height:56px; border-radius:50%;
+    border:0; background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 60%, #fff));
+    color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
   }
-  .wrapper .btn{
-    background: var(--background);
-    width:64px; height:64px; border-radius:999px; position:relative; z-index:3;
-    box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
-    display:flex; align-items:center; justify-content:center;
-    animation: plus-animation-reverse .5s ease-out forwards;
-  }
-  .wrapper .btn::before, .wrapper .btn::after{
-    content:""; position:absolute; border-radius:4px; background:#fff; display:block;
-  }
-  .wrapper .btn::before{ width:4px; height:28px }
-  .wrapper .btn::after{ width:28px; height:4px }
+  .fab:active{transform: translateX(-50%) translateY(-16%) scale(0.97)}
+  .disabled, .icon-btn[disabled], .btn[disabled]{opacity:.45; pointer-events:none; filter: grayscale(.1);}
 
-  .wrapper .tooltip{
-    position:absolute; z-index:2; top:-92px; opacity:0; pointer-events:none;
-    background:#fff; color: var(--text); width: 0; height: 60px; border-radius: 12px;
-    display:flex; align-items:center; gap:8px; padding: 0 10px; box-shadow: var(--shadow);
-    transition: opacity .15s ease-in, top .15s ease-in, width .15s ease-in;
+  /* Quick add */
+  .quick-add{
+    position: fixed; left:12px; right:12px; bottom: calc(var(--nav-h) + var(--safe-bottom) + 10px);
+    background: var(--card); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow);
+    display:none; padding:8px; gap:8px; align-items:center;
   }
-  .wrapper .tooltip::after{
-    content:""; position:absolute; left:50%; bottom:-8px; transform: translateX(-50%) rotate(45deg);
-    width:18px; height:18px; background:#fff; border-radius:3px;
-  }
-  .wrapper .tooltip.open{
-    width: min(420px, 90vw); opacity: 1; pointer-events:auto;
-  }
-  #fabInput{
-    flex:1; height:38px; border:1px solid var(--border); border-radius:10px; outline:none;
-    padding: 6px 10px; background: var(--card); color: var(--text);
-  }
-  #fabSubmit{
-    width:38px; height:38px; border-radius:10px; border:1px solid var(--border);
-    background: var(--accent); color:#fff; display:grid; place-items:center;
-  }
-  #fabSubmit:active{ transform: scale(0.96) }
-  .wrapper.disabled{ opacity:.45; pointer-events:none; filter: grayscale(.1); }
-
-  /* Animacje plusa */
-  @keyframes plus-animation {
-    0% { transform: rotate(0) scale(1) }
-    20% { transform: rotate(60deg) scale(0.93) }
-    55% { transform: rotate(35deg) scale(0.97) }
-    80% { transform: rotate(48deg) scale(0.94) }
-    100% { transform: rotate(45deg) scale(0.95) }
-  }
-  @keyframes plus-animation-reverse {
-    0% { transform: rotate(45deg) scale(0.95) }
-    20% { transform: rotate(-15deg) }
-    55% { transform: rotate(10deg) }
-    80% { transform: rotate(-3deg) }
-    100% { transform: rotate(0) scale(1) }
-  }
+  .quick-add.open{display:flex; animation: pop .12s ease-out}
+  .quick-add input{ flex:1; border:0; background:transparent; outline:none; padding:10px; border-radius:10px; }
 
   /* Dialogs */
   dialog{ border:0; border-radius:18px; padding:0; background: var(--card); color: var(--text); width:min(520px, 92vw); box-shadow: var(--shadow); }
@@ -267,7 +190,7 @@
   .row.wrap{flex-wrap:wrap}
   .grow{flex:1}
 
-  /* Switch */
+  /* Switch (tylko suwaczek) */
   .switch{
     position:relative; width:48px; height:28px; background: var(--border);
     border-radius:999px; border:1px solid var(--border); display:inline-block;
@@ -307,6 +230,169 @@
   .swatch-grid{display:grid; grid-template-columns: repeat(10, 1fr); gap:8px}
   .swatch{ width:28px; height:28px; border-radius:999px; border:2px solid #fff; box-shadow: 0 0 0 2px var(--border); cursor:pointer; }
   .swatch.selected{box-shadow: 0 0 0 2px var(--accent)}
+</style>
+
+<!-- NOWOCZESNY NEON/GLOW STYL – dynamicznie pod kolor listy -->
+<style>
+:root{
+  --ring-blur: 18px;
+  --ring-pad: 2px;
+}
+
+/* Globalne wygładzanie */
+@media (prefers-reduced-motion: no-preference){
+  .icon-btn, .btn, .fab, .item, .title-button, .dropdown {
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .18s ease, opacity .2s ease;
+  }
+}
+
+/* Header */
+.app-header{
+  backdrop-filter: blur(10px);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--accent) 14%, var(--bg)) 0%, var(--bg) 72%);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
+}
+
+/* Tytuł z neonowym ringiem */
+.title-button{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation: isolate;
+}
+.title-button::before{
+  content:'';
+  position:absolute; inset:0; border-radius:12px;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.title-button::after{
+  content:'';
+  position:absolute; inset:-2px; border-radius:14px;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(16px);
+  opacity: 0; transition: opacity .3s ease;
+  z-index:-1;
+}
+.title-button:hover::after{ opacity:.7; }
+
+/* Dropdown – pływająca karta z lekkim neonem */
+.dropdown{
+  box-shadow: 0 14px 38px rgba(0,0,0,.25), 0 0 0 1px color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
+  border-radius: 18px;
+}
+
+/* Item – neonowa ramka dopasowana do akcentu */
+.item{
+  position:relative;
+  border: none !important;
+  background: transparent !important;
+  border-radius: 18px !important;
+  padding: 12px;
+  filter: drop-shadow(0px 8px 24px rgba(17,19,24,0.10));
+}
+.item::before{
+  content:'';
+  position:absolute; inset:0; border-radius:18px;
+  padding: 2px;
+  background: linear-gradient(137deg, var(--neo1) 0%, var(--neo2) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none; z-index:0;
+}
+.item::after{
+  content:'';
+  position:absolute; inset:2px; border-radius:16px;
+  background: var(--card);
+  box-shadow: var(--shadow-soft);
+  z-index:0; pointer-events:none;
+}
+.item > * { position:relative; z-index:1 }
+.item:hover{
+  filter: drop-shadow(0px 0px 28px color-mix(in oklab, var(--accent) 28%, transparent));
+}
+
+/* Checkbox – sprężysty */
+.item input[type="checkbox"]{
+  width:24px; height:24px; border-radius:8px;
+  transition: background .15s, border-color .15s, transform .12s ease;
+}
+.item input[type="checkbox"]:active{ transform: scale(0.9) }
+
+/* Płynne zwijanie/pojawianie */
+.item.anim-hide{
+  overflow:hidden;
+  transition: height .24s ease, margin .24s ease, opacity .24s ease;
+}
+
+/* Ikonowe przyciski i btn – neonowy ring, jasny w light theme */
+.icon-btn, .btn{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation:isolate;
+}
+.icon-btn::before, .btn::before{
+  content:'';
+  position:absolute; inset:0; border-radius: inherit;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.icon-btn::after, .btn::after{
+  content:''; position:absolute; inset:-2px; border-radius: inherit;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(var(--ring-blur));
+  opacity: 0; transition: opacity .3s ease; z-index:-1;
+}
+.icon-btn:hover::after, .btn:hover::after{ opacity:.75; }
+.icon-btn.active{ box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent) }
+
+/* Primary – pełny gradient z akcentu */
+.btn.primary{
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  color:#fff;
+  border: none;
+}
+
+/* FAB – gradient z akcentu */
+.fab{
+  border: none;
+  background: linear-gradient(137deg, var(--neo1), var(--neo2));
+  box-shadow: 0 12px 34px color-mix(in oklab, var(--accent) 32%, transparent);
+  color:#fff;
+}
+.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.03) }
+
+/* Szybki add – neonowy chip */
+.quick-add{
+  border: none; position: fixed;
+  box-shadow: 0 10px 28px rgba(0,0,0,.25);
+}
+.quick-add::before{
+  content:''; position:absolute; inset:0; border-radius:14px; padding:2px;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+}
+
+/* W dark theme przyciski mogą być ciemniejsze – już mamy var(--card) */
+[data-theme="dark"] .icon-btn, [data-theme="dark"] .btn{ background:#0e1118; color:#fff; }
+
+/* Na wszelki wypadek */
+@media (prefers-reduced-motion: reduce){
+  .item, .icon-btn, .btn, .fab, .title-button { transition: none !important; }
+}
 </style>
 </head>
 <body>
@@ -362,44 +448,51 @@
   </main>
 
   <nav class="bottom-nav">
-    <div class="button-container" id="bottomButtons">
-      <button class="button" id="editModeBtn" aria-label="Tryb edycji" title="Tryb edycji">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M15.2 5.2l3.6 3.6M7 17l-1 4 4-1 9.6-9.6a2.5 2.5 0 00-3.6-3.6L7 17z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <div class="nav-left">
+      <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </button>
+    </div>
 
-      <button class="button" id="completedBtn" aria-label="Zakończone" title="Zakończone">
+    <button class="fab" id="addBtn" aria-label="Dodaj">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div class="nav-right">
+      <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji">
+        <!-- Notatnik zamiast ołówka -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-          <path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" stroke-width="2"/>
-          <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <rect x="5" y="4" width="14" height="16" rx="2.5" stroke="currentColor" stroke-width="2"/>
+          <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </button>
-
-      <button class="button" id="settingsBtn" aria-label="Opcje" title="Opcje">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <button class="icon-btn" id="settingsBtn" aria-label="Opcje">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
           <circle cx="12" cy="5.5" r="1.8" fill="currentColor"/>
           <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
           <circle cx="12" cy="18.5" r="1.8" fill="currentColor"/>
         </svg>
       </button>
     </div>
-
-    <!-- FAB pośrodku z dymkiem do wpisywania -->
-    <div class="wrapper" id="addBtn" aria-label="Dodaj">
-      <div class="btn" id="fabButton" aria-hidden="true"></div>
-      <div class="tooltip" id="fabTooltip" role="dialog" aria-label="Dodaj pozycję">
-        <input id="fabInput" type="text" placeholder="Co dodać?" autocomplete="off" />
-        <button id="fabSubmit" title="Dodaj" aria-label="Dodaj">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-      </div>
-    </div>
   </nav>
 
-  <!-- Add item dialog (pozostawiony – nie używany przez plusa, ale może się przydać) -->
+  <div class="quick-add" id="quickAdd" role="dialog" aria-label="Szybkie dodanie">
+    <input id="quickAddInput" type="text" placeholder="Dodaj do bieżącej listy." autocomplete="off" />
+    <button class="i-btn" id="quickAddSubmit" aria-label="Dodaj">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button class="i-btn" id="quickAddClose" aria-label="Zwiń">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Add item dialog -->
   <dialog id="addDialog">
     <form id="addForm">
       <div class="dlg-head">
@@ -607,7 +700,14 @@
     const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', items: [] };
     return { lists: [list1, list2], settings: { dark:false, hideCompleted:false, vibrate:true }, currentListId: list1.id, lastActiveListId: list1.id, editMode: false };
   }
-  function save(){ localStorage.setItem(LS_KEY, JSON.stringify({ lists:state.lists, settings:state.settings, currentListId:state.currentListId, lastActiveListId:state.lastActiveListId })); }
+  function save(){
+    localStorage.setItem(LS_KEY, JSON.stringify({
+      lists:state.lists,
+      settings:state.settings,
+      currentListId:state.currentListId,
+      lastActiveListId:state.lastActiveListId
+    }));
+  }
   function load(){
     const raw = localStorage.getItem(LS_KEY);
     if(!raw){ Object.assign(state, defaultData()); return; }
@@ -620,13 +720,83 @@
       }
     }catch{ Object.assign(state, defaultData()); }
   }
-  function setTheme(dark){ state.settings.dark = !!dark; document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light'); }
-  function setAccent(color){ document.documentElement.style.setProperty('--accent', color); document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14)); }
-  function hexToRgba(hex, a=1){ let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); } const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16); return `rgba(${r},${g},${b},${a})`; }
+
+  // Dynamiczny akcent + neon gradient z koloru listy
+  function setTheme(dark){
+    state.settings.dark = !!dark;
+    document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
+  }
+  function setAccent(color){
+    document.documentElement.style.setProperty('--accent', color);
+    document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14));
+    const {neo1, neo2} = deriveNeoGradient(color);
+    document.documentElement.style.setProperty('--neo1', neo1);
+    document.documentElement.style.setProperty('--neo2', neo2);
+  }
+
+  function hexToRgba(hex, a=1){
+    let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  function hexToRgb(hex){
+    let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return {r,g,b};
+  }
+  function rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if(max===min){ h=s=0; }
+    else{
+      const d=max-min;
+      s=l>0.5? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: h=(g-b)/d + (g<b?6:0); break;
+        case g: h=(b-r)/d + 2; break;
+        case b: h=(r-g)/d + 4; break;
+      }
+      h*=60;
+    }
+    return {h, s:s*100, l:l*100};
+  }
+  // Bezpieczna konwersja HSL -> HEX
+  function hslToHexSafe(h,s,l){
+    s/=100; l/=100;
+    const c=(1-Math.abs(2*l-1))*s;
+    const hh=h/60;
+    const x=c*(1-Math.abs(hh%2-1));
+    let r=0,g=0,b=0;
+    if(hh>=0 && hh<1){ r=c; g=x; b=0; }
+    else if(hh>=1 && hh<2){ r=x; g=c; b=0; }
+    else if(hh>=2 && hh<3){ r=0; g=c; b=x; }
+    else if(hh>=3 && hh<4){ r=0; g=x; b=c; }
+    else if(hh>=4 && hh<5){ r=x; g=0; b=c; }
+    else { r=c; g=0; b=x; }
+    const m=l-c/2;
+    r=Math.round((r+m)*255); g=Math.round((g+m)*255); b=Math.round((b+m)*255);
+    return '#'+[r,g,b].map(v=> v.toString(16).padStart(2,'0')).join('');
+  }
+  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+  function deriveNeoGradient(accent){
+    const {r,g,b} = hexToRgb(accent);
+    const {h,s,l} = rgbToHsl(r,g,b);
+    const neo1 = hslToHexSafe((h+10)%360, clamp(s+10,0,100), clamp(l+6,0,100));
+    const neo2 = hslToHexSafe((h-14+360)%360, clamp(s+22,0,100), clamp(l-8,0,100));
+    return {neo1, neo2};
+  }
+
   function vibrate(ms=20){ if(!state.settings.vibrate) return; if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} } }
   function currentList(){ if(state.currentListId === '__completed__') return null; return state.lists.find(l => l.id === state.currentListId) || state.lists[0]; }
   function listById(id){ return state.lists.find(l => l.id === id); }
   function escapeHtml(str=''){ return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+
+  /* Quick add refs */
+  const quick = el('quickAdd');
+  const quickInput = el('quickAddInput');
+  function openQuick(){ if(state.currentListId === '__completed__') return; quick.classList.add('open'); setTimeout(()=> quickInput?.focus(), 0); }
+  function closeQuick(){ quick.classList.remove('open'); if(quickInput) quickInput.value = ''; }
 
   function render(){
     document.body.classList.toggle('edit-on', !!state.editMode);
@@ -638,25 +808,19 @@
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
-    // FAB on/off
-    const fab = el('addBtn');
-    fab.classList.toggle('disabled', isCompletedView);
-    if(isCompletedView){
-      closeFabBubble();
-    }
+    el('addBtn').classList.toggle('disabled', isCompletedView);
+    el('quickAddBtn').classList.toggle('disabled', isCompletedView);
+    if(isCompletedView) closeQuick();
 
     renderListMenu();
     renderItems();
 
-    // settings toggles
     el('darkModeToggle').checked = !!state.settings.dark;
     el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
     el('vibrateToggle').checked = !!state.settings.vibrate;
 
-    // podświetlenie ołówka i "zakończone"
+    // podświetlenie notatnika w trybie edycji
     el('editModeBtn').classList.toggle('active', !!state.editMode);
-    const cb = el('completedBtn');
-    if(cb){ cb.classList.toggle('active', state.currentListId === '__completed__'); }
   }
 
   function renderListMenu(){
@@ -685,7 +849,7 @@
       btn.addEventListener('click', ()=>{
         state.currentListId = l.id;
         state.lastActiveListId = l.id;
-        save(); render();
+        closeMenu(); save(); render();
       });
 
       btn.addEventListener('dragstart', (e)=>{
@@ -706,10 +870,8 @@
     });
 
     const compl = el('completedViewBtn');
-    if(compl){
-      compl.classList.toggle('is-active', state.currentListId === '__completed__');
-      compl.setAttribute('aria-selected', state.currentListId === '__completed__' ? 'true' : 'false');
-    }
+    compl.classList.toggle('is-active', state.currentListId === '__completed__');
+    compl.setAttribute('aria-selected', state.currentListId === '__completed__' ? 'true' : 'false');
   }
   function moveList(fromIdx, toIdx){ if(fromIdx===toIdx) return; const [m] = state.lists.splice(fromIdx,1); state.lists.splice(toIdx,0,m); save(); renderListMenu(); }
 
@@ -748,32 +910,9 @@
       handle.className = 'handle';
       handle.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
 
-      // iOS-like checkbox
-      const cbWrap = document.createElement('label');
-      cbWrap.className = 'ios-checkbox';
-      cbWrap.innerHTML = `
-        <input type="checkbox" ${it.done ? 'checked' : ''} />
-        <div class="checkbox-wrapper">
-          <div class="checkbox-bg"></div>
-          <svg fill="none" viewBox="0 0 24 24" class="checkbox-icon">
-            <path d="M4 12L10 18L20 6" class="check-path"></path>
-          </svg>
-        </div>
-      `;
-      const checkbox = cbWrap.querySelector('input');
-
-      checkbox.addEventListener('change', ()=>{
-        if(state.currentListId === '__completed__'){
-          const listId = findItemListId(it.id) || it.__fromList;
-          const l = listById(listId);
-          const item = l?.items.find(x=>x.id === it.id);
-          if(item){ item.done = checkbox.checked; item.completedAt = item.done ? Date.now() : null; }
-        }else{
-          const item = lref.items.find(x=>x.id === it.id);
-          if(item){ item.done = checkbox.checked; item.completedAt = item.done ? Date.now() : null; }
-        }
-        vibrate(22); save(); render();
-      });
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!it.done;
 
       const texts = document.createElement('div');
       texts.className = 'texts';
@@ -792,7 +931,7 @@
 
       const actions = document.createElement('div');
       actions.className = 'actions';
-      if(state.currentListId !== '__completed__'){
+      if(!(state.currentListId === '__completed__')){
         actions.innerHTML = `
           <button class="i-btn" data-act="up" title="Góra" aria-label="Góra">
             <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -804,38 +943,105 @@
             <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </button>
         `;
+      }
+
+      // Checkbox – płynne, bez mignięć
+      checkbox.addEventListener('change', ()=>{
+        const toggledDone = checkbox.checked;
+        const containerEl = el('listContainer');
+        const isCompletedViewLocal = (state.currentListId === '__completed__');
+
+        if(isCompletedViewLocal){
+          const listId = findItemListId(it.id) || it.__fromList;
+          const l = listById(listId);
+          const item = l?.items.find(x=>x.id === it.id);
+          if(item){
+            item.done = toggledDone;
+            item.completedAt = toggledDone ? Date.now() : null;
+          }
+          if(!toggledDone){
+            animateCollapseRemove(li, ()=> updateEmptyStateOnContainer(containerEl, true));
+          }
+          vibrate(22); save(); renderListMenu();
+          return;
+        }
+
+        // Normalny widok listy:
+        const lrefLocal = currentList();
+        const itemRef = lrefLocal.items.find(x=>x.id === it.id);
+        if(itemRef){
+          itemRef.done = toggledDone;
+          itemRef.completedAt = toggledDone ? Date.now() : null;
+        }
+        li.classList.toggle('done', toggledDone);
+
+        if(state.settings.hideCompleted && toggledDone){
+          // ukrywaj ukończone z płynną animacją
+          animateCollapseRemove(li, ()=> updateEmptyStateOnContainer(containerEl, false));
+        }else{
+          // FLIP-move: płynne przeniesienie między sekcjami
+          const itemsEls = Array.from(containerEl.querySelectorAll('.item'));
+          const firstDoneIdx = itemsEls.findIndex(n => n.classList.contains('done'));
+          const lastUndoneIdx = itemsEls.reduce((acc, n, i)=> n.classList.contains('done') ? acc : i, -1);
+
+          if(toggledDone){
+            const targetIdx = (lastUndoneIdx >= 0 ? lastUndoneIdx + 1 : 0);
+            if(containerEl.children[targetIdx] !== li){
+              flipMove(li, ()=> containerEl.insertBefore(li, containerEl.children[targetIdx] || null));
+            }
+          }else{
+            const targetIdx = (firstDoneIdx === -1 ? itemsEls.length : firstDoneIdx);
+            if(containerEl.children[targetIdx] !== li){
+              flipMove(li, ()=> containerEl.insertBefore(li, containerEl.children[targetIdx] || null));
+            }
+          }
+        }
+
+        vibrate(22); save(); renderListMenu();
+      });
+
+      // Akcje: góra/dół/usuwanie (usuwanie z animacją)
+      if(!(state.currentListId === '__completed__')){
         actions.querySelector('[data-act="up"]').addEventListener('click', ()=>{
+          const lrefLocal = currentList();
           const idx = visibleIds.indexOf(it.id);
-          if(idx>0){ const visNew = moveInArray(visibleIds.slice(), idx, idx-1); applyVisibleOrder(lref, visNew); }
+          if(idx>0){ const visNew = moveInArray(visibleIds.slice(), idx, idx-1); applyVisibleOrder(lrefLocal, visNew); }
         });
         actions.querySelector('[data-act="down"]').addEventListener('click', ()=>{
+          const lrefLocal = currentList();
           const idx = visibleIds.indexOf(it.id);
-          if(idx>=0 && idx<visibleIds.length-1){ const visNew = moveInArray(visibleIds.slice(), idx, idx+1); applyVisibleOrder(lref, visNew); }
+          if(idx>=0 && idx<visibleIds.length-1){ const visNew = moveInArray(visibleIds.slice(), idx, idx+1); applyVisibleOrder(lrefLocal, visNew); }
         });
         actions.querySelector('[data-act="del"]').addEventListener('click', ()=>{
-          const idx = lref.items.findIndex(x=>x.id===it.id);
-          if(idx>=0){ lref.items.splice(idx,1); vibrate(10); save(); render(); }
+          const lrefLocal = currentList();
+          const idx = lrefLocal.items.findIndex(x=>x.id===it.id);
+          if(idx>=0){
+            animateCollapseRemove(li, ()=>{
+              lrefLocal.items.splice(idx,1); vibrate(10); save(); renderListMenu(); updateEmptyStateOnContainer(el('listContainer'), false);
+            });
+          }
         });
       }
 
       li.appendChild(handle);
-      li.appendChild(cbWrap);
+      li.appendChild(checkbox);
       li.appendChild(texts);
       li.appendChild(actions);
 
-      if(state.editMode && state.currentListId !== '__completed__'){
+      if(state.editMode && !(state.currentListId === '__completed__')){
         title.contentEditable = 'true';
         title.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); title.blur(); } });
         title.addEventListener('blur', ()=>{
           const newVal = (title.textContent || '').trim();
-          const idx = lref.items.findIndex(x=>x.id===it.id);
+          const lrefLocal = currentList();
+          const idx = lrefLocal.items.findIndex(x=>x.id===it.id);
           if(idx>=0){
-            if(newVal.length===0){ title.textContent = lref.items[idx].text; return; }
-            if(lref.items[idx].text !== newVal){ lref.items[idx].text = newVal; save(); }
+            if(newVal.length===0){ title.textContent = lrefLocal.items[idx].text; return; }
+            if(lrefLocal.items[idx].text !== newVal){ lrefLocal.items[idx].text = newVal; save(); }
           }
         });
 
-        enableItemDrag(li, handle, visibleIds, (visNew)=> applyVisibleOrder(lref, visNew));
+        enableItemDrag(li, handle, visibleIds, (visNew)=> applyVisibleOrder(currentList(), visNew));
       }
 
       frag.appendChild(li);
@@ -851,6 +1057,46 @@
     for(const it of list.items){ out.push(isVisible(it) ? (visQueue.shift() || it) : it); }
     list.items = out; vibrate(8); save(); render();
   }
+
+  // === PŁYNNE ANIMACJE (bez migania) ===
+  function flipMove(el, mutateDom){
+    const start = el.getBoundingClientRect();
+    mutateDom?.();
+    const end = el.getBoundingClientRect();
+    const dx = start.left - end.left;
+    const dy = start.top - end.top;
+    if (dx || dy){
+      el.style.transition = 'none';
+      el.style.transform = `translate(${dx}px, ${dy}px)`;
+      el.getBoundingClientRect(); // reflow
+      el.style.transition = 'transform 240ms cubic-bezier(.22,.61,.36,1)';
+      el.style.transform = '';
+      setTimeout(()=>{ el.style.transition = ''; }, 260);
+    }
+  }
+  function animateCollapseRemove(elNode, after){
+    elNode.classList.add('anim-hide');
+    elNode.style.height = elNode.offsetHeight + 'px';
+    elNode.style.marginTop = getComputedStyle(elNode).marginTop;
+    elNode.style.marginBottom = getComputedStyle(elNode).marginBottom;
+    elNode.style.opacity = '1';
+    requestAnimationFrame(()=>{
+      elNode.style.height = '0px';
+      elNode.style.marginTop = '0px';
+      elNode.style.marginBottom = '0px';
+      elNode.style.opacity = '0';
+    });
+    setTimeout(()=>{ try{ elNode.remove(); }catch{} after?.(); }, 240);
+  }
+  function updateEmptyStateOnContainer(container, isCompletedView){
+    const anyItem = container.querySelector('.item');
+    const empty = el('emptyState');
+    empty.hidden = !!anyItem;
+    if (!anyItem){
+      empty.textContent = isCompletedView ? 'Brak pozycji.' : 'Brak pozycji. Dodaj coś przyciskiem +';
+    }
+  }
+
   function enableItemDrag(li, handle, visibleIds, onDropOrder){
     let offsetY=0, ph=null, container=null, dragging=false;
     const onPointerDown = (e)=>{
@@ -890,7 +1136,7 @@
   }
   function findItemListId(itemId){ for(const l of state.lists){ if(l.items.some(i => i.id === itemId)) return l.id; } return null; }
 
-  // Header menu open/close
+  // Menu open/close
   const menuBtn = el('openMenuBtn');
   const menu = el('listMenu');
   function openMenu(){ menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true'); }
@@ -898,12 +1144,12 @@
   menuBtn.addEventListener('click', ()=> menu.classList.contains('open') ? closeMenu() : openMenu());
   document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
 
-  // Menu actions (górne)
-  el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; save(); render(); });
+  // Menu actions
+  el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; closeQuick(); closeMenu(); save(); render(); });
   el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
   el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
 
-  // Zarządzanie listą / nowa lista
+  // Manage/new list
   function openManage(){
     let cl = currentList();
     if(!cl){ const l = listById(state.lastActiveListId) || state.lists[0]; state.currentListId = l.id; cl = l; }
@@ -954,82 +1200,52 @@
     }
   });
 
-  el('newListForm').addEventListener('submit', (e)=>{
-    e.preventDefault();
-    const name = el('newListName').value.trim().slice(0, NAME_MAX);
-    if(!name) return;
-    const color = getSelectedPaletteColor(el('newListPalette'));
-    const l = { id: uid('list'), name, color, items: [] };
-    state.lists.push(l);
-    state.currentListId = l.id; state.lastActiveListId = l.id;
-    el('newListDialog').close(); save(); render();
-  });
-  el('newListClose').addEventListener('click', ()=> el('newListDialog').close());
-  el('newListCancel').addEventListener('click', ()=> el('newListDialog').close());
-
-  // FAB (plus) – dymek dodawania
-  const fabButton = el('fabButton');
-  const fabTooltip = el('fabTooltip');
-  const fabInput = el('fabInput');
-  const fabSubmit = el('fabSubmit');
-
-  function openFabBubble(){
-    fabTooltip.classList.add('open');
-    setTimeout(()=> fabInput?.focus(), 0);
-  }
-  function closeFabBubble(){
-    fabTooltip.classList.remove('open');
-    if(fabInput) fabInput.value = '';
-  }
-
-  // Klik w plusa (otwórz/zamknij bąbelek)
-  fabButton.addEventListener('click', ()=>{
-    if(state.currentListId === '__completed__'){ return; }
-    if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
-    if(fabTooltip.classList.contains('open')) closeFabBubble(); else openFabBubble();
-  });
-
-  fabSubmit.addEventListener('click', ()=>{
-    const txt = (fabInput.value || '').trim(); if(!txt) return;
+  // Quick add
+  el('quickAddBtn').addEventListener('click', openQuick);
+  el('quickAddClose').addEventListener('click', closeQuick);
+  el('quickAddSubmit').addEventListener('click', ()=>{
+    const txt = quickInput.value.trim(); if(!txt) return;
     const toId = (state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId);
-    addItem(txt, toId); fabInput.value = ''; vibrate(16); closeFabBubble();
+    addItem(txt, toId); quickInput.value = ''; vibrate(12);
   });
-  fabInput.addEventListener('keydown', (e)=>{
-    if(e.key === 'Enter'){ e.preventDefault(); fabSubmit.click(); }
-    if(e.key === 'Escape'){ closeFabBubble(); }
-  });
+  quickInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); el('quickAddSubmit').click(); } else if(e.key==='Escape'){ closeQuick(); } });
 
-  // Zamknij bąbelek po kliknięciu poza nim
-  document.addEventListener('click', (e)=>{
-    const w = el('addBtn');
-    if(!w.contains(e.target) && fabTooltip.classList.contains('open')){
-      closeFabBubble();
-    }
+  // Add item dialog
+  el('addBtn').addEventListener('click', ()=>{
+    if(state.currentListId === '__completed__') return;
+    if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
+    openAddDialog();
   });
+  function openAddDialog(){
+    const addListSel = el('addListSelect'); addListSel.innerHTML = '';
+    state.lists.forEach(l=>{ const opt = document.createElement('option'); opt.value = l.id; opt.textContent = l.name; addListSel.appendChild(opt); });
+    const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
+    addListSel.value = defaultId; el('addText').value = '';
+    el('addDialog').showModal(); setTimeout(()=>el('addText').focus(), 0);
+  }
+  el('addForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const txt = el('addText').value.trim(); if(!txt) return;
+    const listId = el('addListSelect').value;
+    addItem(txt, listId); el('addDialog').close(); vibrate(16);
+  });
+  el('addDlgClose').addEventListener('click', ()=> el('addDialog').close());
+  el('addDlgCancel').addEventListener('click', ()=> el('addDialog').close());
 
-  // Przyciski dolnego paska
-  const bottomCompleted = el('completedBtn');
-  if(bottomCompleted){
-    bottomCompleted.addEventListener('click', ()=>{
-      if(state.currentListId === '__completed__'){
-        const back = listById(state.lastActiveListId) ? state.lastActiveListId : state.lists[0]?.id;
-        state.currentListId = back || state.currentListId;
-      }else{
-        state.lastActiveListId = state.currentListId;
-        state.currentListId = '__completed__';
-      }
-      save(); render();
-    });
+  function addItem(text, toListId){
+    const l = listById(toListId); if(!l) return;
+    l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
+    save(); render();
   }
 
-  // Ustawienia
+  // Settings
   el('settingsBtn').addEventListener('click', ()=> el('settingsDialog').showModal());
   el('closeSettings').addEventListener('click', ()=> el('settingsDialog').close());
   el('darkModeToggle').addEventListener('change', (e)=>{ setTheme(e.target.checked); save(); });
   el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
   el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
 
-  // Drukuj
+  // Print
   el('printBtn').addEventListener('click', ()=>{
     const cont = el('printChecks'); cont.innerHTML = '';
     state.lists.forEach(l=>{
@@ -1055,14 +1271,15 @@
     const includeDate = el('printDateToggle').checked;
     const html = buildPrintHTML(ids, includeDate);
     el('printDialog').close();
-    printUsingBlobWindow(html);
+    // Stabilniejszy druk – przez iframe
+    try{ printUsingFrame(html); }catch(e){ printUsingBlobWindow(html); }
   });
   function buildPrintHTML(ids, includeDate){
     const css = `<style>
       @page { margin: 12mm; }
       body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color:#111; }
       .pa-date { font-size:12px; color:#555; margin-bottom:8px; }
-      .pa-list { margin-bottom:16px; }
+      .pa-list { margin-bottom:16px; page-break-inside: avoid; }
       h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
       .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
       ul{ margin: 0 0 8px 18px; padding:0; }
@@ -1099,11 +1316,35 @@
     });
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
   }
+  // Druk przez ukryty iframe – działa w Chrome/Firefox/Safari, także mobilnie
+  function printUsingFrame(html){
+    const frame = document.createElement('iframe');
+    frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
+    frame.style.width='0'; frame.style.height='0'; frame.style.border='0'; frame.style.opacity='0';
+    document.body.appendChild(frame);
+    const done = ()=>{
+      try{
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      }finally{
+        setTimeout(()=> frame.remove(), 1200);
+      }
+    };
+    if('srcdoc' in frame){
+      frame.onload = done;
+      frame.srcdoc = html;
+    }else{
+      const doc = frame.contentWindow.document;
+      doc.open(); doc.write(html); doc.close();
+      setTimeout(done, 120); // krótka pauza na layout
+    }
+  }
+  // Fallback – okno z Blobem (gdyby iframe był blokowany)
   function printUsingBlobWindow(html){
     try{
       const blob = new Blob([html], {type:'text/html'});
       const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank', 'noopener,noreferrer');
+      const win = window.open(url, '_blank', 'noopener');
       if(!win){ alert('Zezwól przeglądarce na wyskakujące okna, aby wydrukować.'); URL.revokeObjectURL(url); return; }
       const trigger = ()=>{ try{ win.focus(); win.print(); }catch{} setTimeout(()=>{ try{ win.close(); }catch{} URL.revokeObjectURL(url); }, 1500); };
       if(win.document && win.document.readyState === 'complete') setTimeout(trigger, 120);
@@ -1191,13 +1432,13 @@
     }catch(e){}
   }
 
-  // Tryb edycji
+  // Edit toggle
   el('editModeBtn').addEventListener('click', ()=>{
     if(state.currentListId === '__completed__'){ alert('Tryb edycji jest dostępny w konkretnej liście.'); return; }
     state.editMode = !state.editMode; render();
   });
 
-  // Zamykaj dialogi po kliknięciu w tło
+  // Close dialogs on backdrop click
   $$('dialog').forEach(d=>{
     d.addEventListener('click', (e)=>{
       const rect = d.getBoundingClientRect();
@@ -1205,12 +1446,6 @@
       if(!inDialog){ d.close(); }
     });
   });
-
-  function addItem(text, toListId){
-    const l = listById(toListId); if(!l) return;
-    l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
-    save(); render();
-  }
 
   // Init
   load(); setTheme(state.settings.dark);

@@ -63,6 +63,7 @@
   }
   .title-button:active{transform:scale(0.98)}
   .dot{ width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft) }
+  .list-icon{ font-size:16px; line-height:1; }
   .title-text{font-weight:600}
   .caret{width:16px; height:16px; opacity:0.7}
 
@@ -230,13 +231,28 @@
   .swatch-grid{display:grid; grid-template-columns: repeat(10, 1fr); gap:8px}
   .swatch{ width:28px; height:28px; border-radius:999px; border:2px solid #fff; box-shadow: 0 0 0 2px var(--border); cursor:pointer; }
   .swatch.selected{box-shadow: 0 0 0 2px var(--accent)}
+
+  /* Ikonki */
+  .icon-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap:8px }
+  .icon-chip{
+    width:36px; height:36px; display:grid; place-items:center; border-radius:10px;
+    border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:18px;
+  }
+  .icon-chip.selected{ outline:2px solid var(--accent) }
+
+  /* Ukryj UI przy systemowym druku (Ctrl+P) */
+  @media print {
+    .app-header, .bottom-nav, .dropdown, dialog, .quick-add { display: none !important; }
+    main { padding: 0 !important; }
+    body { background: #fff !important; }
+  }
 </style>
 
-<!-- NOWOCZESNY NEON/GLOW STYL – dynamicznie pod kolor listy -->
+<!-- NOWOCZESNY NEON/GLOW STYL – dynamicznie pod kolor listy (delikatniejszy) -->
 <style>
 :root{
-  --ring-blur: 18px;
-  --ring-pad: 2px;
+  --ring-blur: 8px;  /* delikatniejsza poświata */
+  --ring-pad: 1px;
 }
 
 /* Globalne wygładzanie */
@@ -254,7 +270,7 @@
   border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
 }
 
-/* Tytuł z neonowym ringiem */
+/* Tytuł z neonowym ringiem – mniej glow */
 .title-button{
   position: relative;
   border: none;
@@ -276,31 +292,31 @@
   content:'';
   position:absolute; inset:-2px; border-radius:14px;
   background: linear-gradient(90deg, var(--neo1), var(--neo2));
-  filter: blur(16px);
+  filter: blur(10px); /* było 16px */
   opacity: 0; transition: opacity .3s ease;
   z-index:-1;
 }
-.title-button:hover::after{ opacity:.7; }
+.title-button:hover::after{ opacity:.45; } /* było .7 */
 
 /* Dropdown – pływająca karta z lekkim neonem */
 .dropdown{
-  box-shadow: 0 14px 38px rgba(0,0,0,.25), 0 0 0 1px color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
+  box-shadow: 0 10px 28px rgba(0,0,0,.20), 0 0 0 1px color-mix(in oklab, var(--border) 75%, var(--accent) 25%);
   border-radius: 18px;
 }
 
-/* Item – neonowa ramka dopasowana do akcentu */
+/* Item – neonowa ramka dopasowana do akcentu (cieniej) */
 .item{
   position:relative;
   border: none !important;
   background: transparent !important;
   border-radius: 18px !important;
   padding: 12px;
-  filter: drop-shadow(0px 8px 24px rgba(17,19,24,0.10));
+  filter: drop-shadow(0px 6px 16px rgba(17,19,24,0.08));
 }
 .item::before{
   content:'';
   position:absolute; inset:0; border-radius:18px;
-  padding: 2px;
+  padding: var(--ring-pad);
   background: linear-gradient(137deg, var(--neo1) 0%, var(--neo2) 100%);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
@@ -315,7 +331,7 @@
 }
 .item > * { position:relative; z-index:1 }
 .item:hover{
-  filter: drop-shadow(0px 0px 28px color-mix(in oklab, var(--accent) 28%, transparent));
+  filter: drop-shadow(0px 0px 18px color-mix(in oklab, var(--accent) 18%, transparent));
 }
 
 /* Checkbox – sprężysty */
@@ -331,7 +347,7 @@
   transition: height .24s ease, margin .24s ease, opacity .24s ease;
 }
 
-/* Ikonowe przyciski i btn – neonowy ring, jasny w light theme */
+/* Ikonowe przyciski i btn – neonowy ring, jasno i subtelnie */
 .icon-btn, .btn{
   position: relative;
   border: none;
@@ -355,7 +371,7 @@
   filter: blur(var(--ring-blur));
   opacity: 0; transition: opacity .3s ease; z-index:-1;
 }
-.icon-btn:hover::after, .btn:hover::after{ opacity:.75; }
+.icon-btn:hover::after, .btn:hover::after{ opacity:.45; } /* było .75 */
 .icon-btn.active{ box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent) }
 
 /* Primary – pełny gradient z akcentu */
@@ -365,28 +381,28 @@
   border: none;
 }
 
-/* FAB – gradient z akcentu */
+/* FAB – gradient z akcentu (mniej “dymu”) */
 .fab{
   border: none;
   background: linear-gradient(137deg, var(--neo1), var(--neo2));
-  box-shadow: 0 12px 34px color-mix(in oklab, var(--accent) 32%, transparent);
+  box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 22%, transparent);
   color:#fff;
 }
-.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.03) }
+.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.01) } /* było 1.03 */
 
-/* Szybki add – neonowy chip */
+/* Szybki add – neonowy chip (cieniej) */
 .quick-add{
   border: none; position: fixed;
-  box-shadow: 0 10px 28px rgba(0,0,0,.25);
+  box-shadow: 0 10px 28px rgba(0,0,0,.20);
 }
 .quick-add::before{
-  content:''; position:absolute; inset:0; border-radius:14px; padding:2px;
+  content:''; position:absolute; inset:0; border-radius:14px; padding: var(--ring-pad);
   background: linear-gradient(90deg, var(--neo1), var(--neo2));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
 }
 
-/* W dark theme przyciski mogą być ciemniejsze – już mamy var(--card) */
+/* Dark theme – już ok dzięki var(--card) */
 [data-theme="dark"] .icon-btn, [data-theme="dark"] .btn{ background:#0e1118; color:#fff; }
 
 /* Na wszelki wypadek */
@@ -400,6 +416,7 @@
   <header class="app-header">
     <button class="title-button" id="openMenuBtn" aria-haspopup="true" aria-expanded="false">
       <span class="dot" id="listDot"></span>
+      <span class="list-icon" id="currentListIcon" hidden></span>
       <span class="title-text" id="currentListName">Moja lista</span>
       <svg class="caret" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -464,7 +481,6 @@
 
     <div class="nav-right">
       <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji">
-        <!-- Notatnik zamiast ołówka -->
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
           <rect x="5" y="4" width="14" height="16" rx="2.5" stroke="currentColor" stroke-width="2"/>
           <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
@@ -579,10 +595,13 @@
         <div class="field">
           <div class="label">Kolor listy</div>
           <div class="swatch-grid" id="managePalette"></div>
+        </div>
+        <div class="field">
+          <div class="label">Ikonka (opcjonalnie)</div>
+          <div class="icon-grid" id="manageIconGrid"></div>
           <div class="row">
-            <button class="btn" type="button" id="suggestColorsBtn">Losuj z palety</button>
+            <button class="btn" type="button" id="manageClearIcon">Bez ikonki</button>
           </div>
-          <div class="hint">10 gotowych kolorów – łatwy wybór</div>
         </div>
       </div>
       <div class="dlg-foot" style="justify-content: space-between">
@@ -611,8 +630,12 @@
         <div class="field">
           <div class="label">Kolor</div>
           <div class="swatch-grid" id="newListPalette"></div>
+        </div>
+        <div class="field">
+          <div class="label">Ikonka (opcjonalnie)</div>
+          <div class="icon-grid" id="newListIconGrid"></div>
           <div class="row">
-            <button class="btn" type="button" id="newListRandom">Losuj z palety</button>
+            <button class="btn" type="button" id="newListClearIcon">Bez ikonki</button>
           </div>
         </div>
       </div>
@@ -684,6 +707,7 @@
   const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
 
   const PALETTE10 = ['#4a90e2','#E86B27','#2ecc71','#9b59b6','#e74c3c','#f39c12','#16a085','#d35400','#27ae60','#8e44ad'];
+  const ICONS = ['🛒','🍎','🥦','📦','🏠','🎁','🧹','💡','📚','💼','⚽️','🎵','🍽️','🧪','🎯'];
   const NAME_MAX = 40;
 
   const state = {
@@ -696,9 +720,19 @@
 
   function uid(prefix='id'){ return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`; }
   function defaultData(){
-    const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', items: [] };
-    const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', items: [] };
+    const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', icon: '', items: [] };
+    const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', icon: '', items: [] };
     return { lists: [list1, list2], settings: { dark:false, hideCompleted:false, vibrate:true }, currentListId: list1.id, lastActiveListId: list1.id, editMode: false };
+  }
+  function migrateData(){
+    // Uzupełnij brakujące pola (np. icon, completedAt)
+    state.lists.forEach(l=>{
+      if(typeof l.icon !== 'string') l.icon = '';
+      if(!Array.isArray(l.items)) l.items = [];
+      l.items.forEach(it=>{
+        if(typeof it.completedAt === 'undefined') it.completedAt = it.done ? Date.now() : null;
+      });
+    });
   }
   function save(){
     localStorage.setItem(LS_KEY, JSON.stringify({
@@ -808,6 +842,16 @@
     el('listDot').style.background = accent;
     el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
 
+    // Ikonka w nagłówku
+    const iconEl = el('currentListIcon');
+    if(!isCompletedView && cl?.icon){
+      iconEl.textContent = cl.icon;
+      iconEl.hidden = false;
+    }else{
+      iconEl.hidden = true;
+      iconEl.textContent = '';
+    }
+
     el('addBtn').classList.toggle('disabled', isCompletedView);
     el('quickAddBtn').classList.toggle('disabled', isCompletedView);
     if(isCompletedView) closeQuick();
@@ -819,7 +863,6 @@
     el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
     el('vibrateToggle').checked = !!state.settings.vibrate;
 
-    // podświetlenie notatnika w trybie edycji
     el('editModeBtn').classList.toggle('active', !!state.editMode);
   }
 
@@ -836,6 +879,7 @@
           <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </span>
         <span class="color-dot" style="background:${l.color}"></span>
+        ${l.icon ? `<span class="list-icon" aria-hidden="true">${escapeHtml(l.icon)}</span>` : ''}
         <span class="name">${escapeHtml(l.name)}</span>
         <span class="pill">${l.items.filter(i=>!i.done).length}</span>
         <span class="tick" aria-hidden="true">
@@ -1155,12 +1199,16 @@
     if(!cl){ const l = listById(state.lastActiveListId) || state.lists[0]; state.currentListId = l.id; cl = l; }
     el('manageListName').value = (cl.name || '').slice(0, NAME_MAX);
     renderPalette(el('managePalette'), cl.color);
+    renderIconGrid(el('manageIconGrid'), cl.icon || '');
+    el('manageClearIcon').onclick = ()=> { $$('.icon-chip', el('manageIconGrid')).forEach(x=>x.classList.remove('selected')); };
     el('manageDialog').showModal();
     setTimeout(()=> el('manageListName').focus(), 0);
   }
   function openNewList(){
     el('newListName').value = '';
     renderPalette(el('newListPalette'), PALETTE10[0]);
+    renderIconGrid(el('newListIconGrid'), '');
+    el('newListClearIcon').onclick = ()=> { $$('.icon-chip', el('newListIconGrid')).forEach(x=>x.classList.remove('selected')); };
     el('newListDialog').showModal();
     setTimeout(()=> el('newListName').focus(), 0);
   }
@@ -1175,9 +1223,24 @@
     });
   }
   function getSelectedPaletteColor(container){ const s = $('.swatch.selected', container); return s ? s.dataset.color : PALETTE10[0]; }
-  function selectRandomPalette(container){ const idx = Math.floor(Math.random()*PALETTE10.length); $$('.swatch', container).forEach((x,i)=> x.classList.toggle('selected', i===idx)); }
-  el('suggestColorsBtn').addEventListener('click', ()=> selectRandomPalette(el('managePalette')));
-  el('newListRandom').addEventListener('click', ()=> selectRandomPalette(el('newListPalette')));
+
+  function renderIconGrid(container, current=''){
+    container.innerHTML = '';
+    ICONS.forEach(ico=>{
+      const b = document.createElement('button');
+      b.type='button'; b.className='icon-chip' + (ico===current ? ' selected':'');
+      b.textContent = ico;
+      b.addEventListener('click', ()=>{
+        $$('.icon-chip', container).forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+      });
+      container.appendChild(b);
+    });
+  }
+  function getSelectedIcon(container){
+    const sel = $('.icon-chip.selected', container);
+    return sel ? sel.textContent : '';
+  }
 
   el('manageForm').addEventListener('submit', (e)=>{
     e.preventDefault();
@@ -1185,6 +1248,7 @@
     const newName = el('manageListName').value.trim().slice(0, NAME_MAX);
     if(newName) cl.name = newName;
     cl.color = getSelectedPaletteColor(el('managePalette')) || cl.color;
+    cl.icon = getSelectedIcon(el('manageIconGrid')) || '';
     el('manageDialog').close(); save(); render();
   });
   el('manageClose').addEventListener('click', ()=> el('manageDialog').close());
@@ -1238,6 +1302,21 @@
     save(); render();
   }
 
+  // New list create
+  el('newListForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = el('newListName').value.trim().slice(0, NAME_MAX);
+    if(!name) return;
+    const color = getSelectedPaletteColor(el('newListPalette'));
+    const icon = getSelectedIcon(el('newListIconGrid')) || '';
+    const list = { id: uid('list'), name, color, icon, items: [] };
+    state.lists.push(list);
+    state.currentListId = list.id; state.lastActiveListId = list.id;
+    el('newListDialog').close(); save(); render();
+  });
+  el('newListClose').addEventListener('click', ()=> el('newListDialog').close());
+  el('newListCancel').addEventListener('click', ()=> el('newListDialog').close());
+
   // Settings
   el('settingsBtn').addEventListener('click', ()=> el('settingsDialog').showModal());
   el('closeSettings').addEventListener('click', ()=> el('settingsDialog').close());
@@ -1252,7 +1331,7 @@
       const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
       const cb = document.createElement('input'); cb.type='checkbox'; cb.value = l.id; if(state.currentListId === l.id) cb.checked = true;
       const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
-      const name = document.createElement('span'); name.textContent = l.name;
+      const name = document.createElement('span'); name.textContent = (l.icon ? `${l.icon} ` : '') + l.name;
       label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
     });
     const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
@@ -1271,7 +1350,6 @@
     const includeDate = el('printDateToggle').checked;
     const html = buildPrintHTML(ids, includeDate);
     el('printDialog').close();
-    // Stabilniejszy druk – przez iframe
     try{ printUsingFrame(html); }catch(e){ printUsingBlobWindow(html); }
   });
   function buildPrintHTML(ids, includeDate){
@@ -1282,6 +1360,7 @@
       .pa-list { margin-bottom:16px; page-break-inside: avoid; }
       h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
       .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
+      .pa-icon{ font-size:18px; line-height:1; }
       ul{ margin: 0 0 8px 18px; padding:0; }
       li{ margin:4px 0; }
       .done{ text-decoration: line-through; color:#777; }
@@ -1303,7 +1382,8 @@
         body += `</div>`;
       }else{
         const list = listById(id); if(!list) return;
-        body += `<div class="pa-list"><h2><span class="pa-dot" style="background:${list.color}"></span>${escapeHtml(list.name)}</h2>`;
+        const iconSpan = list.icon ? `<span class="pa-icon">${escapeHtml(list.icon)}</span>` : '';
+        body += `<div class="pa-list"><h2><span class="pa-dot" style="background:${list.color}"></span>${iconSpan}<span>${escapeHtml(list.name)}</span></h2>`;
         const undone = list.items.filter(i=>!i.done);
         const done = list.items.filter(i=>i.done);
         if(undone.length===0 && done.length===0){ body += `<div>Brak pozycji.</div>`; }
@@ -1316,7 +1396,6 @@
     });
     return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
   }
-  // Druk przez ukryty iframe – działa w Chrome/Firefox/Safari, także mobilnie
   function printUsingFrame(html){
     const frame = document.createElement('iframe');
     frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
@@ -1336,10 +1415,9 @@
     }else{
       const doc = frame.contentWindow.document;
       doc.open(); doc.write(html); doc.close();
-      setTimeout(done, 120); // krótka pauza na layout
+      setTimeout(done, 120);
     }
   }
-  // Fallback – okno z Blobem (gdyby iframe był blokowany)
   function printUsingBlobWindow(html){
     try{
       const blob = new Blob([html], {type:'text/html'});
@@ -1362,7 +1440,7 @@
       const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
       const cb = document.createElement('input'); cb.type='checkbox'; cb.value=l.id; if(state.currentListId === l.id) cb.checked = true;
       const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
-      const name = document.createElement('span'); name.textContent = l.name;
+      const name = document.createElement('span'); name.textContent = (l.icon ? `${l.icon} ` : '') + l.name;
       label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
     });
     const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
@@ -1414,7 +1492,7 @@
         lines.push(`\nZakończone:`); if(allDone.length===0){ lines.push(`- (brak)`); } else allDone.forEach(it=> lines.push(`- ${it.text} (z listy: ${it.from})`));
       }else{
         const list = listById(id); if(!list) return;
-        lines.push(`\n${list.name}:`);
+        lines.push(`\n${list.icon ? list.icon + ' ' : ''}${list.name}:`);
         const undone = list.items.filter(i=>!i.done), done = list.items.filter(i=>i.done);
         if(undone.length===0 && done.length===0){ lines.push(`- (brak)`); }
         else{
@@ -1448,7 +1526,7 @@
   });
 
   // Init
-  load(); setTheme(state.settings.dark);
+  load(); migrateData(); setTheme(state.settings.dark);
   if(state.currentListId !== '__completed__' && !listById(state.currentListId)){
     state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
   }

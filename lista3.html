@@ -58,6 +58,7 @@
   .app-header{
     position:sticky; top:0; z-index:20; height:var(--header-h);
     backdrop-filter: blur(8px);
+    background: var(--bg); /* fallback */
     background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 12%, var(--bg)) 0%, var(--bg) 70%);
     border-bottom: 1px solid var(--border);
     display:flex; align-items:center; padding:0 16px;
@@ -460,6 +461,20 @@
 :root[data-neon-buttons="off"] .btn::after{
   content: none !important;
 }
+
+/* Podgląd w oknie Wygląd */
+#appearancePreview{
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--card); /* fallback */
+  background: color-mix(in oklab, var(--card) 92%, var(--accent) 8%);
+  border: 1px solid var(--border);
+}
+#appearancePreview .handle,
+#appearancePreview .actions { display: none !important; }
+#appearancePreview input[type="checkbox"] { pointer-events: none; }
 </style>
 </head>
 <body>
@@ -764,6 +779,13 @@
         <button class="btn" type="button" id="appearanceClose">Zamknij</button>
       </div>
       <div class="dlg-body">
+
+        <!-- Podgląd (live) -->
+        <div class="field">
+          <div class="label">Podgląd</div>
+          <div id="appearancePreview" class="list"></div>
+        </div>
+
         <div class="field">
           <div class="label">Styl obrysu elementów</div>
           <div class="row wrap" role="radiogroup" aria-label="Styl obrysu">
@@ -1029,6 +1051,7 @@
     el('vibrateToggle').checked = !!state.settings.vibrate;
 
     el('editModeBtn').classList.toggle('active', !!state.editMode);
+    el('editModeBtn').setAttribute('aria-pressed', state.editMode ? 'true' : 'false'); // poprawka
   }
 
   function renderListMenu(){
@@ -1056,6 +1079,7 @@
       btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
 
       btn.addEventListener('click', ()=>{
+        state.editMode = false; // wyłącz edycję przy zmianie listy
         state.currentListId = l.id;
         state.lastActiveListId = l.id;
         closeMenu(); save(); render();
@@ -1354,7 +1378,11 @@
   document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
 
   // Menu actions
-  el('completedViewBtn').addEventListener('click', ()=>{ state.currentListId='__completed__'; closeQuick(); closeMenu(); save(); render(); });
+  el('completedViewBtn').addEventListener('click', ()=>{
+    state.editMode = false; // wyłącz edycję przy wejściu w Zakończone
+    state.currentListId='__completed__';
+    closeQuick(); closeMenu(); save(); render();
+  });
   el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
   el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
 
@@ -1500,6 +1528,7 @@
   });
 
   function openAppearance(){
+    ensureAppearancePreview(); // podgląd
     fillAppearanceForm();
     el('appearanceDialog').showModal();
   }
@@ -1749,9 +1778,10 @@
   }
 
   // Edit toggle
-  el('editModeBtn').addEventListener('click', ()=>{
+  el('editModeBtn').addEventListener('click', (e)=>{
     if(state.currentListId === '__completed__'){ alert('Tryb edycji jest dostępny w konkretnej liście.'); return; }
     state.editMode = !state.editMode; render();
+    if(!state.editMode){ e.currentTarget.blur(); } // usuń świecenie po wyłączeniu
   });
 
   // Close dialogs on backdrop click
@@ -1762,6 +1792,41 @@
       if(!inDialog){ d.close(); }
     });
   });
+
+  // Appearance preview (live)
+  function ensureAppearancePreview(){
+    const cont = el('appearancePreview');
+    if(!cont || cont.dataset.ready) return;
+    cont.dataset.ready = '1';
+    cont.innerHTML = '';
+
+    const makeItem = (done, text, sub='')=>{
+      const li = document.createElement('div');
+      li.className = 'item' + (done ? ' done' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!done;
+      cb.disabled = true;
+      const texts = document.createElement('div');
+      texts.className = 'texts';
+      const t = document.createElement('div');
+      t.className = 'text';
+      t.textContent = text;
+      texts.appendChild(t);
+      if(sub){
+        const s = document.createElement('div');
+        s.className = 'sub';
+        s.textContent = sub;
+        texts.appendChild(s);
+      }
+      li.appendChild(cb);
+      li.appendChild(texts);
+      return li;
+    };
+
+    cont.appendChild(makeItem(false, 'mleko', 'przykład'));
+    cont.appendChild(makeItem(true, 'chleb (ukończone)'));
+  }
 
   // Init
   load(); migrateData(); setTheme(state.settings.dark); applyAppearance();

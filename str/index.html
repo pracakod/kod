@@ -1,0 +1,2132 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Lista • Zadania i Zakupy</title>
+<meta name="color-scheme" content="light dark" />
+<style>
+  :root{
+    --bg: #f6f7fb;
+    --text: #111318;
+    --muted: #566074;
+    --card: #ffffff;
+    --border: #e6e8f0;
+    --accent: #4a90e2;
+    --accent-soft: rgba(74,144,226,0.12);
+    --shadow: 0 8px 24px rgba(17,19,24,0.08);
+    --shadow-soft: 0 4px 12px rgba(17,19,24,0.06);
+    --radius: 16px;
+    --header-h: 64px;
+    --nav-h: 72px;
+    --safe-bottom: env(safe-area-inset-bottom);
+    --safe-top: env(safe-area-inset-top);
+    --focus: 0 0 0 3px rgba(74,144,226,0.3);
+    --danger: #d53b3b;
+
+    /* Neon gradient – nadpisywane dynamicznie w JS na bazie --accent */
+    --neo1: #4ab0ff; /* fallback */
+    --neo2: #a14ae2; /* fallback */
+
+    /* Wygląd – domyślne wartości */
+    --ring-blur: 8px;
+    --ring-pad: 1px;
+    --item-radius: 18px;
+    --item-shadow-opa: 0.06;
+  }
+  [data-theme="dark"]{
+    --bg: #0c0f14;
+    --text: #e6e8ef;
+    --muted: #9aa3b2;
+    --card: #161a22;
+    --border: #232938;
+    --shadow: 0 8px 24px rgba(0,0,0,0.45);
+    --shadow-soft: 0 4px 12px rgba(0,0,0,0.35);
+    --accent-soft: color-mix(in oklab, var(--accent) 15%, transparent);
+  }
+  *{box-sizing: border-box}
+  html,body{height:100%}
+  body{
+    margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+    background: var(--bg); color: var(--text); -webkit-tap-highlight-color: transparent;
+  }
+  button,input,select{font-family:inherit; color:inherit}
+
+  .app{ min-height:100dvh; display:flex; flex-direction:column; padding-top:var(--safe-top); }
+
+  /* Header */
+  .app-header{
+    position:sticky; top:0; z-index:20; height:var(--header-h);
+    backdrop-filter: blur(8px);
+    background: var(--bg); /* fallback */
+    background: linear-gradient(180deg, color-mix(in oklab, var(--accent) 12%, var(--bg)) 0%, var(--bg) 70%);
+    border-bottom: 1px solid var(--border);
+    display:flex; align-items:center; padding:0 16px;
+  }
+  .title-button{
+    display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:12px;
+    background: var(--card); box-shadow: var(--shadow-soft); border:1px solid var(--border);
+    cursor:pointer; user-select:none;
+  }
+  .title-button:active{transform:scale(0.98)}
+  .dot{ width:10px; height:10px; border-radius:50%; background:var(--accent); box-shadow:0 0 0 3px var(--accent-soft) }
+  .list-icon{ font-size:16px; line-height:1; }
+  .title-text{font-weight:600}
+  .caret{width:16px; height:16px; opacity:0.7}
+
+  /* Dropdown */
+  .dropdown{
+    position:absolute; top: calc(var(--header-h) - 6px); left:12px; right:12px;
+    background: var(--card); border:1px solid var(--border); border-radius:18px;
+    box-shadow: var(--shadow); padding:8px; display:none; max-height:60dvh; overflow:auto;
+  }
+  .dropdown.open{display:block; animation: pop 160ms ease-out}
+  @keyframes pop{from{transform:translateY(-8px); opacity:0} to{transform:translateY(0); opacity:1}}
+
+  .menu-sec-title{font-size:12px; color:var(--muted); padding:6px 10px}
+  .menu-item{
+    display:flex; align-items:center; gap:10px; width:100%; border:0; background:transparent;
+    padding:10px; border-radius:12px; cursor:pointer; user-select:none;
+  }
+  .menu-item:hover{background: color-mix(in oklab, var(--card) 92%, var(--accent) 8%)}
+  .menu-item .name{flex:1; text-align:left}
+  .pill{background: var(--accent-soft); color: var(--accent); border-radius:999px; font-size:12px; padding:2px 8px}
+  .color-dot{width:10px; height:10px; border-radius:50%}
+  .grip{opacity:.5; display:grid; place-items:center; cursor:grab}
+  .menu-item.drag-over{outline:2px dashed var(--accent); outline-offset:2px}
+
+  /* Active item highlight */
+  .menu-item.is-active{
+    background: color-mix(in oklab, var(--card) 85%, var(--accent) 15%);
+    outline: 2px solid var(--accent);
+  }
+  .tick{display:none}
+  .menu-item.is-active .tick{display:block}
+
+  /* Main content */
+  main{flex:1; padding:12px 12px calc(var(--nav-h) + var(--safe-bottom) + 12px); max-width:900px; width:100%; margin:0 auto}
+  .list{ display:grid; gap:8px; }
+  .empty{ color:var(--muted); text-align:center; margin-top:18vh; font-size:15px; }
+
+  /* Item */
+  .item{
+    display:flex; align-items:center; gap:12px; background: var(--card); border:1px solid var(--border);
+    padding:12px; border-radius:14px; box-shadow: var(--shadow-soft);
+    transition: transform .15s ease, background .2s ease, opacity .2s ease;
+  }
+  .item.new{animation: slideIn .18s ease-out}
+  @keyframes slideIn{from{transform:translateY(8px); opacity:.0} to{transform:translateY(0); opacity:1}}
+  .item:active{transform:scale(0.995)}
+
+  /* Bright custom checkboxes in list items */
+  .item input[type="checkbox"]{
+    -webkit-appearance:none; appearance:none;
+    width:22px; height:22px; border-radius:6px; flex-shrink:0;
+    border:2px solid var(--border); background: var(--card);
+    display:grid; place-items:center; transition: background .15s, border-color .15s, transform .1s;
+  }
+  .item input[type="checkbox"]:active{ transform: scale(0.96) }
+  .item input[type="checkbox"]:checked{
+    background: var(--accent); border-color: var(--accent);
+  }
+  .item input[type="checkbox"]:checked::after{
+    content:''; width:10px; height:6px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg); margin-top:-1px;
+  }
+
+  .item .texts{display:flex; flex-direction:column; gap:4px; flex:1; min-width:0}
+  .item .text{ font-size:16px; line-height:1.35; word-break:break-word; transition: color .2s ease; }
+  .item.done .text{color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1.5px}
+  .sub{color: var(--muted); font-size:12px}
+
+  /* Edit mode */
+  .edit-on .item input[type="checkbox"]{display:none}
+  .edit-on .item .text{border:1px dashed transparent; border-radius:8px; padding:4px 6px}
+  .edit-on .item .text[contenteditable="true"]:focus{border-color: var(--accent); outline:none; box-shadow: var(--focus)}
+  .item .handle{ display:none; width:24px; height:24px; opacity:.55; flex-shrink:0; cursor:grab; }
+  .edit-on .item .handle{display:block}
+  .item .actions{display:none; gap:6px; align-items:center}
+  .edit-on .item .actions{display:flex}
+  .i-btn{ width:34px; height:34px; display:grid; place-items:center; border-radius:10px; border:1px solid var(--border); background: var(--card); }
+  .i-btn:active{transform:scale(0.96)}
+  .i-btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
+  .item.drag-over{ outline:2px dashed var(--accent); outline-offset:2px; }
+  .item.dragging{ opacity:.98; box-shadow: 0 12px 28px rgba(0,0,0,.18); transform: scale(1.01); }
+  .placeholder{ border:2px dashed var(--border) !important; background: color-mix(in oklab, var(--card) 80%, var(--accent) 20%) !important; }
+
+  /* Bottom nav */
+  .bottom-nav{
+    position:fixed; left:0; right:0; bottom:0; height: calc(var(--nav-h) + var(--safe-bottom));
+    padding-bottom: var(--safe-bottom);
+    background: var(--card); border-top:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; padding:0 16px; z-index:25;
+    gap:12px;
+  }
+  .nav-left, .nav-right{display:flex; gap:10px; align-items:center}
+  .icon-btn{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--border); background:var(--card); display:grid; place-items:center;
+    box-shadow: var(--shadow-soft);
+  }
+  .icon-btn:active{transform:scale(0.96)}
+  .icon-btn.active{outline:2px solid var(--accent); outline-offset:2px}
+  .fab{
+    position:absolute; left:50%; transform: translateX(-50%) translateY(-16%);
+    width:56px; height:56px; border-radius:50%;
+    border:0; background: linear-gradient(135deg, var(--accent), color-mix(in oklab, var(--accent) 60%, #fff));
+    color:#fff; display:grid; place-items:center; box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+  .fab:active{transform: translateX(-50%) translateY(-16%) scale(0.97)}
+  .disabled, .icon-btn[disabled], .btn[disabled]{opacity:.45; pointer-events:none; filter: grayscale(.1);}
+
+  /* Quick add */
+  .quick-add{
+    position: fixed; left:12px; right:12px; bottom: calc(var(--nav-h) + var(--safe-bottom) + 10px);
+    background: var(--card); border:1px solid var(--border); border-radius:14px; box-shadow: var(--shadow);
+    display:none; padding:8px; gap:8px; align-items:center;
+  }
+  .quick-add.open{display:flex; animation: pop .12s ease-out}
+  .quick-add input{ flex:1; border:0; background:transparent; outline:none; padding:10px; border-radius:10px; }
+
+  /* Dialogs */
+  dialog{ border:0; border-radius:18px; padding:0; background: var(--card); color: var(--text); width:min(520px, 92vw); box-shadow: var(--shadow); }
+  dialog::backdrop{background: rgba(10,12,16,0.45); backdrop-filter: blur(3px)}
+  .dlg-head{padding:16px 18px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
+  .dlg-title{font-weight:700}
+  .dlg-body{padding:14px 18px; display:grid; gap:12px}
+  .field{display:grid; gap:6px}
+  .label{font-size:13px; color:var(--muted)}
+  input[type="text"], select{ width:100%; border:1px solid var(--border); background: var(--card); color: var(--text); border-radius:12px; padding:12px; outline:none; }
+  .row{display:flex; gap:10px; align-items:center}
+  .row.wrap{flex-wrap:wrap}
+  .grow{flex:1}
+
+  /* Switch (tylko suwaczek) */
+  .switch{
+    position:relative; width:48px; height:28px; background: var(--border);
+    border-radius:999px; border:1px solid var(--border); display:inline-block;
+  }
+  .switch input{
+    position:absolute; inset:0; width:100%; height:100%; margin:0;
+    opacity:0; cursor:pointer; z-index:2;
+  }
+  .switch .knob{
+    position:absolute; top:50%; left:4px; transform:translateY(-50%);
+    width:20px; height:20px; border-radius:50%; background:#fff; box-shadow: var(--shadow-soft);
+    transition: left .18s ease, background .18s ease;
+    z-index:1;
+  }
+  .switch input:checked + .knob{ left:24px; background: var(--accent)}
+
+  .dlg-foot{display:flex; gap:10px; justify-content:flex-end; padding:14px 18px; border-top:1px solid var(--border)}
+  .btn{ padding:10px 14px; border-radius:12px; border:1px solid var(--border); background:var(--card); cursor:pointer; }
+  .btn.primary{ background: var(--accent); border-color: transparent; color:#fff; }
+  .btn.danger{color: var(--danger); border-color: color-mix(in oklab, var(--danger) 30%, var(--border)); background: color-mix(in oklab, var(--danger) 10%, var(--card))}
+  .hint{font-size:12px; color:var(--muted)}
+
+  /* Light checkboxes in dialogs */
+  dialog input[type="checkbox"]:not(.switch input){
+    -webkit-appearance:none; appearance:none;
+    width:18px; height:18px; border-radius:4px; border:2px solid var(--border); background: var(--card);
+    display:inline-grid; place-items:center; vertical-align:middle; margin:0;
+  }
+  dialog input[type="checkbox"]:not(.switch input):checked{
+    background: var(--accent); border-color: var(--accent);
+  }
+  dialog input[type="checkbox"]:not(.switch input):checked::after{
+    content:''; width:8px; height:5px; border-left:2px solid #fff; border-bottom:2px solid #fff; transform: rotate(-45deg);
+  }
+
+  /* Color palette */
+  .swatch-grid{display:grid; grid-template-columns: repeat(10, 1fr); gap:8px}
+  .swatch{ width:28px; height:28px; border-radius:999px; border:2px solid #fff; box-shadow: 0 0 0 2px var(--border); cursor:pointer; }
+  .swatch.selected{box-shadow: 0 0 0 2px var(--accent)}
+
+  /* Ikonki */
+  .icon-grid{ display:grid; grid-template-columns: repeat(auto-fill, minmax(36px, 1fr)); gap:8px }
+  .icon-chip{
+    width:36px; height:36px; display:grid; place-items:center; border-radius:10px;
+    border:1px solid var(--border); background:var(--card); cursor:pointer; font-size:18px;
+  }
+  .icon-chip.selected{ outline:2px solid var(--accent) }
+
+  /* Ukryj UI przy systemowym druku (Ctrl+P) */
+  @media print {
+    .app-header, .bottom-nav, .dropdown, dialog, .quick-add { display: none !important; }
+    main { padding: 0 !important; }
+    body { background: #fff !important; }
+  }
+</style>
+
+<!-- NOWOCZESNY NEON/GLOW STYL – dynamicznie pod kolor listy (delikatniejszy) -->
+<style>
+:root{
+  --ring-blur: 8px;  /* delikatniejsza poświata */
+  --ring-pad: 1px;
+  --item-radius: 18px;
+  --item-shadow-opa: 0.06;
+}
+
+/* Globalne wygładzanie */
+@media (prefers-reduced-motion: no-preference){
+  .icon-btn, .btn, .fab, .item, .title-button, .dropdown {
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .18s ease, opacity .2s ease;
+  }
+}
+
+/* Header */
+.app-header{
+  backdrop-filter: blur(10px);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--accent) 14%, var(--bg)) 0%, var(--bg) 72%);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
+}
+
+/* Tytuł z neonowym ringiem – mniej glow */
+.title-button{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation: isolate;
+}
+.title-button::before{
+  content:'';
+  position:absolute; inset:0; border-radius:12px;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.title-button::after{
+  content:'';
+  position:absolute; inset:-2px; border-radius:14px;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(10px);
+  opacity: 0; transition: opacity .3s ease;
+  z-index:-1;
+}
+.title-button:hover::after{ opacity:.45; }
+
+/* Wyłączenie neonu w title-button gdy neon w przyciskach wyłączony */
+:root[data-neon-buttons="off"] .title-button{
+  border:1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+:root[data-neon-buttons="off"] .title-button::before,
+:root[data-neon-buttons="off"] .title-button::after{
+  content: none !important;
+}
+
+/* Dropdown – pływająca karta z lekkim neonem */
+.dropdown{
+  box-shadow: 0 10px 28px rgba(0,0,0,.20), 0 0 0 1px color-mix(in oklab, var(--border) 75%, var(--accent) 25%);
+  border-radius: 18px;
+}
+
+/* Item – neonowa ramka dopasowana do akcentu (cieniej) */
+.item{
+  position:relative;
+  border: none !important;
+  background: transparent !important;
+  border-radius: var(--item-radius) !important;
+  padding: 12px;
+  filter: drop-shadow(0px 6px 16px rgba(17,19,24,0.08));
+}
+.item::before{
+  content:'';
+  position:absolute; inset:0; border-radius: var(--item-radius);
+  padding: var(--ring-pad);
+  background: linear-gradient(137deg, var(--neo1) 0%, var(--neo2) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none; z-index:0;
+}
+.item::after{
+  content:'';
+  position:absolute; inset:2px; border-radius: calc(var(--item-radius) - 2px);
+  background: var(--card);
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa));
+  z-index:0; pointer-events:none;
+}
+.item > * { position:relative; z-index:1 }
+.item:hover{
+  filter: drop-shadow(0px 0px 18px color-mix(in oklab, var(--accent) 18%, transparent));
+}
+
+/* Checkbox – sprężysty */
+.item input[type="checkbox"]{
+  width:24px; height:24px; border-radius:8px;
+  transition: background .15s, border-color .15s, transform .12s ease;
+}
+.item input[type="checkbox"]:active{ transform: scale(0.9) }
+
+/* Płynne zwijanie/pojawianie */
+.item.anim-hide{
+  overflow:hidden;
+  transition: height .45s cubic-bezier(.4, 0, .2, 1), margin .45s cubic-bezier(.4, 0, .2, 1), opacity .45s ease-out;
+}
+
+/* Płynniejsze przesuwanie przy zmianie kolejności */
+.item.moving{
+  transition: transform 650ms cubic-bezier(.34, .46, .3, .97) !important;
+}
+
+/* Dodatkowa animacja dla checkboxa */
+.item input[type="checkbox"]{
+  width:24px; height:24px; border-radius:8px;
+  transition: background .2s cubic-bezier(.4, 0, .2, 1), border-color .2s cubic-bezier(.4, 0, .2, 1), transform .15s cubic-bezier(.34, 1.56, .64, 1);
+}
+.item input[type="checkbox"]:active{ transform: scale(0.88) }
+
+/* Ikonowe przyciski i btn – neonowy ring, jasno i subtelnie */
+.icon-btn, .btn{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation:isolate;
+}
+.icon-btn::before, .btn::before{
+  content:'';
+  position:absolute; inset:0; border-radius: inherit;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.icon-btn::after, .btn::after{
+  content:''; position:absolute; inset:-2px; border-radius: inherit;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(var(--ring-blur));
+  opacity: 0; transition: opacity .3s ease; z-index:-1;
+}
+.icon-btn:hover::after, .btn:hover::after{ opacity:.45; }
+.icon-btn.active{ box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent) }
+
+/* Primary – pełny gradient z akcentu */
+.btn.primary{
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  color:#fff;
+  border: none;
+}
+
+/* FAB – gradient z akcentu (mniej "dymu") */
+.fab{
+  border: none;
+  background: linear-gradient(137deg, var(--neo1), var(--neo2));
+  box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 22%, transparent);
+  color:#fff;
+}
+.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.01) }
+
+/* Szybki add – neonowy chip (cieniej) */
+.quick-add{
+  border: none; position: fixed;
+  box-shadow: 0 10px 28px rgba(0,0,0,.20);
+}
+.quick-add::before{
+  content:''; position:absolute; inset:0; border-radius:14px; padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+}
+
+/* Dark theme – już ok dzięki var(--card) */
+[data-theme="dark"] .icon-btn, [data-theme="dark"] .btn{ background:#0e1118; color:#fff; }
+
+/* Na wszelki wypadek */
+@media (prefers-reduced-motion: reduce){
+  .item, .icon-btn, .btn, .fab, .title-button { transition: none !important; }
+}
+
+/* ========= Tryby wyglądu (obrys elementów) ========= */
+
+/* Klasyczny obrys (bez neonu) */
+:root[data-item-outline="border"] .item{
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa)) !important;
+  filter: none !important;
+}
+:root[data-item-outline="border"] .item::before,
+:root[data-item-outline="border"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="border"] .item:hover{ filter: none !important; }
+
+/* Brak obrysu (minimal) */
+:root[data-item-outline="none"] .item{
+  border: 0 !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+:root[data-item-outline="none"] .item::before,
+:root[data-item-outline="none"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="none"] .item:hover{ filter: none !important; }
+
+/* Neon w przyciskach – możliwość wyłączenia */
+:root[data-neon-buttons="off"] .icon-btn,
+:root[data-neon-buttons="off"] .btn{
+  border:1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+:root[data-neon-buttons="off"] .icon-btn::before,
+:root[data-neon-buttons="off"] .icon-btn::after,
+:root[data-neon-buttons="off"] .btn::before,
+:root[data-neon-buttons="off"] .btn::after{
+  content: none !important;
+}
+
+/* Kontrola stylu quick-add przez ustawienie obrysu elementów */
+:root[data-item-outline="border"] .quick-add,
+:root[data-item-outline="none"] .quick-add{
+  border: 1px solid var(--border) !important;
+  box-shadow: var(--shadow) !important;
+}
+:root[data-item-outline="border"] .quick-add::before,
+:root[data-item-outline="none"] .quick-add::before{
+  content: none !important;
+}
+
+/* Podgląd w oknie Wygląd */
+#appearancePreview{
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--card); /* fallback */
+  background: color-mix(in oklab, var(--card) 92%, var(--accent) 8%);
+  border: 1px solid var(--border);
+}
+#appearancePreview .handle,
+#appearancePreview .actions { display: none !important; }
+#appearancePreview input[type="checkbox"] { pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <header class="app-header">
+    <button class="title-button" id="openMenuBtn" aria-haspopup="true" aria-expanded="false" aria-label="Otwórz menu list">
+      <span class="dot" id="listDot"></span>
+      <span class="list-icon" id="currentListIcon" hidden></span>
+      <span class="title-text" id="currentListName">Moja lista</span>
+      <svg class="caret" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </button>
+
+    <div class="dropdown" id="listMenu" role="menu" aria-label="Wybierz listę">
+      <div class="menu-sec">
+        <div class="menu-sec-title">Moje listy <span class="hint">• przeciągaj aby zmienić kolejność</span></div>
+        <div id="listMenuItems"></div>
+      </div>
+      <div class="menu-sec">
+        <div class="menu-sec-title">Inne</div>
+        <button class="menu-item" id="completedViewBtn" aria-label="Zobacz zakończone pozycje">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M20 12a8 8 0 11-16 0 8 8 0 0116 0z" stroke="currentColor" stroke-width="2"/>
+            <path d="M9 12l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span class="name">Zakończone</span>
+          <span class="tick" aria-hidden="true">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </span>
+        </button>
+      </div>
+      <div class="menu-sec">
+        <button class="menu-item" id="manageListBtn" aria-label="Zarządzaj bieżącą listą">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="2"/>
+            <path d="M19.5 12a7.5 7.5 0 10-15 0 7.5 7.5 0 0015 0z" stroke="currentColor" stroke-width="1.4" opacity=".4"/>
+          </svg>
+          <span class="name">Zarządzaj listą</span>
+        </button>
+        <button class="menu-item" id="addListBtn" aria-label="Utwórz nową listę">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <span class="name">Nowa lista</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div id="listContainer" class="list"></div>
+    <div id="emptyState" class="empty" hidden>Brak pozycji.</div>
+  </main>
+
+  <nav class="bottom-nav" aria-label="Nawigacja główna">
+    <div class="nav-left">
+      <button class="icon-btn" id="quickAddBtn" aria-label="Szybkie dodanie">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+    </div>
+
+    <button class="fab" id="addBtn" aria-label="Dodaj nową pozycję">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div class="nav-right">
+      <button class="icon-btn" id="editModeBtn" aria-label="Tryb edycji" aria-pressed="false">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <rect x="5" y="4" width="14" height="16" rx="2.5" stroke="currentColor" stroke-width="2"/>
+          <path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Ustawienia">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="5.5" r="1.8" fill="currentColor"/>
+          <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+          <circle cx="12" cy="18.5" r="1.8" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </nav>
+
+  <div class="quick-add" id="quickAdd" role="dialog" aria-label="Szybkie dodanie">
+    <input id="quickAddInput" type="text" placeholder="Dodaj do bieżącej listy." autocomplete="off" aria-label="Treść pozycji" />
+    <button class="i-btn" id="quickAddSubmit" aria-label="Dodaj">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <button class="i-btn" id="quickAddClose" aria-label="Zwiń">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <!-- Add item dialog -->
+  <dialog id="addDialog" aria-labelledby="addDialogTitle">
+    <form id="addForm">
+      <div class="dlg-head">
+        <div class="dlg-title" id="addDialogTitle">Dodaj pozycję</div>
+        <button class="btn" type="button" id="addDlgClose" aria-label="Zamknij">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <label class="label" for="addText">Treść</label>
+          <input type="text" id="addText" placeholder="np. Kupić mleko" required />
+        </div>
+        <div class="field">
+          <label class="label" for="addListSelect">Dodaj do listy</label>
+          <select id="addListSelect"></select>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="addDlgCancel">Anuluj</button>
+        <button class="btn primary" id="addSubmitBtn" type="submit">Dodaj</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Settings dialog -->
+  <dialog id="settingsDialog" aria-labelledby="settingsDialogTitle">
+    <div class="dlg-head">
+      <div class="dlg-title" id="settingsDialogTitle">Ustawienia</div>
+      <button class="btn" id="closeSettings" type="button">Zamknij</button>
+    </div>
+    <div class="dlg-body">
+      <div class="row">
+        <div class="grow">
+          <div>Motyw ciemny</div>
+          <div class="hint">Przełącz jasny/ciemny</div>
+        </div>
+        <label class="switch" aria-label="Motyw ciemny">
+          <input type="checkbox" id="darkModeToggle" />
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="grow">
+          <div>Ukrywaj ukończone</div>
+          <div class="hint">W widoku listy ukryj odhaczone pozycje</div>
+        </div>
+        <label class="switch" aria-label="Ukrywaj ukończone">
+          <input type="checkbox" id="hideCompletedToggle" />
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="grow">
+          <div>Wibracje przy odhaczaniu</div>
+          <div class="hint">Delikatny feedback (jeśli urządzenie wspiera)</div>
+        </div>
+        <label class="switch" aria-label="Wibracje">
+          <input type="checkbox" id="vibrateToggle" />
+          <span class="knob"></span>
+        </label>
+      </div>
+
+      <div class="row">
+        <div class="grow">
+          <div>Wygląd</div>
+          <div class="hint">Dostosuj obrys, neon i zaokrąglenia</div>
+        </div>
+        <button class="btn" id="appearanceBtn" type="button">Otwórz…</button>
+      </div>
+
+      <div class="row" style="gap:10px">
+        <button class="btn" id="printBtn" type="button">Drukuj…</button>
+        <button class="btn" id="shareBtn" type="button">Udostępnij…</button>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Manage list dialog -->
+  <dialog id="manageDialog" aria-labelledby="manageDialogTitle">
+    <form id="manageForm">
+      <div class="dlg-head">
+        <div class="dlg-title" id="manageDialogTitle">Zarządzaj listą</div>
+        <button class="btn" type="button" id="manageClose">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <label class="label" for="manageListName">Nazwa listy</label>
+          <input type="text" id="manageListName" required maxlength="40" />
+          <div class="hint">max 40 znaków</div>
+        </div>
+        <div class="field">
+          <div class="label">Kolor listy</div>
+          <div class="swatch-grid" id="managePalette" role="radiogroup" aria-label="Wybierz kolor"></div>
+        </div>
+        <div class="field">
+          <div class="label">Ikonka (opcjonalnie)</div>
+          <div class="icon-grid" id="manageIconGrid" role="radiogroup" aria-label="Wybierz ikonę"></div>
+          <div class="row">
+            <button class="btn" type="button" id="manageClearIcon">Bez ikonki</button>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-foot" style="justify-content: space-between">
+        <button class="btn danger" type="button" id="deleteListBtn">Usuń listę</button>
+        <div>
+          <button class="btn" type="button" id="manageCancel">Anuluj</button>
+          <button class="btn primary" id="saveManageBtn" type="submit">Zapisz</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- New list dialog -->
+  <dialog id="newListDialog" aria-labelledby="newListDialogTitle">
+    <form id="newListForm">
+      <div class="dlg-head">
+        <div class="dlg-title" id="newListDialogTitle">Nowa lista</div>
+        <button class="btn" type="button" id="newListClose">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <label class="label" for="newListName">Nazwa</label>
+          <input id="newListName" type="text" placeholder="np. Zakupy" required maxlength="40" />
+          <div class="hint">max 40 znaków</div>
+        </div>
+        <div class="field">
+          <div class="label">Kolor</div>
+          <div class="swatch-grid" id="newListPalette" role="radiogroup" aria-label="Wybierz kolor"></div>
+        </div>
+        <div class="field">
+          <div class="label">Ikonka (opcjonalnie)</div>
+          <div class="icon-grid" id="newListIconGrid" role="radiogroup" aria-label="Wybierz ikonę"></div>
+          <div class="row">
+            <button class="btn" type="button" id="newListClearIcon">Bez ikonki</button>
+          </div>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="newListCancel">Anuluj</button>
+        <button class="btn primary" id="createListBtn" type="submit">Utwórz</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Print dialog -->
+  <dialog id="printDialog" aria-labelledby="printDialogTitle">
+    <form id="printForm">
+      <div class="dlg-head">
+        <div class="dlg-title" id="printDialogTitle">Drukuj listy</div>
+        <button class="btn" type="button" id="printClose">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+        <div class="field">
+          <div class="label">Zaznacz, co drukować</div>
+          <div id="printChecks" class="row wrap"></div>
+        </div>
+        <div class="row">
+          <label class="row" style="gap:8px">
+            <input type="checkbox" id="printDateToggle" checked>
+            <span>Drukuj datę (dziś)</span>
+          </label>
+        </div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="printCancel">Anuluj</button>
+        <button class="btn primary" type="submit">Drukuj</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Share dialog -->
+  <dialog id="shareDialog" aria-labelledby="shareDialogTitle">
+    <div class="dlg-head">
+      <div class="dlg-title" id="shareDialogTitle">Udostępnij listy</div>
+      <button class="btn" type="button" id="shareClose">Zamknij</button>
+    </div>
+    <div class="dlg-body">
+      <div class="field">
+        <div class="label">Zaznacz, co udostępnić</div>
+        <div id="shareChecks" class="row wrap"></div>
+      </div>
+      <div class="row">
+        <label class="row" style="gap:8px">
+          <input type="checkbox" id="shareDateToggle" checked>
+          <span>Dołącz datę</span>
+        </label>
+      </div>
+    </div>
+    <div class="dlg-foot" style="flex-wrap:wrap">
+      <button class="btn" type="button" id="shareCopyBtn">Kopiuj</button>
+      <button class="btn" type="button" id="shareWhatsAppBtn">WhatsApp</button>
+      <button class="btn primary" type="button" id="shareSystemBtn">Udostępnij systemowo</button>
+    </div>
+  </dialog>
+
+  <!-- Appearance dialog -->
+  <dialog id="appearanceDialog" aria-labelledby="appearanceDialogTitle">
+    <form id="appearanceForm">
+      <div class="dlg-head">
+        <div class="dlg-title" id="appearanceDialogTitle">Wygląd</div>
+        <button class="btn" type="button" id="appearanceClose">Zamknij</button>
+      </div>
+      <div class="dlg-body">
+
+        <!-- Podgląd (live) -->
+        <div class="field">
+          <div class="label">Podgląd</div>
+          <div id="appearancePreview" class="list"></div>
+        </div>
+
+        <div class="field">
+          <div class="label">Styl obrysu elementów</div>
+          <div class="row wrap" role="radiogroup" aria-label="Styl obrysu">
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="neon" id="outlineNeon">
+              <span>Neon</span>
+            </label>
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="border" id="outlineBorder">
+              <span>Klasyczny obrys</span>
+            </label>
+            <label class="row" style="gap:8px">
+              <input type="radio" name="itemOutline" value="none" id="outlineNone">
+              <span>Brak</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="ringPadRange">Grubość ringu (neon)</label>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="ringPadRange" min="0" max="4" step="0.5" style="flex:1" aria-label="Grubość ringu">
+            <span id="ringPadVal" class="hint" style="width:54px;text-align:right" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="ringBlurRange">Intensywność poświaty (neon)</label>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="ringBlurRange" min="0" max="24" step="1" style="flex:1" aria-label="Intensywność poświaty">
+            <span id="ringBlurVal" class="hint" style="width:54px;text-align:right" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="itemRadiusRange">Zaokrąglenie kafelków</label>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="itemRadiusRange" min="6" max="26" step="1" style="flex:1" aria-label="Zaokrąglenie kafelków">
+            <span id="itemRadiusVal" class="hint" style="width:54px;text-align:right" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="shadowOpacityRange">Cień kafelków</label>
+          <div class="row" style="gap:10px; align-items:center">
+            <input type="range" id="shadowOpacityRange" min="0" max="0.25" step="0.01" style="flex:1" aria-label="Cień kafelków">
+            <span id="shadowOpacityVal" class="hint" style="width:54px;text-align:right" aria-live="polite"></span>
+          </div>
+        </div>
+
+        <div class="row">
+          <label class="row" style="gap:8px">
+            <input type="checkbox" id="buttonsNeonToggle">
+            <span>Neon w przyciskach</span>
+          </label>
+        </div>
+        <div class="hint">Suwaki działają na żywo i zapisują się automatycznie.</div>
+      </div>
+      <div class="dlg-foot">
+        <button class="btn" type="button" id="appearanceDefaults">Przywróć domyślne</button>
+        <button class="btn primary" type="button" id="appearanceDone">Gotowe</button>
+      </div>
+    </form>
+  </dialog>
+</div>
+
+<script>
+(()=>{'use strict';
+  const LS_KEY = 'todoAppData_v8';
+
+  const el = (id) => document.getElementById(id);
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
+
+  const PALETTE10 = ['#4a90e2','#E86B27','#2ecc71','#9b59b6','#e74c3c','#f39c12','#16a085','#d35400','#27ae60','#8e44ad'];
+  const ICONS = ['🛒','🍎','🥦','📦','🏠','🎁','🧹','💡','📚','💼','⚽️','🎵','🍽️','🧪','🎯','✈️','🚗','🏖️','☕','🍕','🎮','💊','🏋️','🎨','📱','💻','🌟','❤️','🔧','🌍','🎓','🏆','🍔','🎬','📷','🌸','🐕','🐱','🎂','🍺','🚴','🏃','⛺','🎸','🎤','⚽','🏀','🎾','🎳','♟️','🎭'];
+  const NAME_MAX = 40;
+
+  const APPEAR_DEFAULT = {
+    itemOutline: 'border',   // 'neon' | 'border' | 'none'
+    ringPad: 1,              // px
+    ringBlur: 8,             // px
+    itemRadius: 18,          // px
+    shadowOpacity: 0.06,     // 0..0.25
+    buttonsNeon: false
+  };
+
+  const state = {
+    lists: [],
+    settings: { dark:false, hideCompleted:false, vibrate:true, appearance: {...APPEAR_DEFAULT} },
+    currentListId: null,
+    lastActiveListId: null,
+    editMode: false,
+  };
+
+  function uid(prefix='id'){ return `${prefix}_${Math.random().toString(36).slice(2,7)}_${Date.now().toString(36)}`; }
+  function defaultData(){
+    const list1 = { id: uid('list'), name: 'Moja lista 1', color: '#4a90e2', icon: '', items: [] };
+    const list2 = { id: uid('list'), name: 'Moja lista 2', color: '#E86B27', icon: '', items: [] };
+    return {
+      lists: [list1, list2],
+      settings: { dark:false, hideCompleted:false, vibrate:true, appearance: {...APPEAR_DEFAULT} },
+      currentListId: list1.id,
+      lastActiveListId: list1.id,
+      editMode: false
+    };
+  }
+  function migrateData(){
+    // Uzupełnij brakujące pola list i pozycji
+    state.lists.forEach(l=>{
+      if(typeof l.icon !== 'string') l.icon = '';
+      if(!Array.isArray(l.items)) l.items = [];
+      l.items.forEach(it=>{
+        if(typeof it.completedAt === 'undefined') it.completedAt = it.done ? Date.now() : null;
+      });
+    });
+    // Uzupełnij ustawienia wyglądu
+    if(!state.settings) state.settings = {};
+    if(!state.settings.appearance) state.settings.appearance = {...APPEAR_DEFAULT};
+    // Dodaj brakujące klucze (forward-compat)
+    for(const k in APPEAR_DEFAULT){
+      if(typeof state.settings.appearance[k] === 'undefined'){
+        state.settings.appearance[k] = APPEAR_DEFAULT[k];
+      }
+    }
+  }
+  
+  // POPRAWKA 1: Obsługa błędów w save()
+  function save(){
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        lists:state.lists,
+        settings:state.settings,
+        currentListId:state.currentListId,
+        lastActiveListId:state.lastActiveListId
+      }));
+    } catch(e) {
+      if(e.name === 'QuotaExceededError') {
+        alert('Brak miejsca w pamięci przeglądarki. Usuń stare listy lub dane.');
+      } else {
+        console.error('Błąd podczas zapisywania:', e);
+      }
+    }
+  }
+  
+  function load(){
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw){ Object.assign(state, defaultData()); return; }
+    try{
+      const data = JSON.parse(raw);
+      Object.assign(state, defaultData(), data);
+      if(!Array.isArray(state.lists) || state.lists.length === 0){
+        const d = defaultData();
+        state.lists = d.lists; state.currentListId = d.currentListId; state.lastActiveListId = d.lastActiveListId;
+      }
+    }catch{ Object.assign(state, defaultData()); }
+  }
+
+  // Dynamiczny akcent + neon gradient z koloru listy
+  function setTheme(dark){
+    state.settings.dark = !!dark;
+    document.documentElement.setAttribute('data-theme', state.settings.dark ? 'dark' : 'light');
+  }
+  function setAccent(color){
+    document.documentElement.style.setProperty('--accent', color);
+    document.documentElement.style.setProperty('--accent-soft', hexToRgba(color, 0.14));
+    const {neo1, neo2} = deriveNeoGradient(color);
+    document.documentElement.style.setProperty('--neo1', neo1);
+    document.documentElement.style.setProperty('--neo2', neo2);
+  }
+
+  function applyAppearance(){
+    const ap = state.settings.appearance || APPEAR_DEFAULT;
+    document.documentElement.dataset.itemOutline = ap.itemOutline;
+    document.documentElement.setAttribute('data-neon-buttons', ap.buttonsNeon ? 'on' : 'off');
+    document.documentElement.style.setProperty('--ring-pad', (ap.ringPad||0) + 'px');
+    document.documentElement.style.setProperty('--ring-blur', (ap.ringBlur||0) + 'px');
+    document.documentElement.style.setProperty('--item-radius', (ap.itemRadius||18) + 'px');
+    document.documentElement.style.setProperty('--item-shadow-opa', String(ap.shadowOpacity ?? 0.06));
+  }
+
+  function hexToRgba(hex, a=1){
+    let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return `rgba(${r},${g},${b},${a})`;
+  }
+  function hexToRgb(hex){
+    let h = hex.replace('#',''); if(h.length===3){ h = h.split('').map(c=>c+c).join(''); }
+    const r = parseInt(h.slice(0,2),16), g = parseInt(h.slice(2,4),16), b = parseInt(h.slice(4,6),16);
+    return {r,g,b};
+  }
+  function rgbToHsl(r,g,b){
+    r/=255; g/=255; b/=255;
+    const max=Math.max(r,g,b), min=Math.min(r,g,b);
+    let h,s,l=(max+min)/2;
+    if(max===min){ h=s=0; }
+    else{
+      const d=max-min;
+      s=l>0.5? d/(2-max-min) : d/(max+min);
+      switch(max){
+        case r: h=(g-b)/d + (g<b?6:0); break;
+        case g: h=(b-r)/d + 2; break;
+        case b: h=(r-g)/d + 4; break;
+      }
+      h*=60;
+    }
+    return {h, s:s*100, l:l*100};
+  }
+  function hslToHexSafe(h,s,l){
+    s/=100; l/=100;
+    const c=(1-Math.abs(2*l-1))*s;
+    const hh=h/60;
+    const x=c*(1-Math.abs(hh%2-1));
+    let r=0,g=0,b=0;
+    if(hh>=0 && hh<1){ r=c; g=x; b=0; }
+    else if(hh>=1 && hh<2){ r=x; g=c; b=0; }
+    else if(hh>=2 && hh<3){ r=0; g=c; b=x; }
+    else if(hh>=3 && hh<4){ r=0; g=x; b=c; }
+    else if(hh>=4 && hh<5){ r=x; g=0; b=c; }
+    else { r=c; g=0; b=x; }
+    const m=l-c/2;
+    r=Math.round((r+m)*255); g=Math.round((g+m)*255); b=Math.round((b+m)*255);
+    return '#'+[r,g,b].map(v=> v.toString(16).padStart(2,'0')).join('');
+  }
+  function clamp(v,min,max){ return Math.min(max, Math.max(min, v)); }
+  function deriveNeoGradient(accent){
+    const {r,g,b} = hexToRgb(accent);
+    const {h,s,l} = rgbToHsl(r,g,b);
+    const neo1 = hslToHexSafe((h+10)%360, clamp(s+10,0,100), clamp(l+6,0,100));
+    const neo2 = hslToHexSafe((h-14+360)%360, clamp(s+22,0,100), clamp(l-8,0,100));
+    return {neo1, neo2};
+  }
+
+  function vibrate(ms=20){ if(!state.settings.vibrate) return; if('vibrate' in navigator){ try{ navigator.vibrate(ms); }catch{} } }
+  function currentList(){ if(state.currentListId === '__completed__') return null; return state.lists.find(l => l.id === state.currentListId) || state.lists[0]; }
+  function listById(id){ return state.lists.find(l => l.id === id); }
+  function escapeHtml(str=''){ return str.replace(/[&<>"']/g, s=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[s])); }
+
+  /* Quick add refs */
+  const quick = el('quickAdd');
+  const quickInput = el('quickAddInput');
+  function openQuick(){ 
+    if(state.currentListId === '__completed__') return; 
+    quick.classList.add('open'); 
+    // Zmień ikonę na minus
+    el('quickAddBtn').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+    setTimeout(()=> quickInput?.focus(), 0); 
+  }
+  function closeQuick(){ 
+    quick.classList.remove('open'); 
+    if(quickInput) quickInput.value = ''; 
+    // Przywróć ikonę na plus
+    el('quickAddBtn').innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+      <path d="M5 12h14M12 5v14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+    </svg>`;
+  }
+
+  function render(){
+    document.body.classList.toggle('edit-on', !!state.editMode);
+    const isCompletedView = state.currentListId === '__completed__';
+    const cl = currentList();
+    const accent = isCompletedView ? '#7a7f8c' : (cl?.color || '#4a90e2');
+    setAccent(accent);
+    el('currentListName').textContent = isCompletedView ? 'Zakończone' : (cl?.name || 'Lista');
+    el('listDot').style.background = accent;
+    el('listDot').style.boxShadow = `0 0 0 3px ${hexToRgba(accent, .18)}`;
+
+    // Ikonka w nagłówku
+    const iconEl = el('currentListIcon');
+    if(!isCompletedView && cl?.icon){
+      iconEl.textContent = cl.icon;
+      iconEl.hidden = false;
+    }else{
+      iconEl.hidden = true;
+      iconEl.textContent = '';
+    }
+
+    el('addBtn').classList.toggle('disabled', isCompletedView);
+    el('quickAddBtn').classList.toggle('disabled', isCompletedView);
+    if(isCompletedView) closeQuick();
+
+    renderListMenu();
+    renderItems();
+
+    el('darkModeToggle').checked = !!state.settings.dark;
+    el('hideCompletedToggle').checked = !!state.settings.hideCompleted;
+    el('vibrateToggle').checked = !!state.settings.vibrate;
+
+    el('editModeBtn').classList.toggle('active', !!state.editMode);
+    el('editModeBtn').setAttribute('aria-pressed', state.editMode ? 'true' : 'false');
+  }
+
+  function renderListMenu(){
+    const cont = el('listMenuItems'); cont.innerHTML = '';
+    let draggingId = null;
+
+    state.lists.forEach((l)=>{
+      const btn = document.createElement('div');
+      btn.className = 'menu-item'; btn.setAttribute('role', 'button');
+      btn.dataset.id = l.id; btn.draggable = true;
+      // POPRAWKA 4: Nie używaj escapeHtml dla emoji
+      btn.innerHTML = `
+        <span class="grip" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </span>
+        <span class="color-dot" style="background:${l.color}"></span>
+        ${l.icon ? `<span class="list-icon" aria-hidden="true">${l.icon}</span>` : ''}
+        <span class="name">${escapeHtml(l.name)}</span>
+        <span class="pill">${l.items.filter(i=>!i.done).length}</span>
+        <span class="tick" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M5 12l4 4 10-10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+      `;
+      const isActive = state.currentListId === l.id;
+      btn.classList.toggle('is-active', isActive);
+      btn.setAttribute('aria-selected', isActive ? 'true' : 'false');
+
+      btn.addEventListener('click', ()=>{
+        state.editMode = false; // wyłącz edycję przy zmianie listy
+        state.currentListId = l.id;
+        state.lastActiveListId = l.id;
+        closeMenu(); save(); render();
+      });
+
+      btn.addEventListener('dragstart', (e)=>{
+        draggingId = l.id; e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', l.id);
+      });
+      btn.addEventListener('dragover', (e)=>{ e.preventDefault(); btn.classList.add('drag-over'); });
+      btn.addEventListener('dragleave', ()=> btn.classList.remove('drag-over'));
+      btn.addEventListener('drop', (e)=>{
+        e.preventDefault(); btn.classList.remove('drag-over');
+        const fromId = draggingId || e.dataTransfer.getData('text/plain');
+        const toId = l.id; if(!fromId || fromId===toId) return;
+        const fromIdx = state.lists.findIndex(x=>x.id===fromId);
+        const toIdx = state.lists.findIndex(x=>x.id===toId);
+        if(fromIdx<0 || toIdx<0) return; moveList(fromIdx, toIdx);
+      });
+
+      cont.appendChild(btn);
+    });
+
+    const compl = el('completedViewBtn');
+    compl.classList.toggle('is-active', state.currentListId === '__completed__');
+    compl.setAttribute('aria-selected', state.currentListId === '__completed__' ? 'true' : 'false');
+  }
+  function moveList(fromIdx, toIdx){ if(fromIdx===toIdx) return; const [m] = state.lists.splice(fromIdx,1); state.lists.splice(toIdx,0,m); save(); renderListMenu(); }
+
+  function renderItems(){
+    const container = el('listContainer'); container.innerHTML = '';
+    const isCompletedView = state.currentListId === '__completed__';
+    let items = [], lref = null;
+
+    if(isCompletedView){
+      // GRUPOWANIE PO LISTACH w sekcji "Zakończone"
+      const grouped = {}; // { listId: { list, items: [] } }
+      state.lists.forEach(l => {
+        const doneItems = l.items.filter(it => it.done);
+        if(doneItems.length > 0){
+          grouped[l.id] = { list: l, items: doneItems.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0)) };
+        }
+      });
+      
+      if(Object.keys(grouped).length === 0){
+        el('emptyState').hidden = false;
+        el('emptyState').textContent = 'Brak pozycji.';
+        return;
+      }
+      el('emptyState').hidden = true;
+      
+      // Renderuj grupy
+      const expandedKey = 'completedExpanded_v1';
+      let expanded = {};
+      try{ expanded = JSON.parse(localStorage.getItem(expandedKey) || '{}'); }catch{}
+      
+      Object.values(grouped).forEach(({list, items: groupItems}) => {
+        const isExpanded = expanded[list.id] !== false; // domyślnie rozwińte
+        
+        // Nagłówek grupy
+        const header = document.createElement('div');
+        header.style.cssText = 'display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--card); border:1px solid var(--border); border-radius:12px; cursor:pointer; margin-bottom:4px; user-select:none;';
+        header.innerHTML = `
+          <span style="width:10px;height:10px;border-radius:50%;background:${list.color};flex-shrink:0;"></span>
+          ${list.icon ? `<span style="font-size:16px;line-height:1;">${list.icon}</span>` : ''}
+          <span style="flex:1;font-weight:600;">${escapeHtml(list.name)}</span>
+          <span style="background:var(--accent-soft);color:var(--accent);border-radius:999px;font-size:12px;padding:2px 8px;">${groupItems.length}</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="opacity:0.7;transition:transform 0.2s;${isExpanded ? 'transform:rotate(90deg)' : ''}">
+            <path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        `;
+        
+        // Kontener pozycji
+        const itemsContainer = document.createElement('div');
+        itemsContainer.style.cssText = `display:${isExpanded ? 'grid' : 'none'}; gap:8px; margin-bottom:8px;`;
+        
+        header.addEventListener('click', () => {
+          const nowExpanded = itemsContainer.style.display === 'none';
+          itemsContainer.style.display = nowExpanded ? 'grid' : 'none';
+          header.querySelector('svg').style.transform = nowExpanded ? 'rotate(90deg)' : '';
+          expanded[list.id] = nowExpanded;
+          localStorage.setItem(expandedKey, JSON.stringify(expanded));
+        });
+        
+        container.appendChild(header);
+        container.appendChild(itemsContainer);
+        
+        // Renderuj pozycje w tej grupie
+        groupItems.forEach(it => {
+          renderCompletedItem(it, itemsContainer, list);
+        });
+      });
+      
+      return;
+    }else{
+      lref = currentList(); if(!lref) return;
+      const undone = lref.items.filter(i=>!i.done);
+      const done = lref.items.filter(i=>i.done);
+      items = state.settings.hideCompleted ? undone : [...undone, ...done];
+    }
+
+    if(items.length === 0){
+      el('emptyState').hidden = false;
+      el('emptyState').textContent = isCompletedView ? 'Brak pozycji.' : 'Brak pozycji. Dodaj coś przyciskiem +';
+      return;
+    } else {
+      el('emptyState').hidden = true;
+    }
+
+    const visibleIds = items.map(i=>i.id);
+    const frag = document.createDocumentFragment();
+
+    items.forEach(it=>{
+      const li = document.createElement('div');
+      li.className = 'item' + (it.done ? ' done' : '') + ' new';
+      li.dataset.id = it.id;
+
+      const handle = document.createElement('div');
+      handle.className = 'handle';
+      handle.setAttribute('aria-label', 'Przeciągnij aby zmienić kolejność');
+      handle.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24"><path d="M9 6h6M9 12h6M9 18h6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = !!it.done;
+      checkbox.setAttribute('aria-label', it.text);
+
+      const texts = document.createElement('div');
+      texts.className = 'texts';
+      const title = document.createElement('div');
+      title.className = 'text';
+      title.textContent = it.text;
+      texts.appendChild(title);
+
+      if(state.currentListId === '__completed__'){
+        const small = document.createElement('div');
+        small.className = 'sub';
+        const lName = listById(findItemListId(it.id) || it.__fromList)?.name || '—';
+        small.textContent = `z listy: ${lName}`;
+        texts.appendChild(small);
+      }
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      
+      if(state.currentListId === '__completed__'){
+        // W widoku "Zakończone" – przycisk trwałego usunięcia
+        actions.innerHTML = `
+          <button class="i-btn danger" data-act="delete-permanent" title="Usuń trwale" aria-label="Usuń trwale">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        `;
+        actions.style.display = 'flex'; // zawsze widoczny w zakończonych
+      } else {
+        // W normalnym widoku listy – przyciski góra/dół/usuń
+        actions.innerHTML = `
+          <button class="i-btn" data-act="up" title="Góra" aria-label="Przenieś w górę">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="i-btn" data-act="down" title="Dół" aria-label="Przenieś w dół">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="i-btn danger" data-act="del" title="Usuń" aria-label="Usuń pozycję">
+            <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        `;
+      }
+
+      // Checkbox – płynne, bez mignięć
+      checkbox.addEventListener('change', ()=>{
+        const toggledDone = checkbox.checked;
+        const containerEl = el('listContainer');
+        const isCompletedViewLocal = (state.currentListId === '__completed__');
+
+        if(isCompletedViewLocal){
+          const listId = findItemListId(it.id) || it.__fromList;
+          const l = listById(listId);
+          const item = l?.items.find(x=>x.id === it.id);
+          if(item){
+            item.done = toggledDone;
+            item.completedAt = toggledDone ? Date.now() : null;
+          }
+          if(!toggledDone){
+            animateCollapseRemove(li, ()=> updateEmptyStateOnContainer(containerEl, true));
+          }
+          vibrate(22); save(); renderListMenu();
+          return;
+        }
+
+        // Normalny widok listy:
+        const lrefLocal = currentList();
+        const itemRef = lrefLocal.items.find(x=>x.id === it.id);
+        if(itemRef){
+          itemRef.done = toggledDone;
+          itemRef.completedAt = toggledDone ? Date.now() : null;
+        }
+        li.classList.toggle('done', toggledDone);
+
+        if(state.settings.hideCompleted && toggledDone){
+          // ukrywaj ukończone z płynną animacją
+          animateCollapseRemove(li, ()=> updateEmptyStateOnContainer(containerEl, false));
+        }else{
+          // FLIP-move: płynne przeniesienie między sekcjami
+          const itemsEls = Array.from(containerEl.querySelectorAll('.item'));
+          const firstDoneIdx = itemsEls.findIndex(n => n.classList.contains('done'));
+          const lastUndoneIdx = itemsEls.reduce((acc, n, i)=> n.classList.contains('done') ? acc : i, -1);
+
+          if(toggledDone){
+            const targetIdx = (lastUndoneIdx >= 0 ? lastUndoneIdx + 1 : 0);
+            if(containerEl.children[targetIdx] !== li){
+              flipMove(li, ()=> containerEl.insertBefore(li, containerEl.children[targetIdx] || null));
+            }
+          }else{
+            const targetIdx = (firstDoneIdx === -1 ? itemsEls.length : firstDoneIdx);
+            if(containerEl.children[targetIdx] !== li){
+              flipMove(li, ()=> containerEl.insertBefore(li, containerEl.children[targetIdx] || null));
+            }
+          }
+        }
+
+        vibrate(22); save(); renderListMenu();
+      });
+
+      // Akcje: góra/dół/usuwanie (usuwanie z animacją)
+      if(state.currentListId === '__completed__'){
+        // W widoku "Zakończone" - trwałe usunięcie
+        actions.querySelector('[data-act="delete-permanent"]').addEventListener('click', ()=>{
+          const listId = findItemListId(it.id) || it.__fromList;
+          const l = listById(listId);
+          if(!l) return;
+          const idx = l.items.findIndex(x=>x.id===it.id);
+          if(idx>=0){
+            if(confirm(`Trwale usunąć "${it.text}"?`)){
+              animateCollapseRemove(li, ()=>{
+                l.items.splice(idx,1); 
+                vibrate(10); 
+                save(); 
+                renderListMenu(); 
+                updateEmptyStateOnContainer(el('listContainer'), true);
+              });
+            }
+          }
+        });
+      } else {
+        // W normalnym widoku listy
+        actions.querySelector('[data-act="up"]').addEventListener('click', ()=>{
+          const lrefLocal = currentList();
+          const idx = visibleIds.indexOf(it.id);
+          if(idx>0){ const visNew = moveInArray(visibleIds.slice(), idx, idx-1); applyVisibleOrder(lrefLocal, visNew); }
+        });
+        actions.querySelector('[data-act="down"]').addEventListener('click', ()=>{
+          const lrefLocal = currentList();
+          const idx = visibleIds.indexOf(it.id);
+          if(idx>=0 && idx<visibleIds.length-1){ const visNew = moveInArray(visibleIds.slice(), idx, idx+1); applyVisibleOrder(lrefLocal, visNew); }
+        });
+        actions.querySelector('[data-act="del"]').addEventListener('click', ()=>{
+          const lrefLocal = currentList();
+          const idx = lrefLocal.items.findIndex(x=>x.id===it.id);
+          if(idx>=0){
+            animateCollapseRemove(li, ()=>{
+              lrefLocal.items.splice(idx,1); vibrate(10); save(); renderListMenu(); updateEmptyStateOnContainer(el('listContainer'), false);
+            });
+          }
+        });
+      }
+
+      li.appendChild(handle);
+      li.appendChild(checkbox);
+      li.appendChild(texts);
+      li.appendChild(actions);
+
+      if(state.editMode && !(state.currentListId === '__completed__')){
+        title.contentEditable = 'true';
+        title.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); title.blur(); } });
+        title.addEventListener('blur', ()=>{
+          const newVal = (title.textContent || '').trim();
+          const lrefLocal = currentList();
+          const idx = lrefLocal.items.findIndex(x=>x.id===it.id);
+          if(idx>=0){
+            if(newVal.length===0){ title.textContent = lrefLocal.items[idx].text; return; }
+            if(lrefLocal.items[idx].text !== newVal){ lrefLocal.items[idx].text = newVal; save(); }
+          }
+        });
+
+        enableItemDrag(li, handle, visibleIds, (visNew)=> applyVisibleOrder(currentList(), visNew));
+      }
+
+      frag.appendChild(li);
+    });
+    container.appendChild(frag);
+  }
+
+  function renderCompletedItem(it, itemsContainer, list) {
+    const li = document.createElement('div');
+    li.className = 'item done';
+    li.dataset.id = it.id;
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = true;
+    checkbox.setAttribute('aria-label', it.text);
+
+    const texts = document.createElement('div');
+    texts.className = 'texts';
+    const title = document.createElement('div');
+    title.className = 'text';
+    title.textContent = it.text;
+    texts.appendChild(title);
+
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.style.display = 'flex';
+    actions.innerHTML = `
+      <button class="i-btn danger" data-act="delete-permanent" title="Usuń trwale" aria-label="Usuń trwale">
+        <svg width="16" height="16" viewBox="0 0 24 24"><path d="M6 7h12M9 7V5h6v2m-8 0l1 12h8l1-12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    `;
+
+    checkbox.addEventListener('change', () => {
+      const item = list.items.find(x => x.id === it.id);
+      if (item) {
+        item.done = false;
+        item.completedAt = null;
+      }
+      animateCollapseRemove(li, () => {
+        save();
+        renderListMenu();
+        render();
+      });
+      vibrate(22);
+    });
+
+    actions.querySelector('[data-act="delete-permanent"]').addEventListener('click', () => {
+      const idx = list.items.findIndex(x => x.id === it.id);
+      if (idx >= 0 && confirm(`Trwale usunąć "${it.text}"?`)) {
+        animateCollapseRemove(li, () => {
+          list.items.splice(idx, 1);
+          vibrate(10);
+          save();
+          renderListMenu();
+          render();
+        });
+      }
+    });
+
+    li.appendChild(checkbox);
+    li.appendChild(texts);
+    li.appendChild(actions);
+    itemsContainer.appendChild(li);
+  }
+
+  function moveInArray(arr, from, to){ if(from===to) return arr; const [m] = arr.splice(from,1); arr.splice(to,0,m); return arr; }
+  function applyVisibleOrder(list, newVisOrder){
+    const visQueue = newVisOrder.map(id => list.items.find(i=>i.id===id)).filter(Boolean);
+    const isVisible = (it)=> state.settings.hideCompleted ? !it.done : true;
+    const out = [];
+    for(const it of list.items){ out.push(isVisible(it) ? (visQueue.shift() || it) : it); }
+    list.items = out; vibrate(8); save(); render();
+  }
+
+  // === PŁYNNE ANIMACJE (wszystkie elementy na liście) ===
+  // Animacja FLIP - WSZYSTKIE elementy płynnie przesuwają się do nowych pozycji
+  function flipMove(el, mutateDom){
+    const container = el.parentElement;
+    const allItems = Array.from(container.querySelectorAll('.item'));
+    
+    // Zapisz pozycje WSZYSTKICH elementów przed zmianą
+    const positions = new Map();
+    allItems.forEach(item => {
+      positions.set(item, item.getBoundingClientRect());
+    });
+    
+    // Wykonaj mutację DOM
+    mutateDom?.();
+    
+    requestAnimationFrame(() => {
+      // Dla każdego elementu który się przesunął
+      allItems.forEach(item => {
+        const start = positions.get(item);
+        const end = item.getBoundingClientRect();
+        const dx = start.left - end.left;
+        const dy = start.top - end.top;
+        
+        if (dx || dy) {
+          item.style.transition = 'none';
+          item.style.transform = `translate(${dx}px, ${dy}px)`;
+          item.style.visibility = 'visible';
+          item.style.opacity = '1';
+        }
+      });
+      
+      // Wymuś reflow
+      container.offsetHeight;
+      
+      // Animuj wszystkie elementy do końcowych pozycji
+      requestAnimationFrame(() => {
+        allItems.forEach(item => {
+          item.style.transition = 'transform 650ms cubic-bezier(.22, .61, .36, 1)';
+          item.style.transform = '';
+        });
+        
+        // Cleanup
+        setTimeout(() => {
+          allItems.forEach(item => {
+            item.style.transition = '';
+            item.style.transform = '';
+            item.style.visibility = '';
+            item.style.opacity = '';
+          });
+        }, 670);
+      });
+    });
+  }
+  
+  function animateCollapseRemove(elNode, after){
+    elNode.classList.add('anim-hide');
+    elNode.style.height = elNode.offsetHeight + 'px';
+    elNode.style.marginTop = getComputedStyle(elNode).marginTop;
+    elNode.style.marginBottom = getComputedStyle(elNode).marginBottom;
+    elNode.style.opacity = '1';
+    requestAnimationFrame(()=>{
+      elNode.style.height = '0px';
+      elNode.style.marginTop = '0px';
+      elNode.style.marginBottom = '0px';
+      elNode.style.opacity = '0';
+    });
+    setTimeout(()=>{ try{ elNode.remove(); }catch{} after?.(); }, 480);
+  }
+  function updateEmptyStateOnContainer(container, isCompletedView){
+    const anyItem = container.querySelector('.item');
+    const empty = el('emptyState');
+    empty.hidden = !!anyItem;
+    if (!anyItem){
+      empty.textContent = isCompletedView ? 'Brak pozycji.' : 'Brak pozycji. Dodaj coś przyciskiem +';
+    }
+  }
+
+  // POPRAWKA 2: Dodano releasePointerCapture w cleanup
+  function enableItemDrag(li, handle, visibleIds, onDropOrder){
+    let offsetY=0, ph=null, container=null, dragging=false, pointerId=null;
+    const onPointerDown = (e)=>{
+      if(!state.editMode || state.currentListId === '__completed__') return;
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      e.preventDefault(); 
+      handle.setPointerCapture?.(e.pointerId);
+      pointerId = e.pointerId;
+      
+      container = el('listContainer'); const rect = li.getBoundingClientRect();
+      offsetY = (e.clientY||0) - rect.top;
+      ph = document.createElement('div'); ph.className = 'item placeholder'; ph.style.height = rect.height + 'px';
+      container.insertBefore(ph, li.nextSibling);
+      li.classList.add('dragging'); li.style.width = rect.width+'px'; li.style.position='fixed'; li.style.left = rect.left+'px'; li.style.top = rect.top+'px'; li.style.zIndex='1000'; li.style.pointerEvents='none';
+      document.body.style.userSelect='none'; document.body.style.touchAction='none';
+      document.addEventListener('pointermove', onPointerMove, {passive:false});
+      document.addEventListener('pointerup', onPointerUp, {passive:false});
+      dragging = true;
+    };
+    const onPointerMove = (e)=>{
+      if(!dragging) return; e.preventDefault();
+      const y = (e.clientY||0) - offsetY; li.style.top = y + 'px';
+      const centerY = y + li.offsetHeight/2;
+      const children = Array.from(container.children).filter(c=>c!==li);
+      let newIndex=0; for(let i=0;i<children.length;i++){ const r = children[i].getBoundingClientRect(); if(centerY > r.top + r.height/2) newIndex = i+1; }
+      if(container.children[newIndex] !== ph){ container.insertBefore(ph, container.children[newIndex]); }
+    };
+    const onPointerUp = (e)=>{
+      if(!dragging) return; 
+      e.preventDefault(); 
+      dragging = false;
+      
+      // CLEANUP
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerup', onPointerUp);
+      if(pointerId !== null) {
+        handle.releasePointerCapture?.(pointerId);
+        pointerId = null;
+      }
+      
+      document.body.style.userSelect=''; 
+      document.body.style.touchAction='';
+      
+      const targetIndex = Array.from(container.children).indexOf(ph); 
+      ph.replaceWith(li);
+      li.classList.remove('dragging'); 
+      li.style.position=''; 
+      li.style.left=''; 
+      li.style.top=''; 
+      li.style.width=''; 
+      li.style.zIndex=''; 
+      li.style.pointerEvents='';
+      
+      const id = li.dataset.id; 
+      const from = visibleIds.indexOf(id);
+      const to = Math.max(0, Math.min(visibleIds.length-1, targetIndex));
+      if(from>=0 && to>=0 && from!==to){ 
+        const visNew = moveInArray(visibleIds.slice(), from, to); 
+        onDropOrder?.(visNew); 
+      }
+    };
+    handle.addEventListener('pointerdown', onPointerDown);
+  }
+  
+  function findItemListId(itemId){ for(const l of state.lists){ if(l.items.some(i => i.id === itemId)) return l.id; } return null; }
+
+  // Menu open/close
+  const menuBtn = el('openMenuBtn');
+  const menu = el('listMenu');
+  function openMenu(){ menu.classList.add('open'); menuBtn.setAttribute('aria-expanded','true'); }
+  function closeMenu(){ menu.classList.remove('open'); menuBtn.setAttribute('aria-expanded','false'); }
+  menuBtn.addEventListener('click', ()=> menu.classList.contains('open') ? closeMenu() : openMenu());
+  document.addEventListener('click', (e)=>{ if(!menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) closeMenu(); });
+
+  // Menu actions
+  el('completedViewBtn').addEventListener('click', ()=>{
+    state.editMode = false; // wyłącz edycję przy wejściu w Zakończone
+    state.currentListId='__completed__';
+    closeQuick(); closeMenu(); save(); render();
+  });
+  el('manageListBtn').addEventListener('click', ()=>{ closeMenu(); openManage(); });
+  el('addListBtn').addEventListener('click', ()=>{ closeMenu(); openNewList(); });
+
+  // Manage/new list
+  function openManage(){
+    let cl = currentList();
+    if(!cl){ const l = listById(state.lastActiveListId) || state.lists[0]; state.currentListId = l.id; cl = l; }
+    el('manageListName').value = (cl.name || '').slice(0, NAME_MAX);
+    renderPalette(el('managePalette'), cl.color);
+    renderIconGrid(el('manageIconGrid'), cl.icon || '');
+    el('manageClearIcon').onclick = ()=> { $$('.icon-chip', el('manageIconGrid')).forEach(x=>x.classList.remove('selected')); };
+    el('manageDialog').showModal();
+    setTimeout(()=> el('manageListName').focus(), 0);
+  }
+  
+  // POPRAWKA 5: Resetowanie selekcji ikon przy otwieraniu nowej listy
+  function openNewList(){
+    el('newListName').value = '';
+    renderPalette(el('newListPalette'), PALETTE10[0]);
+    renderIconGrid(el('newListIconGrid'), '');
+    
+    // Reset selekcji ikon
+    $$('.icon-chip', el('newListIconGrid')).forEach(x=>x.classList.remove('selected'));
+    
+    el('newListClearIcon').onclick = ()=> { 
+      $$('.icon-chip', el('newListIconGrid')).forEach(x=>x.classList.remove('selected')); 
+    };
+    el('newListDialog').showModal();
+    setTimeout(()=> el('newListName').focus(), 0);
+  }
+  
+  function renderPalette(container, currentColor){
+    container.innerHTML = '';
+    PALETTE10.forEach(c=>{
+      const sw = document.createElement('button'); sw.type='button';
+      sw.className = 'swatch' + (c.toLowerCase() === (currentColor||'').toLowerCase() ? ' selected' : '');
+      sw.style.background = c; sw.dataset.color = c;
+      sw.setAttribute('aria-label', 'Kolor ' + c);
+      sw.addEventListener('click', ()=>{ $$('.swatch', container).forEach(x=>x.classList.remove('selected')); sw.classList.add('selected'); });
+      container.appendChild(sw);
+    });
+  }
+  function getSelectedPaletteColor(container){ const s = $('.swatch.selected', container); return s ? s.dataset.color : PALETTE10[0]; }
+
+  function renderIconGrid(container, current=''){
+    container.innerHTML = '';
+    ICONS.forEach(ico=>{
+      const b = document.createElement('button');
+      b.type='button'; b.className='icon-chip' + (ico===current ? ' selected':'');
+      b.textContent = ico;
+      b.setAttribute('aria-label', 'Ikona ' + ico);
+      b.addEventListener('click', ()=>{
+        $$('.icon-chip', container).forEach(x=>x.classList.remove('selected'));
+        b.classList.add('selected');
+      });
+      container.appendChild(b);
+    });
+  }
+  function getSelectedIcon(container){
+    const sel = $('.icon-chip.selected', container);
+    return sel ? sel.textContent : '';
+  }
+
+  el('manageForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const cl = currentList(); if(!cl) return;
+    const newName = el('manageListName').value.trim().slice(0, NAME_MAX);
+    if(newName) cl.name = newName;
+    cl.color = getSelectedPaletteColor(el('managePalette')) || cl.color;
+    cl.icon = getSelectedIcon(el('manageIconGrid')) || '';
+    el('manageDialog').close(); save(); render();
+  });
+  el('manageClose').addEventListener('click', ()=> el('manageDialog').close());
+  el('manageCancel').addEventListener('click', ()=> el('manageDialog').close());
+  el('deleteListBtn').addEventListener('click', ()=>{
+    const cl = currentList(); if(!cl) return;
+    if(state.lists.length <= 1){ alert('Musi pozostać przynajmniej jedna lista.'); return; }
+    if(confirm(`Usunąć listę "${cl.name}"?`)){
+      const idx = state.lists.findIndex(l=>l.id===cl.id);
+      if(idx>=0){ state.lists.splice(idx,1); }
+      state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
+      el('manageDialog').close(); save(); render();
+    }
+  });
+
+  // Quick add - toggle open/close
+  el('quickAddBtn').addEventListener('click', ()=>{
+    if(quick.classList.contains('open')){
+      closeQuick();
+    } else {
+      openQuick();
+    }
+  });
+  el('quickAddClose').addEventListener('click', closeQuick);
+  el('quickAddSubmit').addEventListener('click', ()=>{
+    const txt = quickInput.value.trim(); if(!txt) return;
+    const toId = (state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId);
+    addItem(txt, toId); quickInput.value = ''; vibrate(12);
+  });
+  quickInput.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); el('quickAddSubmit').click(); } else if(e.key==='Escape'){ closeQuick(); } });
+
+  // Add item dialog
+  el('addBtn').addEventListener('click', ()=>{
+    if(state.currentListId === '__completed__') return;
+    if(state.editMode){ alert('Wyłącz tryb edycji, aby dodać pozycję.'); return; }
+    openAddDialog();
+  });
+  function openAddDialog(){
+    const addListSel = el('addListSelect'); addListSel.innerHTML = '';
+    state.lists.forEach(l=>{ const opt = document.createElement('option'); opt.value = l.id; opt.textContent = l.name; addListSel.appendChild(opt); });
+    const defaultId = state.currentListId === '__completed__' ? (state.lastActiveListId || state.lists[0].id) : state.currentListId;
+    addListSel.value = defaultId; el('addText').value = '';
+    el('addDialog').showModal(); setTimeout(()=>el('addText').focus(), 0);
+  }
+  el('addForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const txt = el('addText').value.trim(); if(!txt) return;
+    const listId = el('addListSelect').value;
+    addItem(txt, listId); el('addDialog').close(); vibrate(16);
+  });
+  el('addDlgClose').addEventListener('click', ()=> el('addDialog').close());
+  el('addDlgCancel').addEventListener('click', ()=> el('addDialog').close());
+
+  function addItem(text, toListId){
+    const l = listById(toListId); if(!l) return;
+    l.items.push({ id: uid('it'), text: text.trim(), done:false, createdAt:Date.now(), completedAt:null });
+    save(); render();
+  }
+
+  // New list create
+  el('newListForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const name = el('newListName').value.trim().slice(0, NAME_MAX);
+    if(!name) return;
+    const color = getSelectedPaletteColor(el('newListPalette'));
+    const icon = getSelectedIcon(el('newListIconGrid')) || '';
+    const list = { id: uid('list'), name, color, icon, items: [] };
+    state.lists.push(list);
+    state.currentListId = list.id; state.lastActiveListId = list.id;
+    el('newListDialog').close(); save(); render();
+  });
+  el('newListClose').addEventListener('click', ()=> el('newListDialog').close());
+  el('newListCancel').addEventListener('click', ()=> el('newListDialog').close());
+
+  // Settings
+  el('settingsBtn').addEventListener('click', ()=> el('settingsDialog').showModal());
+  el('closeSettings').addEventListener('click', ()=> el('settingsDialog').close());
+  el('darkModeToggle').addEventListener('change', (e)=>{ setTheme(e.target.checked); save(); });
+  el('hideCompletedToggle').addEventListener('change', (e)=>{ state.settings.hideCompleted = !!e.target.checked; save(); render(); });
+  el('vibrateToggle').addEventListener('change', (e)=>{ state.settings.vibrate = !!e.target.checked; save(); });
+
+  // Appearance
+  el('appearanceBtn').addEventListener('click', openAppearance);
+  el('appearanceClose').addEventListener('click', ()=> el('appearanceDialog').close());
+  el('appearanceDone').addEventListener('click', ()=> el('appearanceDialog').close());
+  el('appearanceDefaults').addEventListener('click', ()=>{
+    state.settings.appearance = {...APPEAR_DEFAULT};
+    fillAppearanceForm();
+    applyAppearance(); save();
+  });
+
+  function openAppearance(){
+    ensureAppearancePreview(); // podgląd
+    fillAppearanceForm();
+    el('appearanceDialog').showModal();
+  }
+  function fillAppearanceForm(){
+    const ap = state.settings.appearance || APPEAR_DEFAULT;
+    // Radios
+    el('outlineNeon').checked = ap.itemOutline === 'neon';
+    el('outlineBorder').checked = ap.itemOutline === 'border';
+    el('outlineNone').checked = ap.itemOutline === 'none';
+    // Ranges and outputs
+    const pad = ap.ringPad ?? 1;
+    const blur = ap.ringBlur ?? 8;
+    const rad = ap.itemRadius ?? 18;
+    const opa = ap.shadowOpacity ?? 0.06;
+    el('ringPadRange').value = String(pad);
+    el('ringPadVal').textContent = pad + ' px';
+    el('ringBlurRange').value = String(blur);
+    el('ringBlurVal').textContent = blur + ' px';
+    el('itemRadiusRange').value = String(rad);
+    el('itemRadiusVal').textContent = rad + ' px';
+    el('shadowOpacityRange').value = String(opa);
+    el('shadowOpacityVal').textContent = opa.toFixed(2);
+    el('buttonsNeonToggle').checked = !!ap.buttonsNeon;
+  }
+
+  // Live update handlers
+  $$('#appearanceForm input[name="itemOutline"]').forEach(r=>{
+    r.addEventListener('change', ()=>{
+      const val = $('input[name="itemOutline"]:checked', el('appearanceForm')).value;
+      state.settings.appearance.itemOutline = val;
+      applyAppearance(); save();
+    });
+  });
+  el('ringPadRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0') || 0;
+    state.settings.appearance.ringPad = v;
+    el('ringPadVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('ringBlurRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0') || 0;
+    state.settings.appearance.ringBlur = v;
+    el('ringBlurVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('itemRadiusRange').addEventListener('input', (e)=>{
+    const v = parseInt(e.target.value||'18', 10) || 18;
+    state.settings.appearance.itemRadius = v;
+    el('itemRadiusVal').textContent = v + ' px';
+    applyAppearance(); save();
+  });
+  el('shadowOpacityRange').addEventListener('input', (e)=>{
+    const v = parseFloat(e.target.value||'0.06') || 0;
+    state.settings.appearance.shadowOpacity = v;
+    el('shadowOpacityVal').textContent = v.toFixed(2);
+    applyAppearance(); save();
+  });
+  el('buttonsNeonToggle').addEventListener('change', (e)=>{
+    state.settings.appearance.buttonsNeon = !!e.target.checked;
+    applyAppearance(); save();
+  });
+
+  // Print
+  el('printBtn').addEventListener('click', ()=>{
+    const cont = el('printChecks'); cont.innerHTML = '';
+    state.lists.forEach(l=>{
+      const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.value = l.id; if(state.currentListId === l.id) cb.checked = true;
+      const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
+      const name = document.createElement('span'); name.textContent = (l.icon ? `${l.icon} ` : '') + l.name;
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
+    });
+    const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
+    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__'; if(state.currentListId === '__completed__') cbC.checked = true;
+    const dotC = document.createElement('span'); dotC.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:#7a7f8c';
+    const nameC = document.createElement('span'); nameC.textContent = 'Zakończone';
+    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC); cont.appendChild(labelC);
+    el('printDateToggle').checked = true; el('printDialog').showModal();
+  });
+  el('printClose').addEventListener('click', ()=> el('printDialog').close());
+  el('printCancel').addEventListener('click', ()=> el('printDialog').close());
+  el('printForm').addEventListener('submit', (e)=>{
+    e.preventDefault();
+    const ids = $$('#printChecks input[type="checkbox"]').filter(cb=>cb.checked).map(cb=>cb.value);
+    if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const includeDate = el('printDateToggle').checked;
+    const html = buildPrintHTML(ids, includeDate);
+    el('printDialog').close();
+    try{ printUsingFrame(html); }catch(e){ printUsingBlobWindow(html); }
+  });
+  function buildPrintHTML(ids, includeDate){
+    const css = `<style>
+      @page { margin: 12mm; }
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif; color:#111; }
+      .pa-date { font-size:12px; color:#555; margin-bottom:8px; }
+      .pa-list { margin-bottom:16px; page-break-inside: avoid; }
+      h2 { display:flex; align-items:center; gap:10px; margin: 12px 0 6px; font-size:18px; }
+      .pa-dot{ width:12px; height:12px; border-radius:50%; display:inline-block; }
+      .pa-icon{ font-size:18px; line-height:1; }
+      ul{ margin: 0 0 8px 18px; padding:0; }
+      li{ margin:4px 0; }
+      .done{ text-decoration: line-through; color:#777; }
+    </style>`;
+    let body = '';
+    if(includeDate){
+      const d = new Date();
+      const dateStr = d.toLocaleDateString('pl-PL', {year:'numeric', month:'2-digit', day:'2-digit'});
+      body += `<div class="pa-date">Data: ${dateStr}</div>`;
+    }
+    ids.forEach(id=>{
+      if(id === '__completed__'){
+        const allDone = [];
+        state.lists.forEach(l=> l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); }));
+        allDone.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
+        body += `<div class="pa-list"><h2><span class="pa-dot" style="background:#7a7f8c"></span>Zakończone</h2>`;
+        if(allDone.length===0){ body += `<div>Brak pozycji.</div>`; }
+        else{ body += `<ul>` + allDone.map(it=> `<li>${escapeHtml(it.text)} (z listy: ${escapeHtml(it.from)})</li>`).join('') + `</ul>`; }
+        body += `</div>`;
+      }else{
+        const list = listById(id); if(!list) return;
+        // Emoji nie escapujemy
+        const iconSpan = list.icon ? `<span class="pa-icon">${list.icon}</span>` : '';
+        body += `<div class="pa-list"><h2><span class="pa-dot" style="background:${list.color}"></span>${iconSpan}<span>${escapeHtml(list.name)}</span></h2>`;
+        const undone = list.items.filter(i=>!i.done);
+        const done = list.items.filter(i=>i.done);
+        if(undone.length===0 && done.length===0){ body += `<div>Brak pozycji.</div>`; }
+        else{
+          if(undone.length>0){ body += `<ul>` + undone.map(it=> `<li>${escapeHtml(it.text)}</li>`).join('') + `</ul>`; }
+          if(done.length>0){ body += `<div>Ukończone:</div><ul>` + done.map(it=> `<li class="done">${escapeHtml(it.text)}</li>`).join('') + `</ul>`; }
+        }
+        body += `</div>`;
+      }
+    });
+    return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Drukuj</title>${css}</head><body>${body}</body></html>`;
+  }
+  function printUsingFrame(html){
+    const frame = document.createElement('iframe');
+    frame.style.position='fixed'; frame.style.right='0'; frame.style.bottom='0';
+    frame.style.width='0'; frame.style.height='0'; frame.style.border='0'; frame.style.opacity='0';
+    document.body.appendChild(frame);
+    const done = ()=>{
+      try{
+        frame.contentWindow.focus();
+        frame.contentWindow.print();
+      }finally{
+        setTimeout(()=> frame.remove(), 1200);
+      }
+    };
+    if('srcdoc' in frame){
+      frame.onload = done;
+      frame.srcdoc = html;
+    }else{
+      const doc = frame.contentWindow.document;
+      doc.open(); doc.write(html); doc.close();
+      setTimeout(done, 120);
+    }
+  }
+  function printUsingBlobWindow(html){
+    try{
+      const blob = new Blob([html], {type:'text/html'});
+      const url = URL.createObjectURL(blob);
+      const win = window.open(url, '_blank', 'noopener');
+      if(!win){ alert('Zezwól przeglądarce na wyskakujące okna, aby wydrukować.'); URL.revokeObjectURL(url); return; }
+      const trigger = ()=>{ try{ win.focus(); win.print(); }catch{} setTimeout(()=>{ try{ win.close(); }catch{} URL.revokeObjectURL(url); }, 1500); };
+      if(win.document && win.document.readyState === 'complete') setTimeout(trigger, 120);
+      else win.onload = trigger;
+      setTimeout(()=>{ try{ win.focus(); win.print(); }catch{} }, 800);
+    }catch(e){
+      alert('Drukowanie nie powiodło się. Spróbuj ponownie lub w innej przeglądarce.');
+    }
+  }
+
+  // Share
+  el('shareBtn').addEventListener('click', ()=>{
+    const cont = el('shareChecks'); cont.innerHTML = '';
+    state.lists.forEach(l=>{
+      const label = document.createElement('label'); label.className='row'; label.style.gap='8px';
+      const cb = document.createElement('input'); cb.type='checkbox'; cb.value=l.id; if(state.currentListId === l.id) cb.checked = true;
+      const dot = document.createElement('span'); dot.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:'+l.color;
+      const name = document.createElement('span'); name.textContent = (l.icon ? `${l.icon} ` : '') + l.name;
+      label.appendChild(cb); label.appendChild(dot); label.appendChild(name); cont.appendChild(label);
+    });
+    const labelC = document.createElement('label'); labelC.className='row'; labelC.style.gap='8px';
+    const cbC = document.createElement('input'); cbC.type='checkbox'; cbC.value='__completed__'; if(state.currentListId === '__completed__') cbC.checked = true;
+    const dotC = document.createElement('span'); dotC.style.cssText='width:12px;height:12px;border-radius:50%;display:inline-block;background:#7a7f8c';
+    const nameC = document.createElement('span'); nameC.textContent='Zakończone';
+    labelC.appendChild(cbC); labelC.appendChild(dotC); labelC.appendChild(nameC); cont.appendChild(labelC);
+
+    el('shareDateToggle').checked = true;
+    el('shareDialog').showModal();
+  });
+  el('shareClose').addEventListener('click', ()=> el('shareDialog').close());
+  el('shareSystemBtn').addEventListener('click', async ()=>{
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const text = buildShareText(ids, includeDate);
+    try{
+      if(navigator.share){ await navigator.share({ title: 'Lista', text }); }
+      else { await copyToClipboard(text); alert('Skopiowano do schowka. Wklej w Messengerze.'); }
+    }catch{}
+    el('shareDialog').close();
+  });
+  el('shareWhatsAppBtn').addEventListener('click', ()=>{
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const text = buildShareText(ids, includeDate);
+    const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const base = mobile ? 'https://wa.me/?text=' : 'https://web.whatsapp.com/send?text=';
+    window.open(base + encodeURIComponent(text), '_blank'); el('shareDialog').close();
+  });
+  el('shareCopyBtn').addEventListener('click', async ()=>{
+    const {ids, includeDate} = getShareSelection(); if(ids.length===0){ alert('Zaznacz przynajmniej jedną listę.'); return; }
+    const text = buildShareText(ids, includeDate);
+    await copyToClipboard(text); alert('Skopiowano. Wklej w dowolnej rozmowie.');
+  });
+  function getShareSelection(){
+    const ids = $$('#shareChecks input[type="checkbox"]').filter(cb=>cb.checked).map(cb=>cb.value);
+    const includeDate = el('shareDateToggle').checked;
+    return {ids, includeDate};
+  }
+  function buildShareText(ids, includeDate){
+    const lines = [];
+    if(includeDate){
+      const d = new Date(); const dateStr = d.toLocaleDateString('pl-PL', {year:'numeric', month:'2-digit', day:'2-digit'});
+      lines.push(`Data: ${dateStr}`);
+    }
+    ids.forEach(id=>{
+      if(id === '__completed__'){
+        const allDone = []; state.lists.forEach(l=> l.items.forEach(it=>{ if(it.done) allDone.push({text: it.text, from: l.name, completedAt: it.completedAt}); }));
+        allDone.sort((a,b)=>(b.completedAt||0)-(a.completedAt||0));
+        lines.push(`\nZakończone:`); if(allDone.length===0){ lines.push(`- (brak)`); } else allDone.forEach(it=> lines.push(`- ${it.text} (z listy: ${it.from})`));
+      }else{
+        const list = listById(id); if(!list) return;
+        lines.push(`\n${list.icon ? list.icon + ' ' : ''}${list.name}:`);
+        const undone = list.items.filter(i=>!i.done), done = list.items.filter(i=>i.done);
+        if(undone.length===0 && done.length===0){ lines.push(`- (brak)`); }
+        else{
+          undone.forEach(it=> lines.push(`- ${it.text}`));
+          if(done.length>0){ lines.push(`Ukończone:`); done.forEach(it=> lines.push(`- ${it.text}`)); }
+        }
+      }
+    });
+    return lines.join('\n');
+  }
+  async function copyToClipboard(text){
+    try{
+      if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); }
+      else{ const ta = document.createElement('textarea'); ta.value = text; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); ta.remove(); }
+    }catch(e){}
+  }
+
+  // Edit toggle
+  el('editModeBtn').addEventListener('click', (e)=>{
+    if(state.currentListId === '__completed__'){ alert('Tryb edycji jest dostępny w konkretnej liście.'); return; }
+    state.editMode = !state.editMode; render();
+    if(!state.editMode){ e.currentTarget.blur(); }
+  });
+
+  // Close dialogs on backdrop click
+  $$('dialog').forEach(d=>{
+    d.addEventListener('click', (e)=>{
+      const rect = d.getBoundingClientRect();
+      const inDialog = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+      if(!inDialog){ d.close(); }
+    });
+  });
+
+  // Appearance preview (live)
+  function ensureAppearancePreview(){
+    const cont = el('appearancePreview');
+    if(!cont || cont.dataset.ready) return;
+    cont.dataset.ready = '1';
+    cont.innerHTML = '';
+
+    const makeItem = (done, text, sub='')=>{
+      const li = document.createElement('div');
+      li.className = 'item' + (done ? ' done' : '');
+      const cb = document.createElement('input');
+      cb.type = 'checkbox';
+      cb.checked = !!done;
+      cb.disabled = true;
+      const texts = document.createElement('div');
+      texts.className = 'texts';
+      const t = document.createElement('div');
+      t.className = 'text';
+      t.textContent = text;
+      texts.appendChild(t);
+      if(sub){
+        const s = document.createElement('div');
+        s.className = 'sub';
+        s.textContent = sub;
+        texts.appendChild(s);
+      }
+      li.appendChild(cb);
+      li.appendChild(texts);
+      return li;
+    };
+
+    cont.appendChild(makeItem(false, 'mleko', 'przykład'));
+    cont.appendChild(makeItem(true, 'chleb (ukończone)'));
+  }
+
+  // Init
+  load(); migrateData(); setTheme(state.settings.dark); applyAppearance();
+  if(state.currentListId !== '__completed__' && !listById(state.currentListId)){
+    state.currentListId = state.lists[0].id; state.lastActiveListId = state.currentListId;
+  }
+  render();
+})();
+</script>
+</body>
+</html>

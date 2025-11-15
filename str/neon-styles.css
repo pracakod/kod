@@ -1,0 +1,224 @@
+/* NOWOCZESNY NEON/GLOW STYL – dynamicznie pod kolor listy (delikatniejszy) */
+:root{
+  --ring-blur: 8px;  /* delikatniejsza poświata */
+  --ring-pad: 1px;
+  --item-radius: 18px;
+  --item-shadow-opa: 0.06;
+}
+
+/* Globalne wygładzanie */
+@media (prefers-reduced-motion: no-preference){
+  .icon-btn, .btn, .fab, .item, .title-button, .dropdown {
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .25s ease, transform .18s ease, opacity .2s ease;
+  }
+}
+
+/* Header */
+.app-header{
+  backdrop-filter: blur(10px);
+  background:
+    linear-gradient(180deg, color-mix(in oklab, var(--accent) 14%, var(--bg)) 0%, var(--bg) 72%);
+  border-bottom: 1px solid color-mix(in oklab, var(--border) 70%, var(--accent) 30%);
+}
+
+/* Tytuł z neonowym ringiem – mniej glow */
+.title-button{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation: isolate;
+}
+.title-button::before{
+  content:'';
+  position:absolute; inset:0; border-radius:12px;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.title-button::after{
+  content:'';
+  position:absolute; inset:-2px; border-radius:14px;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(10px);
+  opacity: 0; transition: opacity .3s ease;
+  z-index:-1;
+}
+.title-button:hover::after{ opacity:.45; }
+
+/* Dropdown – pływająca karta z lekkim neonem */
+.dropdown{
+  box-shadow: 0 10px 28px rgba(0,0,0,.20), 0 0 0 1px color-mix(in oklab, var(--border) 75%, var(--accent) 25%);
+  border-radius: 18px;
+}
+
+/* Item – neonowa ramka dopasowana do akcentu (cieniej) */
+.item{
+  position:relative;
+  border: none !important;
+  background: transparent !important;
+  border-radius: var(--item-radius) !important;
+  padding: 12px;
+  filter: drop-shadow(0px 6px 16px rgba(17,19,24,0.08));
+}
+.item::before{
+  content:'';
+  position:absolute; inset:0; border-radius: var(--item-radius);
+  padding: var(--ring-pad);
+  background: linear-gradient(137deg, var(--neo1) 0%, var(--neo2) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none; z-index:0;
+}
+.item::after{
+  content:'';
+  position:absolute; inset:2px; border-radius: calc(var(--item-radius) - 2px);
+  background: var(--card);
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa));
+  z-index:0; pointer-events:none;
+}
+.item > * { position:relative; z-index:1 }
+.item:hover{
+  filter: drop-shadow(0px 0px 18px color-mix(in oklab, var(--accent) 18%, transparent));
+}
+
+/* Checkbox – sprężysty */
+.item input[type="checkbox"]{
+  width:24px; height:24px; border-radius:8px;
+  transition: background .15s, border-color .15s, transform .12s ease;
+}
+.item input[type="checkbox"]:active{ transform: scale(0.9) }
+
+/* Płynne zwijanie/pojawianie */
+.item.anim-hide{
+  overflow:hidden;
+  transition: height .38s ease, margin .38s ease, opacity .38s ease;
+}
+
+/* Płynniejsze przesuwanie przy zmianie kolejności */
+.item.moving{
+  transition: transform 550ms cubic-bezier(.22,.61,.36,1) !important;
+}
+
+/* Ikonowe przyciski i btn – neonowy ring, jasno i subtelnie */
+.icon-btn, .btn{
+  position: relative;
+  border: none;
+  background: var(--card);
+  color: var(--text);
+  box-shadow: none;
+  isolation:isolate;
+}
+.icon-btn::before, .btn::before{
+  content:'';
+  position:absolute; inset:0; border-radius: inherit;
+  padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events:none;
+}
+.icon-btn::after, .btn::after{
+  content:''; position:absolute; inset:-2px; border-radius: inherit;
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  filter: blur(var(--ring-blur));
+  opacity: 0; transition: opacity .3s ease; z-index:-1;
+}
+.icon-btn:hover::after, .btn:hover::after{ opacity:.45; }
+.icon-btn.active{ box-shadow: 0 0 0 2px color-mix(in oklab, var(--accent) 60%, transparent) }
+
+/* Primary – pełny gradient z akcentu */
+.btn.primary{
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  color:#fff;
+  border: none;
+}
+
+/* FAB – gradient z akcentu (mniej "dymu") */
+.fab{
+  border: none;
+  background: linear-gradient(137deg, var(--neo1), var(--neo2));
+  box-shadow: 0 10px 24px color-mix(in oklab, var(--accent) 22%, transparent);
+  color:#fff;
+}
+.fab:hover{ transform: translateX(-50%) translateY(-16%) scale(1.01) }
+
+/* Szybki add – neonowy chip (cieniej) */
+.quick-add{
+  border: none; position: fixed;
+  box-shadow: 0 10px 28px rgba(0,0,0,.20);
+}
+.quick-add::before{
+  content:''; position:absolute; inset:0; border-radius:14px; padding: var(--ring-pad);
+  background: linear-gradient(90deg, var(--neo1), var(--neo2));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude; pointer-events:none;
+}
+
+/* Dark theme – już ok dzięki var(--card) */
+[data-theme="dark"] .icon-btn, [data-theme="dark"] .btn{ background:#0e1118; color:#fff; }
+
+/* Na wszelki wypadek */
+@media (prefers-reduced-motion: reduce){
+  .item, .icon-btn, .btn, .fab, .title-button { transition: none !important; }
+}
+
+/* ========= Tryby wyglądu (obrys elementów) ========= */
+
+/* Klasyczny obrys (bez neonu) */
+:root[data-item-outline="border"] .item{
+  border: 1px solid var(--border) !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: 0 4px 12px rgba(17,19,24, var(--item-shadow-opa)) !important;
+  filter: none !important;
+}
+:root[data-item-outline="border"] .item::before,
+:root[data-item-outline="border"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="border"] .item:hover{ filter: none !important; }
+
+/* Brak obrysu (minimal) */
+:root[data-item-outline="none"] .item{
+  border: 0 !important;
+  background: var(--card) !important;
+  border-radius: var(--item-radius) !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+:root[data-item-outline="none"] .item::before,
+:root[data-item-outline="none"] .item::after{
+  content: none !important;
+}
+:root[data-item-outline="none"] .item:hover{ filter: none !important; }
+
+/* Neon w przyciskach – możliwość wyłączenia */
+:root[data-neon-buttons="off"] .icon-btn,
+:root[data-neon-buttons="off"] .btn{
+  border:1px solid var(--border) !important;
+  box-shadow: var(--shadow-soft) !important;
+}
+:root[data-neon-buttons="off"] .icon-btn::before,
+:root[data-neon-buttons="off"] .icon-btn::after,
+:root[data-neon-buttons="off"] .btn::before,
+:root[data-neon-buttons="off"] .btn::after{
+  content: none !important;
+}
+
+/* Podgląd w oknie Wygląd */
+#appearancePreview{
+  display: grid;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 14px;
+  background: var(--card); /* fallback */
+  background: color-mix(in oklab, var(--card) 92%, var(--accent) 8%);
+  border: 1px solid var(--border);
+}
+#appearancePreview .handle,
+#appearancePreview .actions { display: none !important; }
+#appearancePreview input[type="checkbox"] { pointer-events: none; }

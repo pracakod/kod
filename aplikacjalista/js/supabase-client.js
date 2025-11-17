@@ -74,6 +74,7 @@ const ENTITIES = {
   loyalty_cards: "loyalty_cards",
   receipts: "receipts",
   dates: "dates",
+  vacations:       "vacations",
   archive: "archive",
   trash: "trash"
 };
@@ -263,6 +264,7 @@ export async function pullChanges(lastSync = 0) {
       loyalty_cards:   out.loyalty_cards   || [],
       receipts:        out.receipts        || [],
       dates:           out.dates           || [],
+      vacations:       out.vacations       || [],
       archive:         out.archive         || [],
       trash:           out.trash           || []
     };

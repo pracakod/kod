@@ -76,29 +76,17 @@ async function compressImageDataURL(dataURL, maxW = 1400, quality = 0.88) {
 function parseOCRTextToFields(text) {
   const out = { store: "", date: "", total: 0 };
   if (!text) return out;
-
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
-  // Sklep: weź pierwszą niepustą linię (często nazwa)
   out.store = lines[0] || "";
-
-  // Data: dopasuj dd.mm.rrrr lub rrrr-mm-dd
-  const dateMatch = text.match(/(\d{2}[.\-/]\d{2}[.\-/]\d{4})|(\d{4}[.\-/]\d{2}[.\-/]\d{2})/);
+  const dateMatch = text.match(/(\d{2}[.\-\/]\d{2}[.\-\/]\d{4})|(\d{4}[.\-\/]\d{2}[.\-\/]\d{2})/);
   if (dateMatch) {
-    const raw = dateMatch[0].replace(/\./g, "-").replace(/\//g, "-");
-    const [a,b,c] = raw.split("-");
-    // Ustandaryzuj do RRRR-MM-DD
-    if (a.length === 4) out.date = `${a}-${b}-${c}`;
-    else out.date = `${c}-${b}-${a}`;
+    const raw = dateMatch[0].replace(/[.\/]/g, "-");
+    const [a, b, c] = raw.split("-");
+    out.date = a.length === 4 ? `${a}-${b}-${c}` : `${c}-${b}-${a}`;
   }
-
-  // Kwota: szukaj maksimum spośród liczb z separatorem , lub .
-  const amounts = Array.from(text.matchAll(/(\d{1,3}([.,]\d{3})*[.,]\d{2})/g)).map(m => m[0]);
+  const amounts = Array.from(text.matchAll(/(\d{1,3}(?:[.,]\d{3})*[.,]\d{2})/g)).map(m => m[0]);
   const toFloat = (s) => parseFloat(s.replace(/\./g, "").replace(",", "."));
-  if (amounts.length) {
-    out.total = amounts.map(toFloat).reduce((a,b) => Math.max(a,b), 0);
-  }
-
+  if (amounts.length) out.total = amounts.map(toFloat).reduce((a, b) => Math.max(a, b), 0);
   return out;
 }
 

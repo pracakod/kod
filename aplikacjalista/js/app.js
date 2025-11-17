@@ -86,8 +86,8 @@ function closeDialog(id) {
 }
 
 /* --------------------------------------------------------------------------
-   Dynamiczne ładowanie modułów opcjonalnych (zawartość zostanie dostarczona
-   w kolejnych plikach). Stosujemy bezpieczne stuby do czasu podmiany.
+   Dynamiczne ładowanie modułów — odporne na podkatalogi (GitHub Pages)
+   Rozwiązuje ścieżki względem bieżącego modułu (import.meta.url).
    -------------------------------------------------------------------------- */
 
 function stubAPI(namespace) {
@@ -98,33 +98,35 @@ function stubAPI(namespace) {
   });
 }
 
+const modURL = (rel) => new URL(rel, import.meta.url).href;
+
 async function loadModules() {
-  const tryImport = async (path, name) => {
-    try { return (await import(path)); }
-    catch (e) { console.info(`Moduł ${name} (${path}) jeszcze niedostępny — używam stubu.`); return null; }
+  const tryImport = async (url, name) => {
+    try { return (await import(/* @vite-ignore */ url)); }
+    catch (e) { console.info(`Moduł ${name} (${url}) jeszcze niedostępny — używam stubu.`); return null; }
   };
   const mods = {};
-  mods.Supa      = await tryImport("./supabase-client.js", "Supabase");
-  mods.Auth      = await tryImport("./auth.js", "Auth");
-  mods.Storage   = await tryImport("./storage.js", "Storage");
-  mods.UI        = await tryImport("./ui.js", "UI");
-  mods.Swipe     = await tryImport("./swipe-handler.js", "Swipe");
-  mods.Archive   = await tryImport("./archive.js", "Archive");
-  mods.Settings  = await tryImport("./settings.js", "Settings");
-  mods.Barcode   = await tryImport("./barcode-scanner.js", "Barcode");
-  mods.Stats     = await tryImport("./statistics.js", "Statistics");
-  mods.Loyalty   = await tryImport("./loyalty-cards.js", "Loyalty");
-  mods.ListMgr   = await tryImport("./list-manager.js", "ListManager");
-  mods.Sharing   = await tryImport("./sharing.js", "Sharing");
-  mods.Receipts  = await tryImport("./receipts.js", "Receipts");
-  mods.Recipes   = await tryImport("./recipes.js", "Recipes");
-  mods.Vacations = await tryImport("./vacations.js", "Vacations");
-  mods.Notifs    = await tryImport("./notifications.js", "Notifications");
-  mods.Dates     = await tryImport("./important-dates.js", "ImportantDates");
-  mods.Calendar  = await tryImport("./calendar.js", "Calendar");
-  mods.Profile   = await tryImport("./profile.js", "Profile");
+  // Ważne: wszystkie ścieżki liczymy względem pliku js/app.js
+  mods.Supa      = await tryImport(modURL("./supabase-client.js"), "Supabase");
+  mods.Auth      = await tryImport(modURL("./auth.js"), "Auth");
+  mods.Storage   = await tryImport(modURL("./storage.js"), "Storage");
+  mods.UI        = await tryImport(modURL("./ui.js"), "UI");
+  mods.Swipe     = await tryImport(modURL("./swipe-handler.js"), "Swipe");
+  mods.Archive   = await tryImport(modURL("./archive.js"), "Archive");
+  mods.Settings  = await tryImport(modURL("./settings.js"), "Settings");
+  mods.Barcode   = await tryImport(modURL("./barcode-scanner.js"), "Barcode");
+  mods.Stats     = await tryImport(modURL("./statistics.js"), "Statistics");
+  mods.Loyalty   = await tryImport(modURL("./loyalty-cards.js"), "Loyalty");
+  mods.ListMgr   = await tryImport(modURL("./list-manager.js"), "ListManager");
+  mods.Sharing   = await tryImport(modURL("./sharing.js"), "Sharing");
+  mods.Receipts  = await tryImport(modURL("./receipts.js"), "Receipts");
+  mods.Recipes   = await tryImport(modURL("./recipes.js"), "Recipes");
+  mods.Vacations = await tryImport(modURL("./vacations.js"), "Vacations");
+  mods.Notifs    = await tryImport(modURL("./notifications.js"), "Notifications");
+  mods.Dates     = await tryImport(modURL("./important-dates.js"), "ImportantDates");
+  mods.Calendar  = await tryImport(modURL("./calendar.js"), "Calendar");
+  mods.Profile   = await tryImport(modURL("./profile.js"), "Profile");
 
-  /* Przypisanie stubs */
   return {
     Supa:      mods.Supa      ?? stubAPI("Supabase"),
     Auth:      mods.Auth      ?? stubAPI("Auth"),
@@ -149,9 +151,7 @@ async function loadModules() {
 }
 
 /* --------------------------------------------------------------------------
-   Fallback lokalny (działa od razu w trybie gościa, bez czekania na moduły)
-   Prosty magazyn w localStorage dla sekcji: Checklista, Zadania, Zakupy.
-   Docelowo zostanie w pełni przejęty przez storage.js i list-manager.js.
+   Fallback lokalny — jak wcześniej (bez zmian istotnych dla logiki)
    -------------------------------------------------------------------------- */
 const Fallback = {
   key: "lista:fallback",
@@ -253,8 +253,7 @@ const Fallback = {
 };
 
 /* --------------------------------------------------------------------------
-   Renderery fallback (podstawowy UX do czasu dołączenia wyspecjalizowanych
-   modułów zarządzających listami i sekcjami)
+   Renderery fallback
    -------------------------------------------------------------------------- */
 const Render = {
   current: {
@@ -263,11 +262,9 @@ const Render = {
     shoppingListId: null,
   },
 
-  /* Checklista */
   checklist() {
     const select = qs("#checklist-list-select");
     const { lists, items } = Fallback.data.checklist;
-    /* listy */
     select.innerHTML = "";
     for (const l of lists) {
       const opt = document.createElement("option");
@@ -276,7 +273,6 @@ const Render = {
     if (!this.current.checklistListId) this.current.checklistListId = lists[0]?.id;
     if (this.current.checklistListId) select.value = this.current.checklistListId;
 
-    /* elementy */
     const listId = this.current.checklistListId;
     const todoUL = qs("#checklist-todo");
     const doneUL = qs("#checklist-done");
@@ -292,13 +288,12 @@ const Render = {
       cb.checked = !!it.done;
       cb.addEventListener("change", () => {
         Fallback.toggleChecklistItem(listId, it.id, cb.checked);
-        Render.checklist(); // przeniesienie do Zrobione
+        Render.checklist();
       });
       (it.done ? doneUL : todoUL).appendChild(li);
     }
   },
 
-  /* Zadania */
   tasks() {
     const select = qs("#tasks-project-select");
     const { projects, items } = Fallback.data.tasks;
@@ -328,7 +323,6 @@ const Render = {
     }
   },
 
-  /* Zakupy */
   shopping() {
     const select = qs("#shopping-list-select");
     const { lists, items } = Fallback.data.shopping;
@@ -356,7 +350,7 @@ const Render = {
       cb.checked = !!it.bought;
       cb.addEventListener("change", () => {
         Fallback.setShoppingBought(this.current.shoppingListId, it.id, cb.checked);
-        Render.shopping(); // aktualizacja podsumowania
+        Render.shopping();
       });
       ul.appendChild(li);
       if (!it.bought && it.cost) total += Number(it.cost) || 0;
@@ -365,7 +359,6 @@ const Render = {
     qs("#shopping-total").textContent = PLN.format(total);
   },
 
-  /* Paragony (lista prosta) */
   receipts() {
     const ul = qs("#receipts-list");
     if (!ul) return;
@@ -378,15 +371,14 @@ const Render = {
       title.textContent = r.store || "Paragon";
       const meta = document.createElement("div"); meta.className = "item-meta small muted";
       meta.textContent = `${r.date || formatPLShort.format(new Date(r.created_at))} • ${PLN.format(Number(r.total || 0))}`;
+      li.appendChild(document.createElement("span"));
       main.appendChild(title); main.appendChild(meta);
-      li.appendChild(document.createElement("span")); // placeholder dla checkbox layoutu
       li.appendChild(main);
-      li.appendChild(document.createElement("span")); // placeholder uchwytu
+      li.appendChild(document.createElement("span"));
       ul.appendChild(li);
     }
   },
 
-  /* Karty lojalnościowe (lista prosta) */
   loyalty() {
     const ul = qs("#loyalty-list"); if (!ul) return;
     ul.innerHTML = "";
@@ -403,7 +395,6 @@ const Render = {
     }
   },
 
-  /* Ważne daty — lista i kalendarz (minimalny render) */
   dates() {
     const ul = qs("#dates-list"); if (!ul) return;
     ul.innerHTML = "";
@@ -415,8 +406,8 @@ const Render = {
       title.textContent = e.title || "Wydarzenie";
       const meta = document.createElement("div"); meta.className = "item-meta small muted";
       meta.textContent = `${e.category || "inne"} • ${formatPL.format(new Date(e.date))}`;
-      main.appendChild(title); main.appendChild(meta);
       li.appendChild(document.createElement("span"));
+      main.appendChild(title); main.appendChild(meta);
       li.appendChild(main);
       li.appendChild(document.createElement("span"));
       ul.appendChild(li);
@@ -450,7 +441,6 @@ const CalendarBasic = {
       const dateStr = new Date(y, m, d).toISOString().slice(0,10);
       cell.textContent = d.toString();
       if (dateStr === todayISO()) cell.classList.add("cal-today");
-      // znaczniki wydarzeń
       const evCount = Fallback.data.dates.filter(e => e.date === dateStr).length;
       if (evCount > 0) {
         const dot = document.createElement("div");
@@ -478,30 +468,30 @@ const App = {
   },
 
   async init() {
-    // data wydania
     const rd = qs("#release-date"); if (rd) rd.textContent = formatPL.format(new Date());
 
-    // Załadowanie danych fallback (zawsze dostępne)
+    // Załadowanie danych fallback
     Fallback.load();
 
-    // Rejestracja SW (pozwoli na PWA i cache offline)
+    // Rejestracja SW (wersja przyjazna dla podkatalogów: ./sw.js, scope "./")
     this.registerServiceWorker();
 
-    // Załaduj moduły (jeśli jeszcze nie dostarczone — użyj stubów)
+    // Ładuj moduły (z rozwiązywaniem ścieżek względem app.js)
     this.mods = await loadModules();
 
     // Ustawienia i motywy
-    try { await this.mods.Settings.init?.(); } catch {}
-    // Zastosowanie ustawień Wyglądu (przełączniki)
+    try { await this.mods.Settings.init?.(Bus); } catch {}
+
+    // Wygląd i pasek wyszukiwania (uwzględnij zapisane preferencje nawet bez formularza)
     this.applyAppearanceToggles();
 
-    // Inicjalizacja UI/specjalizowanych modułów (swipe, itp.)
+    // Inicjalizacja UI/specjalizowanych modułów
     try { this.mods.Swipe.init?.(Bus); } catch {}
 
-    // Obsługa statusu online/offline
+    // Online/offline
     this.initNetworkBanner();
 
-    // Nawigacja i interfejs
+    // UI
     this.initNav();
     this.initDrawer();
     this.initGlobalSearch();
@@ -510,7 +500,7 @@ const App = {
     this.initAbout();
     this.initProfile();
 
-    // Inicjalizacja sekcji bazowych (render fallback)
+    // Render fallback
     Render.checklist();
     Render.tasks();
     Render.shopping();
@@ -518,7 +508,7 @@ const App = {
     Render.loyalty();
     Render.dates();
 
-    // Zdarzenia selectów list/projektów
+    // Selecty
     qs("#checklist-list-select")?.addEventListener("change", (e) => {
       Render.current.checklistListId = e.target.value; Render.checklist();
     });
@@ -529,27 +519,27 @@ const App = {
       Render.current.shoppingListId = e.target.value; Render.shopping();
     });
 
-    // Podłącz przyciski sekcji
     this.initSectionButtons();
 
-    // Autentykacja i ekran startowy
+    // Auth i start screen
     await this.initAuthAndStartScreen();
 
     // Powiadomienia
-    try { await this.mods.Notifs.init?.(); } catch {}
+    try { await this.mods.Notifs.init?.(Bus); } catch {}
   },
 
   /* ------------------------ Service Worker ------------------------------- */
   async registerServiceWorker() {
     if (!("serviceWorker" in navigator)) return;
     try {
-      const reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" });
+      // Rejestracja względna (działa w podkatalogu, np. /repo/)
+      const reg = await navigator.serviceWorker.register("./sw.js", { scope: "./" });
       reg.addEventListener("updatefound", () => {
         const newWorker = reg.installing;
         if (!newWorker) return;
         newWorker.addEventListener("statechange", () => {
           if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-            showToast("Dostępna nowa wersja aplikacji.", "Odśwież", () => location.reload());
+            showToast("Dostępna nowa wersja aplikacji. Odśwież, aby zaktualizować.", "Odśwież", () => location.reload());
           }
         });
       });
@@ -583,13 +573,11 @@ const App = {
     qsa(".view").forEach(v => { v.hidden = v.id !== viewId; v.classList.toggle("active", v.id === viewId); });
     qsa(".tab-btn").forEach(b => b.classList.toggle("active", b.dataset.target === viewId));
     this.state.activeViewId = viewId;
-    // Drobne: animacja FAB po zmianie
     const fab = qs("#fab"); fab?.classList.add("appear");
     setTimeout(() => fab?.classList.remove("appear"), 320);
   },
 
   initNav() {
-    // Dolne menu
     qsa(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => this.switchView(btn.dataset.target));
     });
@@ -615,9 +603,16 @@ const App = {
     const clear = qs("#btn-clear-search");
     const input = qs("#global-search-input");
 
+    // Wymuś widoczność według preferencji (domyślnie: widoczny)
+    try {
+      const pref = JSON.parse(localStorage.getItem("lista:appearance") || "{}");
+      const show = (typeof pref.showSearch === "boolean") ? pref.showSearch : true;
+      panel?.toggleAttribute("hidden", !show);
+      toggle?.setAttribute("aria-expanded", show ? "true" : "false");
+    } catch {}
+
     const apply = debounce(() => {
       const q = (input.value || "").trim().toLowerCase();
-      // Proste filtrowanie w obrębie aktualnego widoku
       const view = qs(`#${this.state.activeViewId}`);
       const lists = qsa(".list-items > li, .card-list > li", view);
       lists.forEach(li => {
@@ -655,20 +650,16 @@ const App = {
           showToast("Dodano do Checklisty.");
         }
       } else if (active === "view-tasks") {
-        // pełny formularz
         openDialog("#dialog-task");
       } else if (active === "view-shopping") {
-        // formularz pozycji zakupowej
         openDialog("#dialog-shopping");
       } else if (active === "view-recipes") {
-        // dodanie przepisu (po dostarczeniu modułu)
         showToast("Formularz dodawania przepisu będzie dostępny wkrótce.");
       } else if (active === "view-vacations") {
         showToast("Formularz planu wakacyjnego będzie dostępny wkrótce.");
       } else if (active === "view-dates") {
         this.addDateQuick();
       } else {
-        // domyślnie nic
         showToast("Brak akcji dla bieżącego widoku.");
       }
     });
@@ -766,8 +757,6 @@ const App = {
         showToast("Kartę zapisano.");
       }
     });
-
-    // Przepisy / Wakacje — zostaną rozszerzone przez dedykowane moduły
   },
 
   openShareDialog(type, id) {
@@ -802,7 +791,6 @@ const App = {
 
   /* ------------------------------ Opcje --------------------------------- */
   initOptions() {
-    // Eksport/Import
     qs("#btn-export-json")?.addEventListener("click", () => {
       const blob = new Blob([JSON.stringify(Fallback.data, null, 2)], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -810,6 +798,7 @@ const App = {
       a.href = url; a.download = `lista-backup-${new Date().toISOString().slice(0,10)}.json`; a.click();
       URL.revokeObjectURL(url);
     });
+
     const importJSON = () => {
       const inp = document.createElement("input");
       inp.type = "file"; inp.accept = "application/json";
@@ -832,7 +821,6 @@ const App = {
     };
     qs("#btn-import-json")?.addEventListener("click", importJSON);
     qs("#btn-export-csv")?.addEventListener("click", () => {
-      // przykładowy eksport CSV zakupów
       const listId = Render.current.shoppingListId;
       const rows = (Fallback.data.shopping.items[listId] || []).map(i =>
         [i.name, i.qty, i.category, i.store, i.cost, i.bought ? "TAK" : "NIE"].join(";")
@@ -845,7 +833,6 @@ const App = {
       URL.revokeObjectURL(url);
     });
 
-    // Powiadomienia — preferencje (zostaną obsłużone przez notifications.js)
     const bindToggle = (id, key) => {
       qs(id)?.addEventListener("change", (e) => {
         this.mods.Notifs.setPref?.(key, e.target.checked);
@@ -859,7 +846,6 @@ const App = {
     bindToggle("#notif-dates", "dates");
     bindToggle("#notif-shared", "shared");
 
-    // Ciche godziny
     qs("#notif-quiet-hours")?.addEventListener("change", (e) => {
       const on = e.target.checked;
       const from = qs("#quiet-from").value; const to = qs("#quiet-to").value;
@@ -867,7 +853,6 @@ const App = {
       showToast("Zaktualizowano ciche godziny.");
     });
 
-    // Motywy (podgląd i zastosowanie)
     qs("#btn-theme-preview")?.addEventListener("click", () => this.mods.Settings.previewTheme?.());
     qs("#btn-theme-apply")?.addEventListener("click", () => {
       this.mods.Settings.applyTheme?.();
@@ -876,7 +861,6 @@ const App = {
   },
 
   applyAppearanceToggles() {
-    // Wygląd — wiązanie pól do klas body
     const fontSize = qs("#opt-font-size");
     const fontFamily = qs("#opt-font-family");
     const density = qs("#opt-density");
@@ -885,6 +869,10 @@ const App = {
     const elevation = qs("#opt-elevation");
     const anim = qs("#opt-animations");
     const showSearch = qs("#opt-show-search");
+
+    // Wczytaj zapisane preferencje (także gdy formularz nie jest jeszcze odwiedzony)
+    let savedAppearance = {};
+    try { savedAppearance = JSON.parse(localStorage.getItem("lista:appearance") || "{}"); } catch {}
 
     const apply = () => {
       const b = document.body;
@@ -902,8 +890,11 @@ const App = {
       b.classList.remove("elevation-none","elevation-low","elevation-high");
       b.classList.add(elevation?.value === "none" ? "elevation-none" : elevation?.value === "high" ? "elevation-high" : "elevation-low");
 
-      b.classList.toggle("animations-on", !!anim?.checked);
-      qs("#global-search")?.toggleAttribute("hidden", !showSearch?.checked);
+      b.classList.toggle("animations-on", typeof anim?.checked === "boolean" ? !!anim.checked : (savedAppearance.animations ?? true));
+
+      const show = typeof showSearch?.checked === "boolean" ? !!showSearch.checked : (savedAppearance.showSearch ?? true);
+      const panel = qs("#global-search");
+      panel?.toggleAttribute("hidden", !show);
     };
 
     [fontSize,fontFamily,density,itemSize,radius,elevation,anim,showSearch].forEach(el => el?.addEventListener("change", apply));
@@ -932,13 +923,19 @@ const App = {
       localStorage.setItem("lista:persistSession", on ? "1" : "0");
       showToast("Preferencja sesji zapisana.");
     });
+
     logout?.addEventListener("click", async () => {
       try { await this.mods.Auth.signOut?.(); } catch {}
+      // Wylogowanie także z trybu gościa (pokaż ekran startowy)
       this.state.user = null;
-      this.state.guest = true;
+      this.state.guest = false;
+      try { localStorage.removeItem("lista:guest"); } catch {}
       this.updateUserUI();
-      showToast("Wylogowano.");
+      const start = qs("#start-screen");
+      if (start) start.removeAttribute("hidden");
+      showToast("Wylogowano. Wybierz tryb logowania.");
     });
+
     del?.addEventListener("click", async () => {
       if (!confirm("Czy na pewno chcesz usunąć konto? Tej operacji nie można cofnąć.")) return;
       try { await this.mods.Auth.deleteAccount?.(); showToast("Konto usunięto."); }
@@ -970,7 +967,6 @@ const App = {
   async initAuthAndStartScreen() {
     const start = qs("#start-screen");
 
-    // Obsługa przycisków
     qs("#btn-login-google")?.addEventListener("click", async () => {
       try {
         await this.mods.Auth.signInWithGoogle?.();
@@ -1004,7 +1000,7 @@ const App = {
       }
     });
 
-    // Reset hasła: wysyłka kodu i potwierdzenie
+    // Reset hasła
     qs("#btn-send-reset-code")?.addEventListener("click", async () => {
       const email = qs("#reset-email").value.trim();
       if (!email) return;
@@ -1020,19 +1016,16 @@ const App = {
       catch { showToast("Zmiana hasła nie powiodła się."); }
     });
 
-    // Aktualizacja UI użytkownika po zmianie stanu sesji
     try {
       this.mods.Auth.onAuthStateChange?.((evt) => {
         this.state.user = evt?.user || null;
         if (this.state.user) this.state.guest = false;
         this.updateUserUI();
       });
-      // Pobierz bieżącą sesję (jeżeli istnieje)
       const sess = await this.mods.Supa.getSession?.();
       this.state.user = sess?.user || null;
     } catch {}
 
-    // Pokaż start screen, jeżeli brak użytkownika i brak trybu gościa
     const hasGuest = localStorage.getItem("lista:guest") === "1";
     if (!this.state.user && !hasGuest) {
       start?.removeAttribute("hidden");
@@ -1063,14 +1056,13 @@ qs("#cal-next")?.addEventListener("click", () => {
 });
 qs("#cal-view-mode")?.addEventListener("change", (e) => {
   CalendarBasic.mode = e.target.value;
-  CalendarBasic.render(); // w wersji fallback tylko widok miesięczny
+  CalendarBasic.render();
 });
 
-// Inicjalne odświeżenie kalendarza (jeśli widok już otwarty)
 CalendarBasic.render();
 
 /* --------------------------------------------------------------------------
-   Użyteczne zdarzenia Bus (przykładowe)
+   Zdarzenia Bus
    -------------------------------------------------------------------------- */
 Bus.on("storage:synced", () => showToast("Dane zsynchronizowane."));
 Bus.on("list:updated", () => {

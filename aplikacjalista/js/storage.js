@@ -64,7 +64,7 @@ function createEmptyDB() {
     loyalty_cards: [],              // {id, name, code, store?, updated_at}
     receipts: [],                   // {id, store, date, total, tags, ocr_text?, updated_at}
     dates: [],                      // {id, title, date, category, remind?, updated_at}
-
+    vacations: [],
     // Archiwum i kosz (ostatnio usunięte)
     archive: [],                    // {id, type, ref_id, data, archived_at}
     trash: []                       // {id, type, ref_id, data, deleted_at}
@@ -282,9 +282,9 @@ export const Storage = {
   },
 
   /* Zapis lokalny i obsługa kolejki */
-  _saveDB()   { saveJSON(LS_DB, this._db); }
-  _saveMeta() { saveJSON(LS_META, this._meta); }
-  _saveQueue(){ saveJSON(LS_QUEUE, this._queue); }
+  _saveDB()   { saveJSON(LS_DB, this._db); },
+  _saveMeta() { saveJSON(LS_META, this._meta); },
+  _saveQueue(){ saveJSON(LS_QUEUE, this._queue); },
 
   _enqueue(op) {
     const rec = { id: uuid(), ts: nowTs(), ...op };

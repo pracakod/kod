@@ -53,7 +53,8 @@ function applyThemeClasses(theme) {
   const mode = theme.mode === "auto" ? "theme-auto"
             : theme.mode === "dark" ? "theme-dark"
             : "theme-light";
-  const accent = ["blue","green","amber","rose"].includes(theme.accent) ? `theme-${theme.accent}` : "theme-blue";
+  const accents = ["blue","green","amber","rose"];
+  const accent = accents.includes(theme.accent) ? `theme-${theme.accent}` : "theme-blue";
 
   b.classList.add(mode, accent);
   // Domyślnie włącz animacje; zostaną skorygowane przez sekcję Wygląd
@@ -114,20 +115,23 @@ export const Settings = {
     const pending = loadJSON(LS_THEME_PENDING, null);
     if (!pending) saveJSON(LS_THEME_PENDING, this._appliedTheme);
 
-    // 3) Załaduj wygląd i uzupełnij formularz przed aplikacją (app.js zaczytuje i stosuje)
+    // 3) Załaduj wygląd i uzupełnij formularz (app.js zaczytuje i stosuje)
     const appearance = loadJSON(LS_APPEARANCE, DEFAULT_APPEARANCE);
     setAppearanceForm({ ...DEFAULT_APPEARANCE, ...appearance });
 
-    // 4) Nasłuch zmian wyboru oczekującego (nie aplikujemy od razu — robi to „Podgląd”)
+    // 4) Nasłuch zmian wyboru oczekującego – NATYCHMIASTOWY PODGLĄD
     this._bus.on?.("theme:pending-changed", (sel) => {
-      saveJSON(LS_THEME_PENDING, sel);
+      const next = { ...DEFAULT_THEME, ...sel };
+      saveJSON(LS_THEME_PENDING, next);
+      // Natychmiastowy podgląd po kliknięciu kafla w siatce (rozwiązuje brak widocznej zmiany motywu)
+      applyThemeClasses(next);
     });
 
     // 5) Persistencja wyglądu przy zmianach kontrolek
     this._bindAppearancePersistence();
   },
 
-  /* Podgląd motywu — stosuje wybór oczekujący, bez zapisu jako „applied” */
+  /* Podgląd motywu – może być wywołany z przycisku „Podgląd” */
   previewTheme() {
     const sel = UI.getSelectedTheme?.() || loadJSON(LS_THEME_PENDING, this._appliedTheme);
     if (!sel) return;

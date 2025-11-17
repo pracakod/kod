@@ -1,0 +1,36 @@
+{
+  "name": "Lista — Lista DareG 1.0v",
+  "short_name": "Lista",
+  "id": "app.lista.dareg",
+  "description": "Zaawansowany menedżer list i zadań z integracją zakupów, przepisów i planowania wakacji. Offline‑first, Supabase, Realtime, PWA.",
+  "lang": "pl-PL",
+  "dir": "ltr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#1769aa",
+  "categories": ["productivity", "utilities"],
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Checklista",
+      "short_name": "Checklista",
+      "description": "Otwórz sekcję Checklista",
+      "url": "/#checklista"
+    },
+    {
+      "name": "Zadania",
+      "short_name": "Zadania",
+      "description": "Otwórz sekcję Zadania",
+      "url": "/#zadania"
+    },
+    {
+      "name": "Zakupy",
+      "short_name": "Zakupy",
+      "description": "Otwórz sekcję Zakupy",
+      "url": "/#zakupy"
+    }
+  ]
+}

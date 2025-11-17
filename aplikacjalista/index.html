@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1769aa" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="preload" href="css/style.css" as="style" />
+  <link rel="preload" href="css/components.css" as="style" />
+  <link rel="preload" href="css/animations.css" as="style" />
+  <link rel="preload" href="css/themes.css" as="style" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/animations.css" />
+  <link rel="stylesheet" href="css/themes.css" />
+  <title>Lista — Lista DareG wersja 1.0v</title>
+  <meta name="description" content="Lista — zaawansowany menedżer list i zadań z integracją zakupów, przepisów i planowania wakacji. Offline-first, Supabase, Realtime, PWA." />
+</head>
+<body class="theme-light density-normal radius-medium font-base animations-on">
+  <noscript>Do korzystania z aplikacji wymagana jest obsługa JavaScript. Włącz JavaScript w przeglądarce.</noscript>
+
+  <div id="app" class="app-shell" data-app-version="1.0v">
+
+    <!-- Pasek stanu/offline -->
+    <div id="offline-banner" class="offline-banner" role="status" aria-live="polite" hidden>
+      <span class="icon icon-sync" aria-hidden="true"></span>
+      <span id="offline-text">Tryb offline — zmiany zostaną zsynchronizowane po powrocie online.</span>
+      <button class="btn-text" id="btn-sync-now">Synchronizuj teraz</button>
+    </div>
+
+    <!-- Nagłówek -->
+    <header class="topbar" id="topbar" role="banner">
+      <button class="icon-btn" id="btn-open-drawer" aria-label="Otwórz menu">
+        <i class="icon icon-hamburger" aria-hidden="true"></i>
+      </button>
+      <h1 class="app-title">Lista</h1>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="btn-toggle-search" aria-expanded="false" aria-controls="global-search">
+          <i class="icon icon-search" aria-hidden="true"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Pasek wyszukiwania globalnego (możliwość ukrycia w Wygląd) -->
+    <div id="global-search" class="global-search" hidden>
+      <label class="visually-hidden" for="global-search-input">Szukaj</label>
+      <input id="global-search-input" type="search" placeholder="Szukaj we wszystkich sekcjach…" autocomplete="off" />
+      <button class="icon-btn" id="btn-clear-search" aria-label="Wyczyść wyszukiwanie">
+        <i class="icon icon-close" aria-hidden="true"></i>
+      </button>
+      <div class="search-filters">
+        <label><input type="checkbox" id="flt-checklista" checked /> Checklista</label>
+        <label><input type="checkbox" id="flt-zadania" checked /> Zadania</label>
+        <label><input type="checkbox" id="flt-zakupy" checked /> Zakupy</label>
+        <label><input type="checkbox" id="flt-paragony" /> Paragony</label>
+        <label><input type="checkbox" id="flt-przepisy" /> Przepisy</label>
+        <label><input type="checkbox" id="flt-wakacje" /> Wakacje</label>
+        <label><input type="checkbox" id="flt-daty" /> Ważne daty</label>
+      </div>
+    </div>
+
+    <!-- Menu boczne -->
+    <aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu boczne">
+      <div class="drawer-header">
+        <div class="drawer-user">
+          <div class="avatar-css" aria-hidden="true">
+            <i class="icon icon-profile"></i>
+          </div>
+          <div class="user-meta">
+            <div id="user-display-name">Gość</div>
+            <div id="user-display-email" class="muted">Niezalogowano</div>
+          </div>
+        </div>
+        <button class="icon-btn" id="btn-close-drawer" aria-label="Zamknij menu">
+          <i class="icon icon-close" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <nav class="drawer-nav" role="navigation">
+        <ul>
+          <li><button class="drawer-item" data-target-view="loyalty"><i class="icon icon-card"></i><span>Karty lojalnościowe</span></button></li>
+          <li><button class="drawer-item" data-target-view="receipts"><i class="icon icon-receipt"></i><span>Paragony</span></button></li>
+          <li><button class="drawer-item" data-target-view="recipes"><i class="icon icon-recipe"></i><span>Przepisy</span></button></li>
+          <li><button class="drawer-item" data-target-view="vacations"><i class="icon icon-vacation"></i><span>Wakacje</span></button></li>
+          <li><button class="drawer-item" data-target-view="options"><i class="icon icon-settings"></i><span>Opcje</span></button></li>
+          <li><button class="drawer-item" data-target-view="themes"><i class="icon icon-theme"></i><span>Motywy</span></button></li>
+          <li><button class="drawer-item" data-target-view="appearance"><i class="icon icon-appearance"></i><span>Wygląd</span></button></li>
+          <li><button class="drawer-item" data-target-view="archive"><i class="icon icon-archive"></i><span>Archiwum</span></button></li>
+          <li><button class="drawer-item" data-target-view="statistics"><i class="icon icon-stats"></i><span>Statystyki i raporty</span></button></li>
+          <li><button class="drawer-item" data-target-view="about"><i class="icon icon-info"></i><span>O aplikacji</span></button></li>
+          <li><button class="drawer-item" data-target-view="dates"><i class="icon icon-calendar"></i><span>Ważne daty</span></button></li>
+          <li><button class="drawer-item" data-target-view="profile"><i class="icon icon-profile"></i><span>Profil</span></button></li>
+        </ul>
+      </nav>
+
+      <div class="drawer-footer">
+        <button id="btn-export-data" class="btn-secondary">Eksport danych</button>
+        <button id="btn-import-data" class="btn-secondary">Import danych</button>
+      </div>
+    </aside>
+
+    <!-- Ekran startowy (logowanie/gość) -->
+    <div id="start-screen" class="overlay start-screen" role="dialog" aria-modal="true" aria-labelledby="start-screen-title" hidden>
+      <div class="card">
+        <h2 id="start-screen-title">Witaj w aplikacji Lista</h2>
+        <p>Zaloguj się, aby zsynchronizować dane w chmurze, lub kontynuuj jako gość.</p>
+        <div class="auth-actions">
+          <button id="btn-login-google" class="btn-primary">
+            <i class="icon icon-google" aria-hidden="true"></i> Zaloguj przez Google
+          </button>
+          <button id="btn-login-email" class="btn-primary-outline">
+            <i class="icon icon-mail" aria-hidden="true"></i> Zaloguj/Załóż konto (e‑mail/hasło)
+          </button>
+          <button id="btn-continue-guest" class="btn-ghost">
+            <i class="icon icon-user-guest" aria-hidden="true"></i> Kontynuuj jako gość
+          </button>
+        </div>
+        <p class="muted small">W każdej chwili możesz przenieść dane gościa na konto użytkownika.</p>
+      </div>
+    </div>
+
+    <!-- Główne widoki (dolne menu) -->
+    <main id="main" tabindex="-1">
+      <!-- Checklista -->
+      <section id="view-checklist" class="view active" data-section="checklist" aria-labelledby="checklist-title">
+        <div class="section-header">
+          <h2 id="checklist-title"><i class="icon icon-checklist"></i> Checklista</h2>
+          <div class="list-switcher">
+            <label for="checklist-list-select" class="visually-hidden">Wybierz listę</label>
+            <select id="checklist-list-select" aria-label="Wybierz listę checklisty"></select>
+            <button id="btn-manage-checklist" class="icon-btn" title="Zarządzaj listą">
+              <i class="icon icon-settings"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="inline-filters">
+            <button id="btn-clear-completed-checklist" class="btn-text"><i class="icon icon-broom"></i> Wyczyść zrobione</button>
+            <button id="btn-share-checklist" class="btn-text"><i class="icon icon-share"></i> Udostępnij</button>
+          </div>
+        </div>
+
+        <div class="list-block">
+          <ul id="checklist-todo" class="list-items" aria-label="Do zrobienia"></ul>
+        </div>
+
+        <details id="checklist-done-wrap" class="done-wrap" open="false">
+          <summary><i class="icon icon-done"></i> Zrobione</summary>
+          <ul id="checklist-done" class="list-items" aria-label="Zrobione"></ul>
+        </details>
+      </section>
+
+      <!-- Zadania -->
+      <section id="view-tasks" class="view" data-section="tasks" aria-labelledby="tasks-title" hidden>
+        <div class="section-header">
+          <h2 id="tasks-title"><i class="icon icon-tasks"></i> Zadania</h2>
+          <div class="list-switcher">
+            <label for="tasks-project-select" class="visually-hidden">Wybierz projekt</label>
+            <select id="tasks-project-select" aria-label="Wybierz projekt"></select>
+            <button id="btn-manage-project" class="icon-btn" title="Zarządzaj projektem">
+              <i class="icon icon-settings"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="inline-filters">
+            <select id="task-filter-priority" aria-label="Filtr priorytetu">
+              <option value="">Priorytet: wszystkie</option>
+              <option value="high">Wysoki</option>
+              <option value="medium">Średni</option>
+              <option value="low">Niski</option>
+            </select>
+            <select id="task-filter-category" aria-label="Filtr kategorii">
+              <option value="">Kategoria: wszystkie</option>
+            </select>
+            <button id="btn-clear-completed-tasks" class="btn-text"><i class="icon icon-broom"></i> Wyczyść ukończone</button>
+            <button id="btn-share-project" class="btn-text"><i class="icon icon-share"></i> Udostępnij</button>
+          </div>
+        </div>
+
+        <ul id="tasks-list" class="list-items" aria-label="Zadania"></ul>
+      </section>
+
+      <!-- Zakupy -->
+      <section id="view-shopping" class="view" data-section="shopping" aria-labelledby="shopping-title" hidden>
+        <div class="section-header">
+          <h2 id="shopping-title"><i class="icon icon-cart"></i> Zakupy</h2>
+          <div class="list-switcher">
+            <label for="shopping-list-select" class="visually-hidden">Wybierz listę zakupów</label>
+            <select id="shopping-list-select" aria-label="Wybierz listę zakupów"></select>
+            <button id="btn-manage-shopping-list" class="icon-btn" title="Zarządzaj listą">
+              <i class="icon icon-settings"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <div class="inline-filters">
+            <select id="shopping-filter-store" aria-label="Sklep">
+              <option value="">Sklep: wszystkie</option>
+            </select>
+            <select id="shopping-filter-category" aria-label="Kategoria">
+              <option value="">Kategoria: wszystkie</option>
+            </select>
+            <button id="btn-share-shopping" class="btn-text"><i class="icon icon-share"></i> Udostępnij</button>
+          </div>
+          <div id="shopping-summary" class="summary">
+            <span>Pozycje: <strong id="shopping-count">0</strong></span>
+            <span>Do zapłaty: <strong id="shopping-total">0,00 zł</strong></span>
+          </div>
+        </div>
+
+        <ul id="shopping-list" class="list-items" aria-label="Lista zakupów"></ul>
+      </section>
+
+      <!-- Karty lojalnościowe -->
+      <section id="view-loyalty" class="view" data-section="loyalty" aria-labelledby="loyalty-title" hidden>
+        <div class="section-header">
+          <h2 id="loyalty-title"><i class="icon icon-card"></i> Karty lojalnościowe</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn-secondary" id="btn-loyalty-scan"><i class="icon icon-scan"></i> Skanuj kartę</button>
+          <button class="btn-secondary" id="btn-loyalty-add"><i class="icon icon-plus"></i> Dodaj kartę</button>
+        </div>
+        <ul id="loyalty-list" class="card-list" aria-label="Karty lojalnościowe"></ul>
+      </section>
+
+      <!-- Paragony -->
+      <section id="view-receipts" class="view" data-section="receipts" aria-labelledby="receipts-title" hidden>
+        <div class="section-header">
+          <h2 id="receipts-title"><i class="icon icon-receipt"></i> Paragony</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn-secondary" id="btn-receipt-add-photo"><i class="icon icon-camera"></i> Dodaj zdjęcie</button>
+          <button class="btn-secondary" id="btn-receipt-add-manual"><i class="icon icon-plus"></i> Dodaj ręcznie</button>
+          <input id="receipt-search" type="search" placeholder="Szukaj: sklep, data, kwota" />
+          <button class="btn-text" id="btn-receipt-export"><i class="icon icon-download"></i> Eksport</button>
+        </div>
+        <ul id="receipts-list" class="list-items" aria-label="Paragony"></ul>
+      </section>
+
+      <!-- Przepisy -->
+      <section id="view-recipes" class="view" data-section="recipes" aria-labelledby="recipes-title" hidden>
+        <div class="section-header">
+          <h2 id="recipes-title"><i class="icon icon-recipe"></i> Przepisy</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn-secondary" id="btn-recipe-add"><i class="icon icon-plus"></i> Dodaj przepis</button>
+          <select id="recipes-filter-category" aria-label="Kategoria">
+            <option value="">Kategoria: wszystkie</option>
+          </select>
+          <select id="recipes-filter-time" aria-label="Czas">
+            <option value="">Czas: dowolny</option>
+          </select>
+          <select id="recipes-filter-difficulty" aria-label="Trudność">
+            <option value="">Trudność: dowolna</option>
+            <option value="easy">Łatwa</option>
+            <option value="medium">Średnia</option>
+            <option value="hard">Trudna</option>
+          </select>
+          <input id="recipes-search" type="search" placeholder="Szukaj po nazwie lub składnikach" />
+        </div>
+        <ul id="recipes-list" class="card-list" aria-label="Przepisy"></ul>
+      </section>
+
+      <!-- Wakacje -->
+      <section id="view-vacations" class="view" data-section="vacations" aria-labelledby="vacations-title" hidden>
+        <div class="section-header">
+          <h2 id="vacations-title"><i class="icon icon-vacation"></i> Wakacje</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn-secondary" id="btn-vacation-create"><i class="icon icon-plus"></i> Nowy plan</button>
+          <select id="vacations-filter" aria-label="Filtruj plany">
+            <option value="">Wszystkie plany</option>
+          </select>
+        </div>
+        <ul id="vacations-list" class="card-list" aria-label="Plany wakacyjne"></ul>
+      </section>
+
+      <!-- Opcje -->
+      <section id="view-options" class="view" data-section="options" aria-labelledby="options-title" hidden>
+        <div class="section-header">
+          <h2 id="options-title"><i class="icon icon-settings"></i> Opcje</h2>
+        </div>
+
+        <div class="options-group">
+          <h3>Konto</h3>
+          <div class="options-row">
+            <button id="btn-sync" class="btn-primary"><i class="icon icon-sync"></i> Synchronizuj dane</button>
+          </div>
+          <div class="options-row">
+            <button id="btn-backup" class="btn-secondary"><i class="icon icon-cloud"></i> Kopia zapasowa</button>
+            <button id="btn-restore" class="btn-secondary"><i class="icon icon-upload"></i> Przywróć kopię</button>
+          </div>
+        </div>
+
+        <div class="options-group">
+          <h3>Powiadomienia</h3>
+          <div class="options-row">
+            <label class="switch">
+              <input type="checkbox" id="notif-global-toggle" checked />
+              <span>Powiadomienia globalnie</span>
+            </label>
+          </div>
+          <div class="options-row grid-2">
+            <label class="switch"><input type="checkbox" id="notif-checklist" checked /><span>Checklista</span></label>
+            <label class="switch"><input type="checkbox" id="notif-tasks" checked /><span>Zadania</span></label>
+            <label class="switch"><input type="checkbox" id="notif-shopping" checked /><span>Zakupy</span></label>
+            <label class="switch"><input type="checkbox" id="notif-dates" checked /><span>Ważne daty</span></label>
+            <label class="switch"><input type="checkbox" id="notif-shared" checked /><span>Zmiany w listach współdzielonych</span></label>
+          </div>
+          <div class="options-row">
+            <label class="switch">
+              <input type="checkbox" id="notif-quiet-hours" />
+              <span>Ciche godziny</span>
+            </label>
+            <div class="quiet-hours-range">
+              <label>Od <input id="quiet-from" type="time" value="22:00" /></label>
+              <label>Do <input id="quiet-to" type="time" value="07:00" /></label>
+            </div>
+          </div>
+        </div>
+
+        <div class="options-group">
+          <h3>Eksport/Import</h3>
+          <div class="options-row">
+            <button id="btn-export-json" class="btn-secondary"><i class="icon icon-download"></i> Eksport JSON</button>
+            <button id="btn-import-json" class="btn-secondary"><i class="icon icon-upload"></i> Import JSON</button>
+            <button id="btn-export-csv" class="btn-secondary"><i class="icon icon-download"></i> Eksport CSV</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Motywy -->
+      <section id="view-themes" class="view" data-section="themes" aria-labelledby="themes-title" hidden>
+        <div class="section-header">
+          <h2 id="themes-title"><i class="icon icon-theme"></i> Motywy</h2>
+        </div>
+        <div class="themes-grid" id="themes-grid" role="list"></div>
+        <div class="toolbar">
+          <button id="btn-theme-preview" class="btn-secondary"><i class="icon icon-eye"></i> Podgląd</button>
+          <button id="btn-theme-apply" class="btn-primary"><i class="icon icon-check"></i> Zastosuj</button>
+        </div>
+      </section>
+
+      <!-- Wygląd -->
+      <section id="view-appearance" class="view" data-section="appearance" aria-labelledby="appearance-title" hidden>
+        <div class="section-header">
+          <h2 id="appearance-title"><i class="icon icon-appearance"></i> Wygląd</h2>
+        </div>
+        <div class="options-group">
+          <h3>Typografia</h3>
+          <div class="options-row">
+            <label>Rozmiar czcionki
+              <select id="opt-font-size">
+                <option value="small">Mała</option>
+                <option value="normal" selected>Średnia</option>
+                <option value="large">Duża</option>
+                <option value="xlarge">Bardzo duża</option>
+              </select>
+            </label>
+            <label>Styl czcionki
+              <select id="opt-font-family">
+                <option value="system" selected>Systemowa</option>
+                <option value="serif">Szeryfowa</option>
+                <option value="mono">Monospace</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="options-group">
+          <h3>Układ i gęstość</h3>
+          <div class="options-row">
+            <label>Gęstość interfejsu
+              <select id="opt-density">
+                <option value="compact">Kompaktowy</option>
+                <option value="normal" selected>Normalny</option>
+                <option value="spacious">Przestronny</option>
+              </select>
+            </label>
+            <label>Rozmiar pozycji
+              <select id="opt-item-size">
+                <option value="compact">Kompaktowe</option>
+                <option value="normal" selected>Normalne</option>
+                <option value="large">Duże</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="options-group">
+          <h3>Efekty wizualne</h3>
+          <div class="options-row">
+            <label>Zaokrąglanie rogów
+              <select id="opt-radius">
+                <option value="none">Brak</option>
+                <option value="sm">Małe</option>
+                <option value="md" selected>Średnie</option>
+                <option value="lg">Duże</option>
+              </select>
+            </label>
+            <label>Cienie i głębia
+              <select id="opt-elevation">
+                <option value="none">Brak</option>
+                <option value="low" selected>Niskie</option>
+                <option value="high">Wysokie</option>
+              </select>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="opt-animations" checked />
+              <span>Animacje</span>
+            </label>
+            <label class="switch">
+              <input type="checkbox" id="opt-show-search" checked />
+              <span>Pasek wyszukiwania</span>
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- Archiwum -->
+      <section id="view-archive" class="view" data-section="archive" aria-labelledby="archive-title" hidden>
+        <div class="section-header">
+          <h2 id="archive-title"><i class="icon icon-archive"></i> Archiwum</h2>
+        </div>
+        <div class="toolbar">
+          <select id="archive-filter-type">
+            <option value="">Typ: wszystkie</option>
+            <option value="checklist">Checklista</option>
+            <option value="tasks">Zadania</option>
+            <option value="shopping">Zakupy</option>
+          </select>
+        </div>
+        <ul id="archive-list" class="list-items" aria-label="Archiwum"></ul>
+
+        <div class="subsection">
+          <h3><i class="icon icon-trash"></i> Ostatnio usunięte</h3>
+          <p class="muted small">Elementy w koszu zostaną usunięte automatycznie po 7 dniach.</p>
+          <ul id="trash-list" class="list-items" aria-label="Ostatnio usunięte"></ul>
+        </div>
+      </section>
+
+      <!-- Statystyki i raporty -->
+      <section id="view-statistics" class="view" data-section="statistics" aria-labelledby="statistics-title" hidden>
+        <div class="section-header">
+          <h2 id="statistics-title"><i class="icon icon-stats"></i> Statystyki i raporty</h2>
+        </div>
+        <div class="toolbar">
+          <select id="stats-range">
+            <option value="day">Dzień</option>
+            <option value="week">Tydzień</option>
+            <option value="month" selected>Miesiąc</option>
+            <option value="quarter">Kwartał</option>
+            <option value="year">Rok</option>
+            <option value="custom">Własny zakres</option>
+          </select>
+          <input id="stats-from" type="date" />
+          <input id="stats-to" type="date" />
+          <button id="btn-stats-refresh" class="btn-secondary"><i class="icon icon-refresh"></i> Odśwież</button>
+        </div>
+
+        <div class="charts">
+          <div class="chart-card">
+            <h3>Wydatki wg kategorii</h3>
+            <canvas id="chart-expenses" height="200" aria-label="Wykres wydatków" role="img"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Sklepy i pory dnia</h3>
+            <canvas id="chart-habits" height="200" aria-label="Analiza nawyków" role="img"></canvas>
+          </div>
+          <div class="chart-card">
+            <h3>Produktywność</h3>
+            <canvas id="chart-productivity" height="200" aria-label="Wykres produktywności" role="img"></canvas>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button id="btn-export-report" class="btn-secondary"><i class="icon icon-download"></i> Eksport raportu</button>
+        </div>
+      </section>
+
+      <!-- O aplikacji -->
+      <section id="view-about" class="view" data-section="about" aria-labelledby="about-title" hidden>
+        <div class="section-header">
+          <h2 id="about-title"><i class="icon icon-info"></i> O aplikacji</h2>
+        </div>
+        <div class="about-content">
+          <p><strong>Lista DareG wersja 1.0v</strong></p>
+          <p>Zaawansowany menedżer list i zadań z integracją zakupów, przepisów i planowania wakacji.</p>
+          <ul class="about-features">
+            <li>Checklisty, zadania, zakupy</li>
+            <li>Karty lojalnościowe, paragony (OCR)</li>
+            <li>Przepisy z szybkim dodawaniem do zakupów</li>
+            <li>Wakacje: plan, lista rzeczy, harmonogram, budżet</li>
+            <li>Statystyki i raporty</li>
+            <li>Offline-first, synchronizacja, współdzielenie</li>
+          </ul>
+          <p><strong>Technologie:</strong> HTML5, CSS3, JavaScript, Supabase</p>
+          <p><strong>Wsparcie platform:</strong> Android, iOS, Web</p>
+          <p><strong>Data wydania:</strong> <span id="release-date"></span></p>
+
+          <h3>Pomoc i wsparcie</h3>
+          <ul>
+            <li><button id="btn-user-guide" class="link-btn">Przewodnik użytkownika</button></li>
+            <li><button id="btn-faq" class="link-btn">FAQ</button></li>
+            <li><button id="btn-tips" class="link-btn">Porady i wskazówki</button></li>
+            <li><button id="btn-support" class="link-btn">Kontakt z supportem (formularz)</button></li>
+            <li><button id="btn-community" class="link-btn">Społeczność użytkowników (forum)</button></li>
+            <li><button id="btn-video" class="link-btn">Samouczki wideo</button></li>
+          </ul>
+
+          <h3>Polityka prywatności</h3>
+          <ul class="privacy">
+            <li>Dane zbierane: listy, zadania, zakupy, paragony, przepisy (lokalnie lub w chmurze)</li>
+            <li>Dane osobowe: e‑mail (dla zalogowanych)</li>
+            <li>Bezpieczeństwo: szyfrowanie danych, ochrona hasłem</li>
+            <li>Udostępnianie danych: wyłącznie za zgodą użytkownika</li>
+            <li>Pliki cookies: do prawidłowego działania</li>
+            <li>Prawa użytkownika: dostęp, edycja, usuwanie</li>
+            <li>Kontakt w sprawie prywatności: <span id="privacy-contact">admin@example.com</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Ważne daty + Kalendarz -->
+      <section id="view-dates" class="view" data-section="dates" aria-labelledby="dates-title" hidden>
+        <div class="section-header">
+          <h2 id="dates-title"><i class="icon icon-calendar"></i> Ważne daty</h2>
+        </div>
+        <div class="toolbar">
+          <button class="btn-secondary" id="btn-date-add"><i class="icon icon-plus"></i> Dodaj wydarzenie</button>
+          <select id="dates-filter-category" aria-label="Kategoria">
+            <option value="">Wszystkie</option>
+            <option value="urodziny">Urodziny</option>
+            <option value="rocznice">Rocznice</option>
+            <option value="inne">Inne</option>
+          </select>
+          <label><input id="dates-reminders" type="checkbox" checked /> Przypomnienia</label>
+        </div>
+        <div class="calendar-wrap">
+          <div class="calendar-controls">
+            <button id="cal-prev" class="icon-btn" aria-label="Poprzedni">
+              <i class="icon icon-back"></i>
+            </button>
+            <div id="cal-current" class="cal-current"></div>
+            <button id="cal-next" class="icon-btn" aria-label="Następny">
+              <i class="icon icon-forward"></i>
+            </button>
+            <select id="cal-view-mode" aria-label="Widok kalendarza">
+              <option value="month" selected>Miesięczny</option>
+              <option value="week">Tygodniowy</option>
+            </select>
+          </div>
+          <div id="calendar" class="calendar" role="grid" aria-label="Kalendarz"></div>
+        </div>
+        <ul id="dates-list" class="list-items" aria-label="Wydarzenia"></ul>
+      </section>
+
+      <!-- Profil -->
+      <section id="view-profile" class="view" data-section="profile" aria-labelledby="profile-title" hidden>
+        <div class="section-header">
+          <h2 id="profile-title"><i class="icon icon-profile"></i> Profil</h2>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-row">
+            <div class="avatar-css large"><i class="icon icon-profile"></i></div>
+            <div>
+              <div id="profile-email" class="strong">—</div>
+              <div id="profile-method" class="muted small">Metoda logowania: —</div>
+            </div>
+          </div>
+
+          <div class="profile-actions">
+            <label class="switch">
+              <input type="checkbox" id="persist-session" />
+              <span>Pozostań zalogowany</span>
+            </label>
+          </div>
+
+          <div class="profile-actions" id="email-auth-actions" hidden>
+            <button id="btn-change-email" class="btn-secondary"><i class="icon icon-mail"></i> Zmień e‑mail</button>
+            <button id="btn-change-password" class="btn-secondary"><i class="icon icon-lock"></i> Zmień hasło</button>
+            <button id="btn-reset-password" class="btn-secondary"><i class="icon icon-reset"></i> Reset hasła (kod e‑mail)</button>
+          </div>
+
+          <div class="profile-actions">
+            <button id="btn-logout" class="btn-danger"><i class="icon icon-logout"></i> Wyloguj</button>
+          </div>
+
+          <div class="profile-actions danger-zone">
+            <button id="btn-delete-account" class="btn-danger-outline"><i class="icon icon-trash"></i> Usuń konto</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Dolne menu -->
+    <nav id="bottom-nav" class="bottom-nav" role="navigation" aria-label="Główna nawigacja">
+      <button class="tab-btn active" data-target="view-checklist" aria-label="Checklista">
+        <i class="icon icon-checklist" aria-hidden="true"></i>
+        <span>Checklista</span>
+      </button>
+      <button class="tab-btn" data-target="view-tasks" aria-label="Zadania">
+        <i class="icon icon-tasks" aria-hidden="true"></i>
+        <span>Zadania</span>
+      </button>
+      <button class="tab-btn" data-target="view-shopping" aria-label="Zakupy">
+        <i class="icon icon-cart" aria-hidden="true"></i>
+        <span>Zakupy</span>
+      </button>
+    </nav>
+
+    <!-- FAB -->
+    <button id="fab" class="fab" aria-label="Dodaj">
+      <i class="icon icon-plus" aria-hidden="true"></i>
+    </button>
+
+    <!-- Arkusz akcji Swipe (wspólne) -->
+    <div id="swipe-actions-sheet" class="action-sheet" hidden>
+      <div class="action-sheet-content">
+        <button data-action="delete"><i class="icon icon-delete"></i> Usuń</button>
+        <button data-action="edit"><i class="icon icon-edit"></i> Edytuj</button>
+        <button data-action="move"><i class="icon icon-move"></i> Przesuń</button>
+        <button data-action="archive"><i class="icon icon-archive"></i> Archiwizuj</button>
+        <button data-action="manage-list"><i class="icon icon-settings"></i> Zarządzaj listą</button>
+        <button data-action="share"><i class="icon icon-share"></i> Udostępnij</button>
+        <button data-action="oos" class="only-shopping"><i class="icon icon-alert"></i> Brak w sklepie</button>
+      </div>
+    </div>
+
+    <!-- Dialog: Logowanie e‑mail/hasło -->
+    <dialog id="dialog-auth-email" class="dialog">
+      <form method="dialog" class="dialog-content" id="form-auth-email">
+        <h3><i class="icon icon-mail"></i> Logowanie / Rejestracja</h3>
+        <label>E‑mail
+          <input type="email" id="auth-email" required />
+        </label>
+        <label>Hasło
+          <input type="password" id="auth-password" required minlength="6" />
+        </label>
+        <div class="muted small">Nowy użytkownik: konto zostanie utworzone automatycznie.</div>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn-ghost">Anuluj</button>
+          <button id="btn-email-signin" class="btn-primary">Dalej</button>
+        </menu>
+        <div class="divider"></div>
+        <h4>Reset hasła</h4>
+        <label>E‑mail do resetu
+          <input type="email" id="reset-email" />
+        </label>
+        <button id="btn-send-reset-code" type="button" class="btn-secondary">Wyślij kod na e‑mail</button>
+        <label>Kod z e‑maila
+          <input type="text" id="reset-code" inputmode="numeric" pattern="[0-9]{4,8}" />
+        </label>
+        <label>Nowe hasło
+          <input type="password" id="reset-new-pass" minlength="6" />
+        </label>
+        <button id="btn-confirm-reset" type="button" class="btn-primary-outline">Zmień hasło</button>
+      </form>
+    </dialog>
+
+    <!-- Dialog: Dodaj/Edytuj Zadanie (pełny formularz) -->
+    <dialog id="dialog-task" class="dialog">
+      <form method="dialog" class="dialog-content" id="form-task">
+        <h3><i class="icon icon-tasks"></i> Zadanie</h3>
+        <label>Nazwa
+          <input type="text" id="task-title" required />
+        </label>
+        <label>Notatki
+          <textarea id="task-notes" rows="3"></textarea>
+        </label>
+        <div class="grid-2">
+          <label>Priorytet
+            <select id="task-priority">
+              <option value="low">Niski</option>
+              <option value="medium" selected>Średni</option>
+              <option value="high">Wysoki</option>
+            </select>
+          </label>
+          <label>Termin
+            <input type="datetime-local" id="task-due" />
+          </label>
+        </div>
+        <label>Kategoria
+          <input type="text" id="task-category" placeholder="np. praca, dom" />
+        </label>
+        <div id="subtasks-wrap">
+          <h4>Podzadania</h4>
+          <ul id="subtasks-list" class="list-subitems"></ul>
+          <button id="btn-add-subtask" type="button" class="btn-secondary"><i class="icon icon-plus"></i> Dodaj podzadanie</button>
+        </div>
+        <label class="switch">
+          <input type="checkbox" id="task-reminder" />
+          <span>Przypomnienie</span>
+        </label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn-ghost">Anuluj</button>
+          <button id="btn-save-task" class="btn-primary">Zapisz</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Dialog: Dodaj produkt / skan / szablony / z przepisu / z wakacji -->
+    <dialog id="dialog-shopping" class="dialog">
+      <form method="dialog" class="dialog-content" id="form-shopping">
+        <h3><i class="icon icon-cart"></i> Pozycja zakupowa</h3>
+        <div class="grid-2">
+          <label>Produkt
+            <input type="text" id="shop-name" required />
+          </label>
+          <label>Ilość
+            <input type="number" id="shop-qty" step="0.01" min="0" value="1" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label>Kategoria
+            <input type="text" id="shop-category" />
+          </label>
+          <label>Szacowany koszt
+            <input type="number" id="shop-cost" step="0.01" min="0" />
+          </label>
+        </div>
+        <label>Sklep
+          <input type="text" id="shop-store" />
+        </label>
+        <menu class="dialog-actions">
+          <button id="btn-scan-barcode" type="button" class="btn-secondary"><i class="icon icon-scan"></i> Zeskanuj kod</button>
+          <button id="btn-use-template" type="button" class="btn-secondary"><i class="icon icon-template"></i> Użyj szablonu</button>
+          <button id="btn-from-recipe" type="button" class="btn-secondary"><i class="icon icon-recipe"></i> Z przepisu</button>
+          <button id="btn-from-vacation" type="button" class="btn-secondary"><i class="icon icon-vacation"></i> Z wakacji</button>
+        </menu>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn-ghost">Anuluj</button>
+          <button id="btn-save-shopping" class="btn-primary">Zapisz</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Dialog: Skaner kodów kreskowych -->
+    <dialog id="dialog-scanner" class="dialog dialog-full">
+      <div class="dialog-content">
+        <h3><i class="icon icon-scan"></i> Skaner kodów</h3>
+        <video id="scanner-video" autoplay playsinline muted></video>
+        <canvas id="scanner-overlay" aria-hidden="true"></canvas>
+        <div id="scanner-result" class="scanner-result"></div>
+        <menu class="dialog-actions">
+          <button id="btn-scanner-cancel" class="btn-ghost">Zamknij</button>
+        </menu>
+      </div>
+    </dialog>
+
+    <!-- Dialog: OCR Paragonu -->
+    <dialog id="dialog-ocr" class="dialog dialog-full">
+      <div class="dialog-content">
+        <h3><i class="icon icon-receipt"></i> Dodaj paragon (OCR)</h3>
+        <div class="ocr-controls">
+          <input type="file" id="ocr-file" accept="image/*" capture="environment" />
+          <button id="btn-ocr-start" class="btn-primary"><i class="icon icon-magic"></i> Rozpoznaj tekst</button>
+        </div>
+        <div class="grid-2">
+          <label>Sklep
+            <input type="text" id="ocr-store" />
+          </label>
+          <label>Data
+            <input type="date" id="ocr-date" />
+          </label>
+        </div>
+        <div class="grid-2">
+          <label>Kwota
+            <input type="number" id="ocr-total" step="0.01" min="0" />
+          </label>
+          <label>Kategorie
+            <input type="text" id="ocr-tags" placeholder="np. spożywcze, chemia" />
+          </label>
+        </div>
+        <label>Tekst z OCR
+          <textarea id="ocr-text" rows="8"></textarea>
+        </label>
+        <menu class="dialog-actions">
+          <button class="btn-ghost" id="btn-ocr-close">Zamknij</button>
+          <button class="btn-primary" id="btn-ocr-save">Zapisz paragon</button>
+        </menu>
+      </div>
+    </dialog>
+
+    <!-- Dialog: Udostępnianie -->
+    <dialog id="dialog-share" class="dialog">
+      <form method="dialog" class="dialog-content" id="form-share">
+        <h3><i class="icon icon-share"></i> Udostępnij</h3>
+        <label>E‑mail osoby zapraszanej
+          <input type="email" id="share-email" required />
+        </label>
+        <label>Uprawnienia
+          <select id="share-permissions">
+            <option value="read">Tylko odczyt</option>
+            <option value="edit" selected>Edycja</option>
+          </select>
+        </label>
+        <menu class="dialog-actions">
+          <button value="cancel" class="btn-ghost">Anuluj</button>
+          <button id="btn-share-send" class="btn-primary">Wyślij zaproszenie</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <!-- Snackbar / Toast -->
+    <div id="snackbar" class="snackbar" role="status" aria-live="polite" hidden>
+      <span id="snackbar-text">Gotowe.</span>
+      <button id="snackbar-action" class="btn-text" hidden>COFNIJ</button>
+    </div>
+
+    <!-- Announcer (a11y) -->
+    <div id="a11y-announcer" class="visually-hidden" aria-live="assertive" aria-atomic="true"></div>
+
+    <!-- Szablony elementów -->
+    <template id="tpl-checklist-item">
+      <li class="item swipeable" data-id="">
+        <label class="checkbox">
+          <input type="checkbox" class="item-done" />
+          <span class="checkmark"></span>
+          <span class="item-title"></span>
+        </label>
+        <button class="icon-btn drag-handle" title="Przenieś"><i class="icon icon-move"></i></button>
+      </li>
+    </template>
+
+    <template id="tpl-task-item">
+      <li class="item swipeable" data-id="">
+        <div class="item-main">
+          <div class="item-title-row">
+            <span class="priority-dot"></span>
+            <span class="item-title"></span>
+          </div>
+          <div class="item-meta small muted">
+            <span class="item-due"></span>
+            <span class="item-category"></span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button class="icon-btn mark-done" title="Oznacz jako ukończone"><i class="icon icon-check"></i></button>
+        </div>
+      </li>
+    </template>
+
+    <template id="tpl-shopping-item">
+      <li class="item swipeable" data-id="">
+        <label class="checkbox">
+          <input type="checkbox" class="item-bought" />
+          <span class="checkmark"></span>
+        </label>
+        <div class="item-main">
+          <span class="item-title"></span>
+          <div class="item-meta small muted">
+            <span class="item-qty"></span>
+            <span class="item-category"></span>
+            <span class="item-store"></span>
+            <span class="item-price"></span>
+          </div>
+        </div>
+        <button class="icon-btn drag-handle" title="Przenieś"><i class="icon icon-move"></i></button>
+      </li>
+    </template>
+
+    <template id="tpl-loyalty-card">
+      <li class="card-item" data-id="">
+        <div class="card-row">
+          <div class="card-logo-css"><i class="icon icon-store"></i></div>
+          <div class="card-main">
+            <div class="card-title"></div>
+            <div class="card-code small muted"></div>
+          </div>
+          <div class="card-actions">
+            <button class="btn-secondary show-barcode"><i class="icon icon-barcode"></i> Pokaż kod</button>
+          </div>
+        </div>
+      </li>
+    </template>
+
+    <template id="tpl-recipe-card">
+      <li class="card-item" data-id="">
+        <div class="card-main">
+          <div class="card-title"></div>
+          <div class="card-meta small muted">
+            <span class="recipe-category"></span> •
+            <span class="recipe-time"></span> •
+            <span class="recipe-difficulty"></span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-secondary add-to-shopping"><i class="icon icon-cart"></i> Dodaj do zakupów</button>
+          <button class="btn-secondary mark-favorite"><i class="icon icon-star"></i> Ulubione</button>
+        </div>
+      </li>
+    </template>
+
+    <template id="tpl-vacation-card">
+      <li class="card-item" data-id="">
+        <div class="card-main">
+          <div class="card-title"></div>
+          <div class="card-meta small muted">
+            <span class="vacation-dates"></span> •
+            <span class="vacation-destination"></span>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="btn-secondary to-checklist"><i class="icon icon-checklist"></i> Do Checklisty</button>
+          <button class="btn-secondary to-tasks"><i class="icon icon-tasks"></i> Do Zadań</button>
+          <button class="btn-secondary to-shopping"><i class="icon icon-cart"></i> Do Zakupów</button>
+        </div>
+      </li>
+    </template>
+
+  </div>
+
+  <!-- Moduł główny -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>

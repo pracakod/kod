@@ -16,8 +16,7 @@ const STATIC_CACHE = `lista-static-${VERSION}`;
 const RUNTIME_CACHE = `lista-runtime-${VERSION}`;
 
 /* Zasoby do precache (app shell) */
-const CORE_ASSETS = [
-  "/",               // start_url
+const CORE_ASSETS = [             // start_url
   "/index.html",
   "/manifest.webmanifest",
   // CSS

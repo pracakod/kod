@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1769aa" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Lista — Lista DareG 1.0v</title>
+  <link rel="manifest" href="/manifest.webmanifest.json" />
+  <link rel="icon" href="/favicon.ico" />
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/animations.css" />
+  <link rel="stylesheet" href="/css/themes.css" />
+</head>
+<body class="theme-auto font-base density-default radius-medium animations-on">
+
+  <!-- App Shell -->
+  <div class="app-shell">
+    <!-- Topbar -->
+    <header class="topbar">
+      <button id="drawer-toggle" class="icon-btn" aria-label="Menu">
+        <span class="icon icon-menu"></span>
+      </button>
+      <h1 class="app-title">Lista</h1>
+      <div class="topbar-actions">
+        <button id="sync-btn" class="icon-btn" aria-label="Synchronizuj" hidden>
+          <span class="icon icon-sync"></span>
+        </button>
+        <button id="profile-btn" class="icon-btn" aria-label="Profil">
+          <span class="icon icon-user"></span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Offline Banner -->
+    <div id="offline-banner" class="offline-banner" hidden>
+      <span class="icon icon-offline"></span>
+      <span>Pracujesz offline. Zmiany zostaną zsynchronizowane po połączeniu.</span>
+    </div>
+
+    <!-- Global Search -->
+    <div class="global-search">
+      <input type="search" id="global-search-input" placeholder="Szukaj..." />
+      <button id="search-filters-btn" class="icon-btn" aria-label="Filtry">
+        <span class="icon icon-filter"></span>
+      </button>
+    </div>
+
+    <!-- Main Content -->
+    <main id="main">
+      <!-- Views będą tutaj ładowane dynamicznie -->
+      <div id="view-checklist" class="view"></div>
+      <div id="view-tasks" class="view" hidden></div>
+      <div id="view-shopping" class="view" hidden></div>
+      <div id="view-recipes" class="view" hidden></div>
+      <div id="view-vacations" class="view" hidden></div>
+      <div id="view-statistics" class="view" hidden></div>
+      <div id="view-settings" class="view" hidden></div>
+      <div id="view-profile" class="view" hidden></div>
+      <div id="view-archive" class="view" hidden></div>
+    </main>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <button class="tab-btn active" data-view="checklist">
+        <span class="icon icon-checklist"></span>
+        <span class="small">Checklista</span>
+      </button>
+      <button class="tab-btn" data-view="tasks">
+        <span class="icon icon-tasks"></span>
+        <span class="small">Zadania</span>
+      </button>
+      <button class="tab-btn" data-view="shopping">
+        <span class="icon icon-cart"></span>
+        <span class="small">Zakupy</span>
+      </button>
+      <button class="tab-btn" data-view="recipes">
+        <span class="icon icon-recipe"></span>
+        <span class="small">Przepisy</span>
+      </button>
+      <button class="tab-btn" data-view="vacations">
+        <span class="icon icon-vacation"></span>
+        <span class="small">Wakacje</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- FAB -->
+  <button id="fab-add" class="fab" aria-label="Dodaj">
+    <span class="icon icon-plus"></span>
+  </button>
+
+  <!-- Drawer -->
+  <aside id="drawer" class="drawer" aria-hidden="true" role="dialog">
+    <div class="drawer-header">
+      <div class="drawer-user">
+        <div class="avatar-css">
+          <span class="icon icon-user"></span>
+        </div>
+        <div>
+          <div id="drawer-user-name" class="strong">Gość</div>
+          <div id="drawer-user-email" class="small muted">Tryb lokalny</div>
+        </div>
+      </div>
+      <button id="drawer-close" class="icon-btn" aria-label="Zamknij">
+        <span class="icon icon-close"></span>
+      </button>
+    </div>
+    <nav class="drawer-nav">
+      <ul>
+        <li><button class="drawer-item" data-view="checklist">
+          <span class="icon icon-checklist"></span>
+          <span>Checklista</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="tasks">
+          <span class="icon icon-tasks"></span>
+          <span>Zadania</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="shopping">
+          <span class="icon icon-cart"></span>
+          <span>Zakupy</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="recipes">
+          <span class="icon icon-recipe"></span>
+          <span>Przepisy</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="vacations">
+          <span class="icon icon-vacation"></span>
+          <span>Wakacje</span>
+        </button></li>
+        <li><hr class="divider"></li>
+        <li><button class="drawer-item" data-view="statistics">
+          <span class="icon icon-chart"></span>
+          <span>Statystyki</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="archive">
+          <span class="icon icon-archive"></span>
+          <span>Archiwum</span>
+        </button></li>
+        <li><button class="drawer-item" data-view="settings">
+          <span class="icon icon-settings"></span>
+          <span>Ustawienia</span>
+        </button></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <!-- Snackbar -->
+  <div id="snackbar" class="snackbar" hidden>
+    <span id="snackbar-text"></span>
+    <button id="snackbar-action" hidden></button>
+  </div>
+
+  <!-- NAPRAWIONE: Dodano type="module" do wszystkich skryptów -->
+  <script type="module" src="/js/supabase-client.js"></script>
+  <script type="module" src="/js/storage.js"></script>
+  <script type="module" src="/js/auth.js"></script>
+  <script type="module" src="/js/ui.js"></script>
+  <script type="module" src="/js/list-manager.js"></script>
+  <script type="module" src="/js/swipe-handler.js"></script>
+  <script type="module" src="/js/notifications.js"></script>
+  <script type="module" src="/js/sharing.js"></script>
+  <script type="module" src="/js/barcode-scanner.js"></script>
+  <script type="module" src="/js/receipts.js"></script>
+  <script type="module" src="/js/recipes.js"></script>
+  <script type="module" src="/js/loyalty-cards.js"></script>
+  <script type="module" src="/js/calendar.js"></script>
+  <script type="module" src="/js/important-dates.js"></script>
+  <script type="module" src="/js/vacations.js"></script>
+  <script type="module" src="/js/statistics.js"></script>
+  <script type="module" src="/js/archive.js"></script>
+  <script type="module" src="/js/settings.js"></script>
+  <script type="module" src="/js/profile.js"></script>
+  <script type="module" src="/js/app.js"></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('SW zarejestrowany:', reg.scope))
+          .catch(err => console.error('SW błąd rejestracji:', err));
+      });
+    }
+  </script>
+</body>
+</html>

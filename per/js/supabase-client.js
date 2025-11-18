@@ -1,9 +1,7 @@
 "use strict";
 
-// KONFIGURACJA SUPABASE
-// WAŻNE: Zamień poniższe wartości na swoje dane z Supabase Dashboard
-const SUPABASE_URL = 'https://vzttszvasssweigpqwcc.supabase.co'; 
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dHRzenZhc3Nzd2VpZ3Bxd2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyNTM2ODEsImV4cCI6MjA3ODgyOTY4MX0.lRhUUWmtJX5yf-VYrVAIP94OH3ScAL5t3Zo8HrxTvlc';
+const SUPABASE_URL = 'https://twoj-projekt.supabase.co';
+const SUPABASE_ANON_KEY = 'twoj-anon-key-tutaj';
 
 let supabase = null;
 
@@ -23,7 +21,7 @@ async function initSupabase() {
       });
     }
     
-    if (SUPABASE_URL === 'https://vzttszvasssweigpqwcc.supabase.co') {
+    if (SUPABASE_URL === 'https://twoj-projekt.supabase.co') {
       console.warn('⚠️ SUPABASE: Nie skonfigurowano. Aplikacja działa w trybie offline.');
       return null;
     }
@@ -51,13 +49,40 @@ async function initSupabase() {
 }
 
 function isSupabaseConfigured() {
-  return SUPABASE_URL !== 'https://vzttszvasssweigpqwcc.supabase.co' && 
-         SUPABASE_ANON_KEY !== 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ6dHRzenZhc3Nzd2VpZ3Bxd2NjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjMyNTM2ODEsImV4cCI6MjA3ODgyOTY4MX0.lRhUUWmtJX5yf-VYrVAIP94OH3ScAL5t3Zo8HrxTvlc';
+  return SUPABASE_URL !== 'https://twoj-projekt.supabase.co' && 
+         SUPABASE_ANON_KEY !== 'twoj-anon-key-tutaj';
 }
 
 function getSupabase() {
   return supabase;
 }
 
-export { initSupabase, isSupabaseConfigured, getSupabase };
-export default { initSupabase, isSupabaseConfigured, getSupabase };
+// NAPRAWIONE: Dodano eksport getSession
+async function getSession() {
+  if (!supabase) return null;
+  
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) throw error;
+    return data.session;
+  } catch (error) {
+    console.error('Błąd pobierania sesji:', error);
+    return null;
+  }
+}
+
+async function getUser() {
+  if (!supabase) return null;
+  
+  try {
+    const { data, error } = await supabase.auth.getUser();
+    if (error) throw error;
+    return data.user;
+  } catch (error) {
+    console.error('Błąd pobierania użytkownika:', error);
+    return null;
+  }
+}
+
+export { initSupabase, isSupabaseConfigured, getSupabase, getSession, getUser };
+export default { initSupabase, isSupabaseConfigured, getSupabase, getSession, getUser };

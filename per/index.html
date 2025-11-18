@@ -8,13 +8,13 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Lista — Lista DareG 1.0v</title>
-  <link rel="manifest" href="/manifest.webmanifest.json" />
-  <link rel="icon" href="/favicon.ico" />
-  <!-- CSS -->
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/components.css" />
-  <link rel="stylesheet" href="/css/animations.css" />
-  <link rel="stylesheet" href="/css/themes.css" />
+  <link rel="manifest" href="./manifest.webmanifest.json" />
+  
+  <!-- CSS - POPRAWIONE ŚCIEŻKI -->
+  <link rel="stylesheet" href="./css/style.css" />
+  <link rel="stylesheet" href="./css/components.css" />
+  <link rel="stylesheet" href="./css/animations.css" />
+  <link rel="stylesheet" href="./css/themes.css" />
 </head>
 <body class="theme-auto font-base density-default radius-medium animations-on">
 
@@ -52,7 +52,6 @@
 
     <!-- Main Content -->
     <main id="main">
-      <!-- Views będą tutaj ładowane dynamicznie -->
       <div id="view-checklist" class="view"></div>
       <div id="view-tasks" class="view" hidden></div>
       <div id="view-shopping" class="view" hidden></div>
@@ -155,33 +154,33 @@
     <button id="snackbar-action" hidden></button>
   </div>
 
-  <!-- NAPRAWIONE: Dodano type="module" do wszystkich skryptów -->
-  <script type="module" src="/js/supabase-client.js"></script>
-  <script type="module" src="/js/storage.js"></script>
-  <script type="module" src="/js/auth.js"></script>
-  <script type="module" src="/js/ui.js"></script>
-  <script type="module" src="/js/list-manager.js"></script>
-  <script type="module" src="/js/swipe-handler.js"></script>
-  <script type="module" src="/js/notifications.js"></script>
-  <script type="module" src="/js/sharing.js"></script>
-  <script type="module" src="/js/barcode-scanner.js"></script>
-  <script type="module" src="/js/receipts.js"></script>
-  <script type="module" src="/js/recipes.js"></script>
-  <script type="module" src="/js/loyalty-cards.js"></script>
-  <script type="module" src="/js/calendar.js"></script>
-  <script type="module" src="/js/important-dates.js"></script>
-  <script type="module" src="/js/vacations.js"></script>
-  <script type="module" src="/js/statistics.js"></script>
-  <script type="module" src="/js/archive.js"></script>
-  <script type="module" src="/js/settings.js"></script>
-  <script type="module" src="/js/profile.js"></script>
-  <script type="module" src="/js/app.js"></script>
+  <!-- POPRAWIONE ŚCIEŻKI DO SKRYPTÓW -->
+  <script type="module" src="./js/supabase-client.js"></script>
+  <script type="module" src="./js/storage.js"></script>
+  <script type="module" src="./js/auth.js"></script>
+  <script type="module" src="./js/ui.js"></script>
+  <script type="module" src="./js/list-manager.js"></script>
+  <script type="module" src="./js/swipe-handler.js"></script>
+  <script type="module" src="./js/notifications.js"></script>
+  <script type="module" src="./js/sharing.js"></script>
+  <script type="module" src="./js/barcode-scanner.js"></script>
+  <script type="module" src="./js/receipts.js"></script>
+  <script type="module" src="./js/recipes.js"></script>
+  <script type="module" src="./js/loyalty-cards.js"></script>
+  <script type="module" src="./js/calendar.js"></script>
+  <script type="module" src="./js/important-dates.js"></script>
+  <script type="module" src="./js/vacations.js"></script>
+  <script type="module" src="./js/statistics.js"></script>
+  <script type="module" src="./js/archive.js"></script>
+  <script type="module" src="./js/settings.js"></script>
+  <script type="module" src="./js/profile.js"></script>
+  <script type="module" src="./js/app.js"></script>
 
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
+        navigator.serviceWorker.register('./sw.js')
           .then(reg => console.log('SW zarejestrowany:', reg.scope))
           .catch(err => console.error('SW błąd rejestracji:', err));
       });

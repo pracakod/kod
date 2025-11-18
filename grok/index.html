@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#1769aa" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="preload" href="css/style.css" as="style" />
+<link rel="preload" href="css/components.css" as="style" />
+<link rel="preload" href="css/animations.css" as="style" />
+<link rel="preload" href="css/themes.css" as="style" />
+<link rel="stylesheet" href="css/style.css" />
+<link rel="stylesheet" href="css/components.css" />
+<link rel="stylesheet" href="css/animations.css" />
+<link rel="stylesheet" href="css/themes.css" />
+<title>Lista — Lista DareG wersja 1.0v</title>
+<meta name="description" content="Lista — zaawansowany menedżer list i zadań z integracją zakupów, przepisów i planowania wakacji. Offline-first, Supabase, Realtime, PWA." />
+</head>
+<body class="theme-light density-normal radius-medium font-base animations-on">
+<noscript>Do korzystania z aplikacji wymagana jest obsługa JavaScript.... Włącz JavaScript w przeglądarce.</noscript>
+<div id="app" class="app-shell" data-app-version="1.0v">
+<div id="offline-banner" class="offline-banner" role="status" aria-live="polite" hidden>
+<span class="icon-emoji">🔄</span>
+<span id="offline-text">Tryb offline — zmiany zostaną zsynchronizowane po powrocie online.</span>
+<button class="btn-text" id="btn-sync-now">Synchronizuj teraz</button>
+</div>
+<header class="topbar" id="topbar" role="banner">
+<button class="icon-btn" id="btn-open-drawer" aria-label="Otwórz menu">
+<span class="icon-emoji">☰</span>
+</button>
+<h1 class="app-title">Lista</h1>
+<div class="topbar-actions">
+<button class="icon-btn" id="btn-toggle-search" aria-expanded="false" aria-controls="global-search">
+<span class="icon-emoji">🔍</span>
+</button>
+</div>
+</header>
+<div id="global-search" class="global-search" hidden>
+<label class="visually-hidden" for="global-search-input">Szukaj</label>
+<input id="global-search-input" type="search" placeholder="Szukaj we wszystkich sekcjach…" autocomplete="off" />
+<button class="icon-btn" id="btn-clear-search" aria-label="Wyczyść wyszukiwanie">
+<span class="icon-emoji">✕</span>
+</button>
+<div class="search-filters">
+<label><input type="checkbox" id="flt-checklista" checked /> Checklista</label>
+<label><input type="checkbox" id="flt-zadania" checked /> Zadania</label>
+<label><input type="checkbox" id="flt-zakupy" checked /> Zakupy</label>
+<label><input type="checkbox" id="flt-paragony" /> Paragony</label>
+<label><input type="checkbox" id="flt-przepisy" /> Przepisy</label>
+<label><input type="checkbox" id="flt-wakacje" /> Wakacje</label>
+<label><input type="checkbox" id="flt-daty" /> Ważne daty</label>
+</div>
+</div>
+<aside id="drawer" class="drawer" aria-hidden="true" aria-label="Menu boczne">
+<div class="drawer-header">
+<div class="drawer-user">
+<div class="avatar-css" aria-hidden="true">
+<span class="icon-emoji">👤</span>
+</div>
+<div class="user-meta">
+<div id="user-display-name">Gość</div>
+<div id="user-display-email" class="muted">Niezalogowano</div>
+</div>
+</div>
+<button class="icon-btn" id="btn-close-drawer" aria-label="Zamknij menu">
+<span class="icon-emoji">✕</span>
+</button>
+</div>
+<nav class="drawer-nav" role="navigation">
+<ul>
+<li><button class="drawer-item" data-target-view="loyalty"><span class="icon-emoji">🪪</span><span>Karty lojalnościowe</span></button></li>
+<li><button class="drawer-item" data-target-view="receipts"><span class="icon-emoji">🧾</span><span>Paragony</span></button></li>
+<li><button class="drawer-item" data-target-view="recipes"><span class="icon-emoji">🍳</span><span>Przepisy</span></button></li>
+<li><button class="drawer-item" data-target-view="vacations"><span class="icon-emoji">🏖️</span><span>Wakacje</span></button></li>
+<li><button class="drawer-item" data-target-view="options"><span class="icon-emoji">⚙️</span><span>Opcje</span></button></li>
+<li><button class="drawer-item" data-target-view="themes"><span class="icon-emoji">🎨</span><span>Motywy</span></button></li>
+<li><button class="drawer-item" data-target-view="appearance"><span class="icon-emoji">🎨</span><span>Wygląd</span></button></li>
+<li><button class="drawer-item" data-target-view="archive"><span class="icon-emoji">📦</span><span>Archiwum</span></button></li>
+<li><button class="drawer-item" data-target-view="statistics"><span class="icon-emoji">📊</span><span>Statystyki i raporty</span></button></li>
+<li><button class="drawer-item" data-target-view="about"><span class="icon-emoji">ℹ️</span><span>O aplikacji</span></button></li>
+<li><button class="drawer-item" data-target-view="dates"><span class="icon-emoji">📅</span><span>Ważne daty</span></button></li>
+<li><button class="drawer-item" data-target-view="profile"><span class="icon-emoji">👤</span><span>Profil</span></button></li>
+</ul>
+</nav>
+<div class="drawer-footer">
+<button id="btn-export-data" class="btn-secondary">Eksport danych</button>
+<button id="btn-import-data" class="btn-secondary">Import danych</button>
+</div>
+</aside>
+<div id="start-screen" class="overlay start-screen" role="dialog" aria-modal="true" aria-labelledby="start-screen-title" hidden>
+<div class="card">
+<h2 id="start-screen-title">Witaj w aplikacji Lista</h2>
+<p>Zaloguj się, aby zsynchronizować dane w chmurze, lub kontynuuj jako gość.</p>
+<div class="auth-actions">
+<button id="btn-login-google" class="btn-primary">
+<span class="icon-emoji">🔗</span> Zaloguj przez Google 
+</button>
+<button id="btn-login-email" class="btn-primary-outline">
+<span class="icon-emoji">✉️</span> Zaloguj/Załóż konto (e‑mail/hasło) 
+</button>
+<button id="btn-continue-guest" class="btn-ghost">
+<span class="icon-emoji">👤</span> Kontynuuj jako gość 
+</button>
+</div>
+<p class="muted small">W każdej chwili możesz przenieść dane gościa na konto użytkownika.</p>
+</div>
+</div>
+<main id="main" tabindex="-1">
+<section id="view-checklist" class="view active" data-section="checklist" aria-labelledby="checklist-title">
+<div class="section-header">
+<h2 id="checklist-title"><span class="icon-emoji">📋</span> Checklista</h2>
+<div class="list-switcher">
+<label for="checklist-list-select" class="visually-hidden">Wybierz listę</label>
+<select id="checklist-list-select" aria-label="Wybierz listę checklisty"></select>
+<button id="btn-manage-checklist" class="icon-btn" title="Zarządzaj listą">
+<span class="icon-emoji">⚙️</span>
+</button>
+</div>
+</div>
+<div class="toolbar">
+<div class="inline-filters">
+<button id="btn-clear-completed-checklist" class="btn-text">
+<span class="icon-emoji">🧹</span> Wyczyść zrobione
+</button>
+<button id="btn-share-checklist" class="btn-text">
+<span class="icon-emoji">↗️</span> Udostępnij
+</button>
+</div>
+</div>
+<div class="list-block">
+<ul id="checklist-todo" class="list-items" aria-label="Do zrobienia"></ul>
+</div>
+<details id="checklist-done-wrap" class="done-wrap" open="false">
+<summary><span class="icon-emoji">✅</span> Zrobione</summary>
+<ul id="checklist-done" class="list-items" aria-label="Zrobione"></ul>
+</details>
+</section>
+<section id="view-tasks" class="view" data-section="tasks" aria-labelledby="tasks-title" hidden>
+<div class="section-header">
+<h2 id="tasks-title"><span class="icon-emoji">✅</span> Zadania</h2>
+<div class="list-switcher">
+<label for="tasks-project-select" class="visually-hidden">Wybierz projekt</label>
+<select id="tasks-project-select" aria-label="Wybierz projekt"></select>
+<button id="btn-manage-project" class="icon-btn" title="Zarządzaj projektem">
+<span class="icon-emoji">⚙️</span>
+</button>
+</div>
+</div>
+<div class="toolbar">
+<div class="inline-filters">
+<select id="task-filter-priority" aria-label="Filtr priorytetu">
+<option value="">Priorytet: wszystkie</option>
+<option value="high">Wysoki</option>
+<option value="medium">Średni</option>
+<option value="low">Niski</option>
+</select>
+<select id="task-filter-category" aria-label="Filtr kategorii">
+<option value="">Kategoria: wszystkie</option>
+</select>
+<button id="btn-clear-completed-tasks" class="btn-text">
+<span class="icon-emoji">🧹</span> Wyczyść ukończone
+</button>
+<button id="btn-share-project" class="btn-text">
+<span class="icon-emoji">↗️</span> Udostępnij
+</button>
+</div>
+</div>
+<ul id="tasks-list" class="list-items" aria-label="Zadania"></ul>
+</section>
+<section id="view-shopping" class="view" data-section="shopping" aria-labelledby="shopping-title" hidden>
+<div class="section-header">
+<h2 id="shopping-title"><span class="icon-emoji">🛒</span> Zakupy</h2>
+<div class="list-switcher">
+<label for="shopping-list-select" class="visually-hidden">Wybierz listę zakupów</label>
+<select id="shopping-list-select" aria-label="Wybierz listę zakupów"></select>
+<button id="btn-manage-shopping-list" class="icon-btn" title="Zarządzaj listą">
+<span class="icon-emoji">⚙️</span>
+</button>
+</div>
+</div>
+<div class="toolbar">
+<div class="inline-filters">
+<select id="shopping-filter-store" aria-label="Sklep">
+<option value="">Sklep: wszystkie</option>
+</select>
+<select id="shopping-filter-category" aria-label="Kategoria">
+<option value="">Kategoria: wszystkie</option>
+</select>
+<button id="btn-share-shopping" class="btn-text">
+<span class="icon-emoji">↗️</span> Udostępnij
+</button>
+</div>
+<div id="shopping-summary" class="summary">
+<span>Pozycje: <strong id="shopping-count">0</strong></span>
+<span>Do zapłaty: <strong id="shopping-total">0,00 zł</strong></span>
+</div>
+</div>
+<ul id="shopping-list" class="list-items" aria-label="Lista zakupów"></ul>
+</section>
+<section id="view-loyalty" class="view" data-section="loyalty" aria-labelledby="loyalty-title" hidden>
+<div class="section-header">
+<h2 id="loyalty-title"><span class="icon-emoji">🪪</span> Karty lojalnościowe</h2>
+</div>
+<div class="toolbar">
+<button class="btn-secondary" id="btn-loyalty-scan">
+<span class="icon-emoji">📱</span> Skanuj kartę
+</button>
+<button class="btn-secondary" id="btn-loyalty-add">
+<span class="icon-emoji">➕</span> Dodaj kartę
+</button>
+</div>
+<ul id="loyalty-list" class="card-list" aria-label="Karty lojalnościowe"></ul>
+</section>
+<section id="view-receipts" class="view" data-section="receipts" aria-labelledby="receipts-title" hidden>
+<div class="section-header">
+<h2 id="receipts-title"><span class="icon-emoji">🧾</span> Paragony</h2>
+</div>
+<div class="toolbar">
+<button class="btn-secondary" id="btn-receipt-add-photo">
+<span class="icon-emoji">📷</span> Dodaj zdjęcie
+</button>
+<button class="btn-secondary" id="btn-receipt-add-manual">
+<span class="icon-emoji">➕</span> Dodaj ręcznie
+</button>
+<input id="receipt-search" type="search" placeholder="Szukaj: sklep, data, kwota" />
+<button class="btn-text" id="btn-receipt-export">
+<span class="icon-emoji">⬇️</span> Eksport
+</button>
+</div>
+<ul id="receipts-list" class="list-items" aria-label="Paragony"></ul>
+</section>
+<section id="view-recipes" class="view" data-section="recipes" aria-labelledby="recipes-title" hidden>
+<div class="section-header">
+<h2 id="recipes-title"><span class="icon-emoji">🍳</span> Przepisy</h2>
+</div>
+<div class="toolbar">
+<button class="btn-secondary" id="btn-recipe-add">
+<span class="icon-emoji">➕</span> Dodaj przepis
+</button>
+<select id="recipes-filter-category" aria-label="Kategoria">
+<option value="">Kategoria: wszystkie</option>
+</select>
+<select id="recipes-filter-time" aria-label="Czas">
+<option value="">Czas: dowolny</option>
+</select>
+<select id="recipes-filter-difficulty" aria-label="Trudność">
+<option value="">Trudność: dowolna</option>
+<option value="easy">Łatwa</option>
+<option value="medium">Średnia</option>
+<option value="hard">Trudna</option>
+</select>
+<input id="recipes-search" type="search" placeholder="Szukaj po nazwie lub składnikach" />
+</div>
+<ul id="recipes-list" class="card-list" aria-label="Przepisy"></ul>
+</section>
+<section id="view-vacations" class="view" data-section="vacations" aria-labelledby="vacations-title" hidden>
+<div class="section-header">
+<h2 id="vacations-title"><span class="icon-emoji">🏖️</span> Wakacje</h2>
+</div>
+<div class="toolbar">
+<button class="btn-secondary" id="btn-vacation-create">
+<span class="icon-emoji">➕</span> Nowy plan
+</button>
+<select id="vacations-filter" aria-label="Filtruj plany">
+<option value="">Wszystkie plany</option>
+</select>
+</div>
+<ul id="vacations-list" class="card-list" aria-label="Plany wakacyjne"></ul>
+</section>
+<section id="view-options" class="view" data-section="options" aria-labelledby="options-title" hidden>
+<div class="section-header">
+<h2 id="options-title"><span class="icon-emoji">⚙️</span> Opcje</h2>
+</div>
+<div class="options-group">
+<h3>Konto</h3>
+<div class="options-row">
+<button id="btn-sync" class="btn-primary">
+<span class="icon-emoji">🔄</span> Synchronizuj dane
+</button>
+</div>
+<div class="options-row">
+<button id="btn-backup" class="btn-secondary">
+<span class="icon-emoji">☁️</span> Kopia zapasowa
+</button>
+<button id="btn-restore" class="btn-secondary">
+<span class="icon-emoji">⬆️</span> Przywróć kopię
+</button>
+</div>
+</div>
+<div class="options-group">
+<h3>Powiadomienia</h3>
+<div class="options-row">
+<label class="switch">
+<input type="checkbox" id="notif-global-toggle" checked />
+<span>Powiadomienia globalnie</span>
+</label>
+</div>
+<div class="options-row grid-2">
+<label class="switch">
+<input type="checkbox" id="notif-checklist" checked />
+<span>Checklista</span>
+</label>
+<label class="switch">
+<input type="checkbox" id="notif-tasks" checked />
+<span>Zadania</span>
+</label>
+<label class="switch">
+<input type="checkbox" id="notif-shopping" checked />
+<span>Zakupy</span>
+</label>
+<label class="switch">
+<input type="checkbox" id="notif-dates" checked />
+<span>Ważne daty</span>
+</label>
+<label class="switch">
+<input type="checkbox" id="notif-shared" checked />
+<span>Zmiany w listach współdzielonych</span>
+</label>
+</div>
+<div class="options-row">
+<label class="switch">
+<input type="checkbox" id="notif-quiet-hours" />
+<span>Ciche godziny</span>
+</label>
+<div class="quiet-hours-range">
+<label>Od <input id="quiet-from" type="time" value="22:00" /></label>
+<label>Do <input id="quiet-to" type="time" value="07:00" /></label>
+</div>
+</div>
+</div>
+<div class="options-group">
+<h3>Eksport/Import</h3>
+<div class="options-row">
+<button id="btn-export-json" class="btn-secondary">
+<span class="icon-emoji">⬇️</span> Eksport JSON
+</button>
+<button id="btn-import-json" class="btn-secondary">
+<span class="icon-emoji">⬆️</span> Import JSON
+</button>
+<button id="btn-export-csv" class="btn-secondary">
+<span class="icon-emoji">⬇️</span> Eksport CSV
+</button>
+</div>
+</div>
+</section>
+<section id="view-themes" class="view" data-section="themes" aria-labelledby="themes-title" hidden>
+<div class="section-header">
+<h2 id="themes-title"><span class="icon-emoji">🎨</span> Motywy</h2>
+</div>
+<div class="themes-grid" id="themes-grid" role="list"></div>
+<div class="toolbar">
+<button id="btn-theme-preview" class="btn-secondary">
+<span class="icon-emoji">👁️</span> Podgląd
+</button>
+<button id="btn-theme-apply" class="btn-primary">
+<span class="icon-emoji">✅</span> Zastosuj
+</button>
+</div>
+</section>
+<section id="view-appearance" class="view" data-section="appearance" aria-labelledby="appearance-title" hidden>
+<div class="section-header">
+<h2 id="appearance-title"><span class="icon-emoji">🎨</span> Wygląd</h2>
+</div>
+<div class="options-group">
+<h3>Typografia</h3>
+<div class="options-row">
+<label>Rozmiar czcionki <select id="opt-font-size">
+<option value="small">Mała</option>
+<option value="normal" selected>Średnia</option>
+<option value="large">Duża</option>
+<option value="xlarge">Bardzo duża</option>
+</select></label>
+<label>Styl czcionki <select id="opt-font-family">
+<option value="system" selected>Systemowa</option>
+<option value="serif">Szeryfowa</option>
+<option value="mono">Monospace</option>
+</select></label>
+</div>
+</div>
+<div class="options-group">
+<h3>Układ i gęstość</h3>
+<div class="options-row">
+<label>Gęstość interfejsu <select id="opt-density">
+<option value="compact">Kompaktowy</option>
+<option value="normal" selected>Normalny</option>
+<option value="spacious">Przestronny</option>
+</select></label>
+<label>Zaokrąglenia <select id="opt-radius">
+<option value="none">Brak</option>
+<option value="small" selected>Małe</option>
+<option value="medium">Średnie</option>
+<option value="large">Duże</option>
+</select></label>
+</div>
+</div>
+<div class="options-group">
+<h3>Animacje</h3>
+<div class="options-row">
+<label class="switch">
+<input type="checkbox" id="opt-animations" checked />
+<span>Animacje włączone</span>
+</label>
+</div>
+</div>
+</section>
+<section id="view-archive" class="view" data-section="archive" aria-labelledby="archive-title" hidden>
+<div class="section-header">
+<h2 id="archive-title"><span class="icon-emoji">📦</span> Archiwum</h2>
+</div>
+<div class="toolbar">
+<button id="btn-archive-empty" class="btn-danger-outline">
+<span class="icon-emoji">🗑️</span> Opróżnij archiwum
+</button>
+</div>
+<div id="archive-list" class="card-list" aria-label="Archiwum"></div>
+</section>
+<section id="view-statistics" class="view" data-section="statistics" aria-labelledby="stats-title" hidden>
+<div class="section-header">
+<h2 id="stats-title"><span class="icon-emoji">📊</span> Statystyki i raporty</h2>
+</div>
+<div class="toolbar">
+<select id="stats-range" aria-label="Okres">
+<option value="day">Dzisiaj</option>
+<option value="week">Ten tydzień</option>
+<option value="month" selected>Miesiąc</option>
+<option value="quarter">Kwartał</option>
+<option value="year">Rok</option>
+<option value="custom">Niestandardowy</option>
+</select>
+<div id="stats-custom-range" class="inline-filters" hidden>
+<label>Dzień początkowy: <input id="stats-from" type="date" /></label>
+<label>Dzień końcowy: <input id="stats-to" type="date" /></label>
+</div>
+<button id="btn-stats-refresh" class="btn-secondary">
+<span class="icon-emoji">🔄</span> Odśwież
+</button>
+<button id="btn-export-report" class="btn-secondary">
+<span class="icon-emoji">⬇️</span> Eksportuj raport
+</button>
+</div>
+<div class="stats-grid">
+<div class="stats-card">
+<h3>Podsumowanie finansowe</h3>
+<canvas id="chart-expenses" width="300" height="200"></canvas>
+<div id="stats-totals" class="stats-totals"></div>
+</div>
+<div class="stats-card">
+<h3>Nawyki zakupowe</h3>
+<canvas id="chart-habits" width="300" height="200"></canvas>
+</div>
+<div class="stats-card">
+<h3>Produktywność</h3>
+<canvas id="chart-productivity" width="300" height="200"></canvas>
+<div id="stats-comparisons" class="stats-comparisons"></div>
+</div>
+</div>
+</section>
+<section id="view-dates" class="view" data-section="dates" aria-labelledby="dates-title" hidden>
+<div class="section-header">
+<h2 id="dates-title"><span class="icon-emoji">📅</span> Ważne daty</h2>
+<div class="list-switcher">
+<select id="dates-filter-category" aria-label="Kategoria">
+<option value="">Wszystkie kategorie</option>
+<option value="urodziny">Urodziny</option>
+<option value="rocznice">Rocznice</option>
+<option value="inne">Inne</option>
+</select>
+<button id="btn-date-add" class="btn-secondary">
+<span class="icon-emoji">➕</span> Dodaj datę
+</button>
+</div>
+</div>
+<div class="toolbar">
+<label class="switch">
+<input type="checkbox" id="dates-reminders" />
+<span>Włącz przypomnienia</span>
+</label>
+</div>
+<ul id="dates-list" class="list-items" aria-label="Ważne daty"></ul>
+<div class="calendar-wrap">
+<div class="cal-header">
+<button id="cal-prev" class="icon-btn">
+<span class="icon-emoji">⬅️</span>
+</button>
+<div id="cal-current" class="cal-title"></div>
+<button id="cal-next" class="icon-btn">
+<span class="icon-emoji">➡️</span>
+</button>
+<select id="cal-view-mode" aria-label="Widok kalendarza">
+<option value="month">Miesiąc</option>
+<option value="week">Tydzień</option>
+</select>
+</div>
+<div id="calendar" class="cal-grid"></div>
+</div>
+</section>
+<section id="view-profile" class="view" data-section="profile" aria-labelledby="profile-title" hidden>
+<div class="section-header">
+<h2 id="profile-title"><span class="icon-emoji">👤</span> Profil</h2>
+</div>
+<div class="profile-card">
+<div class="avatar-css">
+<span class="icon-emoji">👤</span>
+</div>
+<div id="profile-details" class="profile-details"></div>
+</div>
+<div class="options-group">
+<h3>Ustawienia konta</h3>
+<button id="btn-profile-edit-email" class="btn-secondary">Zmień e-mail</button>
+<button id="btn-profile-change-password" class="btn-secondary">Zmień hasło</button>
+<label class="switch">
+<input type="checkbox" id="profile-stay-logged" checked />
+<span>Pozostań zalogowany</span>
+</label>
+</div>
+<div class="options-group">
+<button id="btn-profile-logout" class="btn-danger-outline">Wyloguj</button>
+<button id="btn-profile-delete" class="btn-danger">Usuń konto</button>
+</div>
+</section>
+<section id="view-about" class="view" data-section="about" aria-labelledby="about-title" hidden>
+<div class="section-header">
+<h2 id="about-title"><span class="icon-emoji">ℹ️</span> O aplikacji</h2>
+</div>
+<div class="about-content">
+<p>Lista DareG wersja 1.0v — zaawansowany menedżer list i zadań z integracją zakupów, przepisów i planowania wakacji. Offline-first, Supabase, Realtime, PWA.</p>
+<div class="about-sections">
+<h3>Funkcje</h3>
+<ul>
+<li>Checklisty i zadania z priorytetami</li>
+<li>Zakupy z skanowaniem kodów i sumami</li>
+<li>Paragony z OCR i statystykami</li>
+<li>Przepisy z listą składników</li>
+<li>Planowanie wakacji i ważne daty</li>
+<li>Synchronizacja i współpraca</li>
+</ul>
+<h3>Technologie</h3>
+<p>HTML5, CSS3, JavaScript ES6+, Supabase (Auth, Postgres, Realtime).</p>
+<h3>Wsparcie</h3>
+<p>Android, iOS, Web. Przewodnik użytkownika, FAQ, kontakt: support@dareg.pl.</p>
+</div>
+</div>
+</section>
+</main>
+<div id="fab-container">
+<button id="fab-main" class="fab" aria-label="Dodaj">
+<span class="icon-emoji">➕</span>
+</button>
+</div>
+<div id="snackbar" class="snackbar" hidden>
+<div id="snackbar-text"></div>
+<button id="snackbar-action" class="btn-text" hidden></button>
+</div>
+<dialog id="dialog-generic" class="generic-dialog">
+<div class="dialog-content">
+<div id="dialog-title"></div>
+<div id="dialog-body"></div>
+<div class="dialog-actions">
+<button id="dialog-cancel" class="btn-secondary">Anuluj</button>
+<button id="dialog-confirm" class="btn-primary">Potwierdź</button>
+</div>
+</div>
+</dialog>
+<dialog id="dialog-scanner" class="scanner-dialog">
+<div class="scanner-container">
+<video id="scanner-video" autoplay playsinline muted></video>
+<canvas id="scanner-overlay" class="scanner-overlay"></canvas>
+<div id="scanner-result"></div>
+<button id="btn-scanner-cancel" class="btn-secondary">Anuluj</button>
+</div>
+</dialog>
+<template id="tpl-item">
+<li class="item" draggable="true">
+<div class="item-main">
+<div class="item-title"></div>
+<div class="item-meta"></div>
+</div>
+<div class="item-actions">
+<button class="btn-secondary btn-edit" title="Edytuj">
+<span class="icon-emoji">✏️</span>
+</button>
+<button class="btn-danger-outline btn-delete" title="Usuń">
+<span class="icon-emoji">🗑️</span>
+</button>
+</div>
+</li>
+</template>
+<template id="tpl-vacation-card">
+<li class="card-item">
+<div class="card-header">
+<div class="card-title"></div>
+<div class="card-actions">
+<button class="btn-text to-checklist" title="Do checklisty">
+<span class="icon-emoji">📋</span>
+</button>
+<button class="btn-text to-tasks" title="Do zadań">
+<span class="icon-emoji">✅</span>
+</button>
+<button class="btn-text to-shopping" title="Do zakupów">
+<span class="icon-emoji">🛒</span>
+</button>
+</div>
+</div>
+<div class="card-meta">
+<span class="vacation-dates"></span>
+<span class="vacation-destination"></span>
+</div>
+</li>
+</template>
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

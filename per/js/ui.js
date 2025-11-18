@@ -37,6 +37,63 @@ export function toast(message, actionLabel = null, actionFn = null, timeout = 30
   }
 }
 
+// NAPRAWIONE: Dodano eksport UI jako obiekt
+export const UI = {
+  toast,
+  showDialog(title, content) {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog';
+    dialog.innerHTML = `
+      <div class="dialog-content">
+        <h3>${title}</h3>
+        <div>${content}</div>
+        <menu class="dialog-actions">
+          <button class="btn-secondary" id="close-dialog-btn">Zamknij</button>
+        </menu>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    
+    qs('#close-dialog-btn').addEventListener('click', () => {
+      dialog.close();
+      dialog.remove();
+    });
+    
+    return dialog;
+  },
+  
+  confirm(message, onConfirm) {
+    const dialog = document.createElement('dialog');
+    dialog.className = 'dialog';
+    dialog.innerHTML = `
+      <div class="dialog-content">
+        <h3>Potwierdzenie</h3>
+        <p>${message}</p>
+        <menu class="dialog-actions">
+          <button class="btn-secondary" id="cancel-dialog-btn">Anuluj</button>
+          <button class="btn-primary" id="confirm-dialog-btn">Potwierdź</button>
+        </menu>
+      </div>
+    `;
+    document.body.appendChild(dialog);
+    dialog.showModal();
+    
+    qs('#cancel-dialog-btn').addEventListener('click', () => {
+      dialog.close();
+      dialog.remove();
+    });
+    
+    qs('#confirm-dialog-btn').addEventListener('click', () => {
+      onConfirm();
+      dialog.close();
+      dialog.remove();
+    });
+  }
+};
+
 export function initUI() {
   console.log('UI helpers załadowane');
 }
+
+export default UI;

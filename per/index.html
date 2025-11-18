@@ -8,13 +8,15 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>Lista — Lista DareG 1.0v</title>
-  <link rel="manifest" href="./manifest.webmanifest.json" />
   
-  <!-- CSS - POPRAWIONE ŚCIEŻKI -->
-  <link rel="stylesheet" href="./css/style.css" />
-  <link rel="stylesheet" href="./css/components.css" />
-  <link rel="stylesheet" href="./css/animations.css" />
-  <link rel="stylesheet" href="./css/themes.css" />
+  <!-- POPRAWIONE ŚCIEŻKI dla /kod/per/ -->
+  <link rel="manifest" href="/kod/per/manifest.webmanifest.json" />
+  
+  <!-- CSS -->
+  <link rel="stylesheet" href="/kod/per/css/style.css" />
+  <link rel="stylesheet" href="/kod/per/css/components.css" />
+  <link rel="stylesheet" href="/kod/per/css/animations.css" />
+  <link rel="stylesheet" href="/kod/per/css/themes.css" />
 </head>
 <body class="theme-auto font-base density-default radius-medium animations-on">
 
@@ -154,33 +156,33 @@
     <button id="snackbar-action" hidden></button>
   </div>
 
-  <!-- POPRAWIONE ŚCIEŻKI DO SKRYPTÓW -->
-  <script type="module" src="./js/supabase-client.js"></script>
-  <script type="module" src="./js/storage.js"></script>
-  <script type="module" src="./js/auth.js"></script>
-  <script type="module" src="./js/ui.js"></script>
-  <script type="module" src="./js/list-manager.js"></script>
-  <script type="module" src="./js/swipe-handler.js"></script>
-  <script type="module" src="./js/notifications.js"></script>
-  <script type="module" src="./js/sharing.js"></script>
-  <script type="module" src="./js/barcode-scanner.js"></script>
-  <script type="module" src="./js/receipts.js"></script>
-  <script type="module" src="./js/recipes.js"></script>
-  <script type="module" src="./js/loyalty-cards.js"></script>
-  <script type="module" src="./js/calendar.js"></script>
-  <script type="module" src="./js/important-dates.js"></script>
-  <script type="module" src="./js/vacations.js"></script>
-  <script type="module" src="./js/statistics.js"></script>
-  <script type="module" src="./js/archive.js"></script>
-  <script type="module" src="./js/settings.js"></script>
-  <script type="module" src="./js/profile.js"></script>
-  <script type="module" src="./js/app.js"></script>
+  <!-- POPRAWIONE ŚCIEŻKI DO JS -->
+  <script type="module" src="/kod/per/js/supabase-client.js"></script>
+  <script type="module" src="/kod/per/js/storage.js"></script>
+  <script type="module" src="/kod/per/js/auth.js"></script>
+  <script type="module" src="/kod/per/js/ui.js"></script>
+  <script type="module" src="/kod/per/js/list-manager.js"></script>
+  <script type="module" src="/kod/per/js/swipe-handler.js"></script>
+  <script type="module" src="/kod/per/js/notifications.js"></script>
+  <script type="module" src="/kod/per/js/sharing.js"></script>
+  <script type="module" src="/kod/per/js/barcode-scanner.js"></script>
+  <script type="module" src="/kod/per/js/receipts.js"></script>
+  <script type="module" src="/kod/per/js/recipes.js"></script>
+  <script type="module" src="/kod/per/js/loyalty-cards.js"></script>
+  <script type="module" src="/kod/per/js/calendar.js"></script>
+  <script type="module" src="/kod/per/js/important-dates.js"></script>
+  <script type="module" src="/kod/per/js/vacations.js"></script>
+  <script type="module" src="/kod/per/js/statistics.js"></script>
+  <script type="module" src="/kod/per/js/archive.js"></script>
+  <script type="module" src="/kod/per/js/settings.js"></script>
+  <script type="module" src="/kod/per/js/profile.js"></script>
+  <script type="module" src="/kod/per/js/app.js"></script>
 
   <!-- Service Worker Registration -->
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('/kod/per/sw.js', { scope: '/kod/per/' })
           .then(reg => console.log('SW zarejestrowany:', reg.scope))
           .catch(err => console.error('SW błąd rejestracji:', err));
       });

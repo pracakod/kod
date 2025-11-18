@@ -2,40 +2,40 @@
 
 const CACHE_NAME = "lista-v1-0-0";
 const urlsToCache = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest.json",
+  "./",
+  "./index.html",
+  "./manifest.webmanifest.json",
   
   // CSS
-  "/css/style.css",
-  "/css/components.css",
-  "/css/animations.css",
-  "/css/themes.css",
+  "./css/style.css",
+  "./css/components.css",
+  "./css/animations.css",
+  "./css/themes.css",
   
   // JavaScript
-  "/js/app.js",
-  "/js/storage.js",
-  "/js/supabase-client.js",
-  "/js/auth.js",
-  "/js/ui.js",
-  "/js/list-manager.js",
-  "/js/swipe-handler.js",
-  "/js/notifications.js",
-  "/js/sharing.js",
-  "/js/barcode-scanner.js",
-  "/js/receipts.js",
-  "/js/recipes.js",
-  "/js/loyalty-cards.js",
-  "/js/calendar.js",
-  "/js/important-dates.js",
-  "/js/vacations.js",
-  "/js/statistics.js",
-  "/js/archive.js",
-  "/js/settings.js",
-  "/js/profile.js"
+  "./js/app.js",
+  "./js/storage.js",
+  "./js/supabase-client.js",
+  "./js/auth.js",
+  "./js/ui.js",
+  "./js/list-manager.js",
+  "./js/swipe-handler.js",
+  "./js/notifications.js",
+  "./js/sharing.js",
+  "./js/barcode-scanner.js",
+  "./js/receipts.js",
+  "./js/recipes.js",
+  "./js/loyalty-cards.js",
+  "./js/calendar.js",
+  "./js/important-dates.js",
+  "./js/vacations.js",
+  "./js/statistics.js",
+  "./js/archive.js",
+  "./js/settings.js",
+  "./js/profile.js"
 ];
 
-// Instalacja
+// Reszta kodu bez zmian...
 self.addEventListener("install", (event) => {
   console.log("[SW] Instalacja...");
   event.waitUntil(
@@ -49,7 +49,6 @@ self.addEventListener("install", (event) => {
   );
 });
 
-// Aktywacja
 self.addEventListener("activate", (event) => {
   console.log("[SW] Aktywacja...");
   event.waitUntil(
@@ -66,11 +65,9 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   
-  // Ignoruj Supabase i CDN
   if (event.request.url.includes("supabase.co") || 
       event.request.url.includes("cdn.jsdelivr.net")) {
     return;
@@ -94,7 +91,7 @@ self.addEventListener("fetch", (event) => {
               return cachedResponse;
             }
             if (event.request.mode === 'navigate') {
-              return caches.match('/index.html');
+              return caches.match('./index.html');
             }
           });
       })

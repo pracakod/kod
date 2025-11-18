@@ -14,7 +14,6 @@ import { initStatistics } from "./statistics.js";
 const qs = (s) => document.querySelector(s);
 const qsa = (s) => Array.from(document.querySelectorAll(s));
 
-// Stan aplikacji
 export const AppState = {
   currentView: 'checklist',
   currentUser: null,
@@ -23,27 +22,22 @@ export const AppState = {
   supabase: null
 };
 
-// Inicjalizacja aplikacji
 async function initApp() {
   try {
     console.log('🚀 Inicjalizacja aplikacji...');
     
-    // 1. Storage (zawsze pierwszy)
     AppState.storage = new Storage();
     await AppState.storage.init();
     console.log('✓ Storage zainicjalizowany');
     
-    // 2. UI Event Listeners
     initUIListeners();
     console.log('✓ UI zainicjalizowane');
     
-    // 3. Supabase (opcjonalnie)
     if (isSupabaseConfigured()) {
       AppState.supabase = await initSupabase();
       if (AppState.supabase) {
         console.log('✓ Supabase zainicjalizowany');
         
-        // 4. Auth (tylko jeśli Supabase dostępny)
         await initAuth();
         const user = await checkAuth();
         if (user) {
@@ -57,18 +51,14 @@ async function initApp() {
       showGuestMode();
     }
     
-    // 5. Powiadomienia
     await initNotifications();
     console.log('✓ Powiadomienia zainicjalizowane');
     
-    // 6. Załaduj domyślny widok
     await loadView('checklist');
     
-    // 7. Online/Offline listeners
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
     
-    // 8. Sprawdź stan połączenia
     if (!navigator.onLine) {
       handleOffline();
     }
@@ -81,9 +71,7 @@ async function initApp() {
   }
 }
 
-// UI Event Listeners
 function initUIListeners() {
-  // Drawer toggle
   const drawerToggle = qs('#drawer-toggle');
   const drawer = qs('#drawer');
   const drawerClose = qs('#drawer-close');
@@ -100,7 +88,6 @@ function initUIListeners() {
     });
   }
   
-  // Kliknięcie poza drawer zamyka go
   if (drawer) {
     drawer.addEventListener('click', (e) => {
       if (e.target === drawer) {
@@ -109,19 +96,16 @@ function initUIListeners() {
     });
   }
   
-  // Bottom nav tabs
   qsa('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
       if (view) {
         loadView(view);
-        // Zamknij drawer jeśli otwarty
         if (drawer) drawer.setAttribute('aria-hidden', 'true');
       }
     });
   });
   
-  // Drawer nav items
   qsa('.drawer-item').forEach(btn => {
     btn.addEventListener('click', () => {
       const view = btn.dataset.view;
@@ -132,7 +116,6 @@ function initUIListeners() {
     });
   });
   
-  // Profile button
   const profileBtn = qs('#profile-btn');
   if (profileBtn) {
     profileBtn.addEventListener('click', () => {
@@ -140,7 +123,6 @@ function initUIListeners() {
     });
   }
   
-  // Sync button
   const syncBtn = qs('#sync-btn');
   if (syncBtn) {
     syncBtn.addEventListener('click', async () => {
@@ -166,21 +148,18 @@ function initUIListeners() {
     });
   }
   
-  // Global search
   const searchInput = qs('#global-search-input');
   if (searchInput) {
     searchInput.addEventListener('input', debounce(handleGlobalSearch, 300));
   }
 }
 
-// Ładowanie widoków
-export async function loadView(viewName) {
+// NAPRAWIONE: Usunięto duplikat export
+async function loadView(viewName) {
   console.log(`Ładowanie widoku: ${viewName}`);
   
-  // Ukryj wszystkie widoki
   qsa('.view').forEach(v => v.setAttribute('hidden', ''));
   
-  // Aktualizuj aktywne tapy
   qsa('.tab-btn').forEach(btn => {
     if (btn.dataset.view === viewName) {
       btn.classList.add('active');
@@ -189,13 +168,11 @@ export async function loadView(viewName) {
     }
   });
   
-  // Pokaż wybrany widok
   const view = qs(`#view-${viewName}`);
   if (view) {
     view.removeAttribute('hidden');
     AppState.currentView = viewName;
     
-    // Inicjalizuj specyficzne funkcje widoku
     switch (viewName) {
       case 'checklist':
         await initChecklistView();
@@ -228,7 +205,6 @@ export async function loadView(viewName) {
   }
 }
 
-// Placeholder funkcje dla widoków (do implementacji)
 async function initChecklistView() {
   const view = qs('#view-checklist');
   if (!view.innerHTML.trim()) {
@@ -281,7 +257,6 @@ async function initVacationsView() {
   }
 }
 
-// Online/Offline handlers
 function handleOnline() {
   AppState.isOnline = true;
   const banner = qs('#offline-banner');
@@ -289,14 +264,12 @@ function handleOnline() {
   
   toast('Połączono z internetem');
   
-  // Auto-sync
   if (AppState.storage && AppState.supabase) {
     setTimeout(() => {
       AppState.storage.syncWithSupabase();
     }, 1000);
   }
   
-  // Pokaż przycisk sync
   const syncBtn = qs('#sync-btn');
   if (syncBtn) syncBtn.removeAttribute('hidden');
 }
@@ -308,12 +281,10 @@ function handleOffline() {
   
   toast('Pracujesz offline');
   
-  // Ukryj przycisk sync
   const syncBtn = qs('#sync-btn');
   if (syncBtn) syncBtn.setAttribute('hidden', '');
 }
 
-// User Display
 function updateUserDisplay(user) {
   const userName = qs('#drawer-user-name');
   const userEmail = qs('#drawer-user-email');
@@ -330,14 +301,11 @@ function showGuestMode() {
   if (userEmail) userEmail.textContent = 'Tryb lokalny';
 }
 
-// Global Search
 function handleGlobalSearch(e) {
   const query = e.target.value.toLowerCase().trim();
   console.log('Wyszukiwanie:', query);
-  // TODO: Implementacja wyszukiwania globalnego
 }
 
-// Utility: Debounce
 function debounce(func, wait) {
   let timeout;
   return function executedFunction(...args) {
@@ -350,11 +318,11 @@ function debounce(func, wait) {
   };
 }
 
-// Uruchom aplikację
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', initApp);
 } else {
   initApp();
 }
 
+// NAPRAWIONE: Tylko jeden export loadView
 export { loadView };

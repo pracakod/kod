@@ -1,188 +1,248 @@
-/* ==========================================================================
-   Lista — settings.js
-   Odpowiada za: ustawienia motywów i wyglądu (persistencja, podgląd, zastosowanie)
-   - Motywy: tryb (auto/jasny/ciemny) + akcent (niebieski/zielony/bursztynowy/różany)
-   - Wygląd: rozmiar/krój czcionki, gęstość, rozmiar elementów, promienie, cienie,
-             animacje, widoczność paska wyszukiwania
-   Integracja: UI (siatka motywów), App (przyciski „Podgląd” i „Zastosuj”)
-   ========================================================================== */
-
 "use strict";
 
-import { UI } from "./ui.js";
+import { toast } from "./ui.js";
+import { Storage } from "./storage.js";
 
-/* Klucze localStorage */
-const LS_THEME_APPLIED = "lista:theme";         // zapisany, zastosowany motyw
-const LS_THEME_PENDING = "lista:themePending";  // wybór oczekujący (z siatki UI)
-const LS_APPEARANCE    = "lista:appearance";    // ustawienia wyglądu
+const qs = (s) => document.querySelector(s);
+const storage = new Storage();
 
-/* Domyślne wartości */
-const DEFAULT_THEME = { mode: "light", accent: "blue" };
-const DEFAULT_APPEARANCE = {
-  fontSize: "normal",
-  fontFamily: "system",
-  density: "normal",
-  itemSize: "normal",
-  radius: "md",
-  elevation: "low",
-  animations: true,
-  showSearch: true
-};
+export function initSettings() {
+  const view = qs('#view-settings');
+  if (!view) return;
 
-/* Pomocnicze */
-const qs = (s, r = document) => r.querySelector(s);
+  view.innerHTML = `
+    <div class="section-header">
+      <h2><span class="icon icon-settings"></span> Ustawienia</h2>
+    </div>
 
-function loadJSON(key, fallback) {
+    <div class="options-group">
+      <h3>Wygląd</h3>
+      <div class="options-row">
+        <label>
+          <span>Motyw</span>
+          <select id="theme-select">
+            <option value="auto">Automatyczny</option>
+            <option value="light">Jasny</option>
+            <option value="dark">Ciemny</option>
+          </select>
+        </label>
+      </div>
+      <div class="options-row">
+        <label>
+          <span>Kolor akcentu</span>
+          <select id="accent-select">
+            <option value="blue">Niebieski</option>
+            <option value="green">Zielony</option>
+            <option value="amber">Bursztynowy</option>
+            <option value="rose">Różowy</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="options-group">
+      <h3>Gęstość interfejsu</h3>
+      <div class="options-row">
+        <label>
+          <span>Rozmiar elementów</span>
+          <select id="density-select">
+            <option value="compact">Kompaktowy</option>
+            <option value="default">Domyślny</option>
+            <option value="spacious">Przestronny</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <div class="options-group">
+      <h3>Powiadomienia</h3>
+      <div class="options-row">
+        <label class="switch">
+          <input type="checkbox" id="notifications-enabled" />
+          <span>Włącz powiadomienia</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="options-group">
+      <h3>Dane</h3>
+      <div class="options-row">
+        <button class="btn-secondary" id="export-data-btn">Eksportuj dane</button>
+        <button class="btn-secondary" id="import-data-btn">Importuj dane</button>
+      </div>
+      <div class="options-row">
+        <button class="btn-danger" id="clear-data-btn">Wyczyść wszystkie dane</button>
+      </div>
+    </div>
+  `;
+
+  loadSettings();
+  attachSettingsListeners();
+}
+
+function loadSettings() {
+  const theme = localStorage.getItem('lista:theme') || 'auto';
+  const accent = localStorage.getItem('lista:accent') || 'blue';
+  const density = localStorage.getItem('lista:density') || 'default';
+  const notificationsEnabled = localStorage.getItem('lista:notifications') === 'true';
+
+  const themeSelect = qs('#theme-select');
+  const accentSelect = qs('#accent-select');
+  const densitySelect = qs('#density-select');
+  const notificationsCheckbox = qs('#notifications-enabled');
+
+  if (themeSelect) themeSelect.value = theme;
+  if (accentSelect) accentSelect.value = accent;
+  if (densitySelect) densitySelect.value = density;
+  if (notificationsCheckbox) notificationsCheckbox.checked = notificationsEnabled;
+
+  applyTheme(theme);
+  applyAccent(accent);
+  applyDensity(density);
+}
+
+function attachSettingsListeners() {
+  const themeSelect = qs('#theme-select');
+  const accentSelect = qs('#accent-select');
+  const densitySelect = qs('#density-select');
+  const notificationsCheckbox = qs('#notifications-enabled');
+
+  if (themeSelect) {
+    themeSelect.addEventListener('change', (e) => {
+      const value = e.target.value;
+      localStorage.setItem('lista:theme', value);
+      applyTheme(value);
+      toast('Motyw zmieniony');
+    });
+  }
+
+  if (accentSelect) {
+    accentSelect.addEventListener('change', (e) => {
+      const value = e.target.value;
+      localStorage.setItem('lista:accent', value);
+      applyAccent(value);
+      toast('Kolor akcentu zmieniony');
+    });
+  }
+
+  if (densitySelect) {
+    densitySelect.addEventListener('change', (e) => {
+      const value = e.target.value;
+      localStorage.setItem('lista:density', value);
+      applyDensity(value);
+      toast('Gęstość interfejsu zmieniona');
+    });
+  }
+
+  if (notificationsCheckbox) {
+    notificationsCheckbox.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      localStorage.setItem('lista:notifications', enabled);
+      toast(enabled ? 'Powiadomienia włączone' : 'Powiadomienia wyłączone');
+    });
+  }
+
+  const exportBtn = qs('#export-data-btn');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportData);
+  }
+
+  const importBtn = qs('#import-data-btn');
+  if (importBtn) {
+    importBtn.addEventListener('click', importData);
+  }
+
+  const clearBtn = qs('#clear-data-btn');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearAllData);
+  }
+}
+
+function applyTheme(theme) {
+  document.body.className = document.body.className
+    .replace(/theme-\w+/g, '')
+    .trim();
+  document.body.classList.add(`theme-${theme}`);
+}
+
+function applyAccent(accent) {
+  document.body.className = document.body.className
+    .replace(/accent-\w+/g, '')
+    .trim();
+  document.body.classList.add(`accent-${accent}`);
+}
+
+function applyDensity(density) {
+  document.body.className = document.body.className
+    .replace(/density-\w+/g, '')
+    .trim();
+  document.body.classList.add(`density-${density}`);
+}
+
+async function exportData() {
   try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch { return fallback; }
-}
-function saveJSON(key, value) {
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
-}
-
-/* Usuwanie i nadawanie klas motywu na <body> */
-function applyThemeClasses(theme) {
-  const b = document.body;
-  const modeClasses = ["theme-auto", "theme-light", "theme-dark"];
-  const accentClasses = ["theme-blue", "theme-green", "theme-amber", "theme-rose"];
-
-  b.classList.remove(...modeClasses, ...accentClasses);
-
-  const mode = theme.mode === "auto" ? "theme-auto"
-            : theme.mode === "dark" ? "theme-dark"
-            : "theme-light";
-  const accents = ["blue","green","amber","rose"];
-  const accent = accents.includes(theme.accent) ? `theme-${theme.accent}` : "theme-blue";
-
-  b.classList.add(mode, accent);
-  // Domyślnie włącz animacje; zostaną skorygowane przez sekcję Wygląd
-  b.classList.add("animations-on");
-}
-
-/* Zapis/odczyt wyglądu do/z formularza */
-function setAppearanceForm(values) {
-  const map = {
-    "#opt-font-size": "fontSize",
-    "#opt-font-family": "fontFamily",
-    "#opt-density": "density",
-    "#opt-item-size": "itemSize",
-    "#opt-radius": "radius",
-    "#opt-elevation": "elevation",
-    "#opt-animations": "animations",
-    "#opt-show-search": "showSearch"
-  };
-  for (const [sel, key] of Object.entries(map)) {
-    const el = qs(sel);
-    if (!el) continue;
-    if (typeof values[key] === "undefined") continue;
-    if (el.type === "checkbox") el.checked = !!values[key];
-    else el.value = String(values[key]);
+    const data = storage.exportData();
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `lista-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+    toast('Dane wyeksportowane');
+  } catch (error) {
+    console.error('Błąd eksportu:', error);
+    toast('Nie udało się wyeksportować danych');
   }
 }
 
-function getAppearanceForm() {
-  const v = {};
-  v.fontSize = qs("#opt-font-size")?.value || DEFAULT_APPEARANCE.fontSize;
-  v.fontFamily = qs("#opt-font-family")?.value || DEFAULT_APPEARANCE.fontFamily;
-  v.density = qs("#opt-density")?.value || DEFAULT_APPEARANCE.density;
-  v.itemSize = qs("#opt-item-size")?.value || DEFAULT_APPEARANCE.itemSize;
-  v.radius = qs("#opt-radius")?.value || DEFAULT_APPEARANCE.radius;
-  v.elevation = qs("#opt-elevation")?.value || DEFAULT_APPEARANCE.elevation;
-  v.animations = !!qs("#opt-animations")?.checked;
-  v.showSearch = !!qs("#opt-show-search")?.checked;
-  return v;
+function importData() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'application/json';
+  
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      
+      if (confirm('Czy na pewno chcesz zaimportować dane? To nadpisze istniejące dane.')) {
+        await storage.importData(data);
+        toast('Dane zaimportowane');
+        setTimeout(() => location.reload(), 1000);
+      }
+    } catch (error) {
+      console.error('Błąd importu:', error);
+      toast('Nie udało się zaimportować danych');
+    }
+  });
+  
+  input.click();
 }
 
-/* Główny moduł */
-export const Settings = {
-  _inited: false,
-  _bus: { on() {}, emit() {} },
-  _appliedTheme: { ...DEFAULT_THEME },
-
-  async init(Bus) {
-    if (this._inited) return;
-    this._inited = true;
-    if (Bus && typeof Bus.emit === "function") this._bus = Bus;
-
-    // 1) Załaduj i zastosuj motyw zapisany
-    const applied = loadJSON(LS_THEME_APPLIED, DEFAULT_THEME);
-    this._appliedTheme = { ...DEFAULT_THEME, ...applied };
-    applyThemeClasses(this._appliedTheme);
-
-    // 2) Upewnij się, że wybór oczekujący nie jest pusty (dla siatki UI)
-    const pending = loadJSON(LS_THEME_PENDING, null);
-    if (!pending) saveJSON(LS_THEME_PENDING, this._appliedTheme);
-
-    // 3) Załaduj wygląd i uzupełnij formularz (app.js zaczytuje i stosuje)
-    const appearance = loadJSON(LS_APPEARANCE, DEFAULT_APPEARANCE);
-    setAppearanceForm({ ...DEFAULT_APPEARANCE, ...appearance });
-
-    // 4) Nasłuch zmian wyboru oczekującego – NATYCHMIASTOWY PODGLĄD
-    this._bus.on?.("theme:pending-changed", (sel) => {
-      const next = { ...DEFAULT_THEME, ...sel };
-      saveJSON(LS_THEME_PENDING, next);
-      // Natychmiastowy podgląd po kliknięciu kafla w siatce (rozwiązuje brak widocznej zmiany motywu)
-      applyThemeClasses(next);
-    });
-
-    // 5) Persistencja wyglądu przy zmianach kontrolek
-    this._bindAppearancePersistence();
-  },
-
-  /* Podgląd motywu – może być wywołany z przycisku „Podgląd” */
-  previewTheme() {
-    const sel = UI.getSelectedTheme?.() || loadJSON(LS_THEME_PENDING, this._appliedTheme);
-    if (!sel) return;
-    applyThemeClasses(sel);
-    // Nie aktualizujemy _appliedTheme — to wyłącznie podgląd
-  },
-
-  /* Zastosowanie motywu na stałe — zapis + użycie */
-  applyTheme() {
-    const sel = UI.getSelectedTheme?.() || loadJSON(LS_THEME_PENDING, this._appliedTheme);
-    const theme = { ...DEFAULT_THEME, ...sel };
-    this._appliedTheme = theme;
-    applyThemeClasses(theme);
-    saveJSON(LS_THEME_APPLIED, theme);
-    // Ujednolicenie wyboru oczekującego z zastosowanym
-    saveJSON(LS_THEME_PENDING, theme);
-  },
-
-  /* Ujawnienie aktualnego motywu */
-  getAppliedTheme() {
-    return { ...this._appliedTheme };
-  },
-
-  /* Persistencja wyglądu */
-  _bindAppearancePersistence() {
-    const ids = [
-      "#opt-font-size",
-      "#opt-font-family",
-      "#opt-density",
-      "#opt-item-size",
-      "#opt-radius",
-      "#opt-elevation",
-      "#opt-animations",
-      "#opt-show-search"
-    ];
-    ids.forEach(id => {
-      const el = qs(id);
-      if (!el) return;
-      el.addEventListener("change", () => {
-        const v = getAppearanceForm();
-        saveJSON(LS_APPEARANCE, v);
-      });
-    });
+function clearAllData() {
+  if (!confirm('Czy na pewno chcesz usunąć WSZYSTKIE dane? Tej operacji nie można cofnąć!')) {
+    return;
   }
-};
 
-/* Inicjalizacja samoczynna (gdy moduł wczytany niezależnie) */
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", () => Settings.init(window.Bus));
-} else {
-  Settings.init(window.Bus);
+  if (!confirm('Ostatnie ostrzeżenie: wszystkie listy, zadania, przepisy i ustawienia zostaną usunięte. Kontynuować?')) {
+    return;
+  }
+
+  try {
+    storage.clearAll();
+    toast('Wszystkie dane usunięte');
+    setTimeout(() => location.reload(), 1000);
+  } catch (error) {
+    console.error('Błąd czyszczenia danych:', error);
+    toast('Nie udało się wyczyścić danych');
+  }
 }
 
-export default Settings;
+export default { initSettings };

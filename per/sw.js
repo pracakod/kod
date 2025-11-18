@@ -1,41 +1,42 @@
 "use strict";
 
 const CACHE_NAME = "lista-v1-0-0";
+const BASE_PATH = "/kod/per";
+
 const urlsToCache = [
-  "./",
-  "./index.html",
-  "./manifest.webmanifest.json",
+  `${BASE_PATH}/`,
+  `${BASE_PATH}/index.html`,
+  `${BASE_PATH}/manifest.webmanifest.json`,
   
   // CSS
-  "./css/style.css",
-  "./css/components.css",
-  "./css/animations.css",
-  "./css/themes.css",
+  `${BASE_PATH}/css/style.css`,
+  `${BASE_PATH}/css/components.css`,
+  `${BASE_PATH}/css/animations.css`,
+  `${BASE_PATH}/css/themes.css`,
   
   // JavaScript
-  "./js/app.js",
-  "./js/storage.js",
-  "./js/supabase-client.js",
-  "./js/auth.js",
-  "./js/ui.js",
-  "./js/list-manager.js",
-  "./js/swipe-handler.js",
-  "./js/notifications.js",
-  "./js/sharing.js",
-  "./js/barcode-scanner.js",
-  "./js/receipts.js",
-  "./js/recipes.js",
-  "./js/loyalty-cards.js",
-  "./js/calendar.js",
-  "./js/important-dates.js",
-  "./js/vacations.js",
-  "./js/statistics.js",
-  "./js/archive.js",
-  "./js/settings.js",
-  "./js/profile.js"
+  `${BASE_PATH}/js/app.js`,
+  `${BASE_PATH}/js/storage.js`,
+  `${BASE_PATH}/js/supabase-client.js`,
+  `${BASE_PATH}/js/auth.js`,
+  `${BASE_PATH}/js/ui.js`,
+  `${BASE_PATH}/js/list-manager.js`,
+  `${BASE_PATH}/js/swipe-handler.js`,
+  `${BASE_PATH}/js/notifications.js`,
+  `${BASE_PATH}/js/sharing.js`,
+  `${BASE_PATH}/js/barcode-scanner.js`,
+  `${BASE_PATH}/js/receipts.js`,
+  `${BASE_PATH}/js/recipes.js`,
+  `${BASE_PATH}/js/loyalty-cards.js`,
+  `${BASE_PATH}/js/calendar.js`,
+  `${BASE_PATH}/js/important-dates.js`,
+  `${BASE_PATH}/js/vacations.js`,
+  `${BASE_PATH}/js/statistics.js`,
+  `${BASE_PATH}/js/archive.js`,
+  `${BASE_PATH}/js/settings.js`,
+  `${BASE_PATH}/js/profile.js`
 ];
 
-// Reszta kodu bez zmian...
 self.addEventListener("install", (event) => {
   console.log("[SW] Instalacja...");
   event.waitUntil(
@@ -91,7 +92,7 @@ self.addEventListener("fetch", (event) => {
               return cachedResponse;
             }
             if (event.request.mode === 'navigate') {
-              return caches.match('./index.html');
+              return caches.match(`${BASE_PATH}/index.html`);
             }
           });
       })

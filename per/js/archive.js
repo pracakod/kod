@@ -74,7 +74,6 @@ async function loadArchive() {
       return;
     }
 
-    // Sortuj po dacie usunięcia (najnowsze pierwsze)
     allArchived.sort((a, b) => {
       const dateA = new Date(a.updatedAt || a.createdAt || 0);
       const dateB = new Date(b.updatedAt || b.createdAt || 0);
@@ -102,7 +101,6 @@ async function loadArchive() {
       </ul>
     `;
 
-    // Event listeners
     qsa('[data-action="restore"]').forEach(btn => {
       const li = btn.closest('li');
       const id = li.dataset.id;

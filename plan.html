@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Smart Shop Planer 2.0</title>
+    <title>Smart Shop Planer 3.0</title>
     <style>
         :root {
             --primary: #0050aa;
@@ -31,35 +31,41 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0; padding: 0; background-color: var(--bg); color: var(--text);
             height: 100vh; display: flex; flex-direction: column; overflow: hidden;
-            transition: background 0.3s, color 0.3s;
         }
 
         /* --- HEADER --- */
         header {
             background: var(--surface); color: var(--text); padding: 10px 15px;
             display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid var(--border); z-index: 10;
+            border-bottom: 1px solid var(--border); z-index: 20;
+            height: 60px;
         }
-        h1 { margin: 0; font-size: 18px; font-weight: 800; background: linear-gradient(90deg, var(--primary), var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h1 { margin: 0; font-size: 18px; font-weight: 800; color: var(--primary); }
 
-        .header-controls { display: flex; gap: 10px; }
-        .icon-btn { font-size: 20px; background: none; border: none; cursor: pointer; padding: 5px; }
+        .header-btn {
+            background: none; border: 1px solid var(--border); border-radius: 8px;
+            padding: 5px 10px; cursor: pointer; display: flex; align-items: center; gap: 5px;
+            font-size: 12px; color: var(--text);
+        }
 
-        /* --- NAV --- */
+        /* --- NAV (DOLNY PASEK) --- */
         nav {
-            background: var(--surface); padding: 8px 0; border-top: 1px solid var(--border);
-            display: flex; justify-content: space-around; z-index: 9;
+            background: var(--surface); border-top: 1px solid var(--border);
+            display: flex; height: 70px; z-index: 20;
         }
         .nav-btn {
-            background: none; border: none; color: #888; font-size: 11px; font-weight: bold;
-            text-transform: uppercase; display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
+            flex: 1; background: none; border: none; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 4px;
+            color: #999; font-size: 11px; font-weight: bold;
         }
-        .nav-btn.active { color: var(--primary); transform: scale(1.05); }
-        .nav-btn .icon { font-size: 22px; }
+        .nav-btn.active { color: var(--primary); }
         
+        /* Ikony SVG */
+        .icon-svg { width: 24px; height: 24px; fill: currentColor; }
+
         .badge {
             background: var(--accent); color: white; border-radius: 10px; padding: 2px 6px;
-            font-size: 10px; position: absolute; margin-left: 15px; margin-top: -5px; display: none;
+            font-size: 10px; position: absolute; margin-left: 20px; margin-top: -10px; display: none;
         }
 
         /* --- VIEWS --- */
@@ -68,19 +74,23 @@
 
         /* --- AISLE VIEW --- */
         #aisle-container {
-            padding: 20px 10px 60px 10px; background: var(--bg);
+            padding: 10px 10px 40px 10px; background: var(--bg);
             display: flex; flex-direction: column; gap: 6px; align-items: center;
         }
 
-        /* Row Controls (Length) */
-        .length-controls {
-            display: flex; justify-content: center; gap: 20px; padding: 10px;
-            background: var(--surface); border-bottom: 1px solid var(--border); width: 100%;
+        /* KONTROLKI DŁUGOŚCI SKLEPU */
+        #aisle-controls {
+            background: var(--surface); padding: 10px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: center; align-items: center; gap: 15px;
+            /* Ważne: domyślnie flex, ukrywamy JS tylko w trybie listy */
+            display: flex; 
         }
         .len-btn {
             background: var(--bg); border: 1px solid var(--border); border-radius: 20px;
-            padding: 5px 15px; font-weight: bold; font-size: 14px; color: var(--text);
+            padding: 8px 20px; font-weight: bold; font-size: 14px; color: var(--text); cursor: pointer;
+            display: flex; align-items: center; gap: 5px;
         }
+        .len-btn:active { transform: scale(0.95); }
 
         .store-row {
             display: grid; grid-template-columns: 1fr 60px 1fr;
@@ -90,16 +100,15 @@
         .path-center {
             height: 100%; background-color: var(--path);
             border-left: 2px dashed var(--bg); border-right: 2px dashed var(--bg);
-            display: flex; justify-content: center; align-items: center; position: relative;
-            border-radius: 4px;
+            display: flex; justify-content: center; align-items: center;
+            border-radius: 4px; position: relative;
         }
         
         .player {
-            font-size: 30px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-            animation: moveCart 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 5;
+            font-size: 30px; z-index: 5; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            animation: moveCart 0.3s ease-out;
         }
-        @keyframes moveCart { from { transform: scale(0) translateY(20px); } to { transform: scale(1) translateY(0); } }
+        @keyframes moveCart { from { transform: scale(0.5); opacity:0; } to { transform: scale(1); opacity:1; } }
 
         .shelf-slot {
             height: 75px; background: var(--surface); border-radius: 10px; margin: 0 5px;
@@ -112,7 +121,7 @@
         }
         .shelf-slot .s-icon { font-size: 26px; margin-bottom: 2px; }
         
-        /* Hold Animation */
+        /* Pasek przytrzymania */
         .hold-bar {
             position: absolute; bottom: 0; left: 0; height: 4px; background: var(--accent);
             width: 0%; transition: width 0.1s linear;
@@ -123,22 +132,17 @@
         .cl-group { background: var(--surface); border-radius: 10px; padding: 10px; margin-bottom: 15px; border: 1px solid var(--border); }
         .cl-title { font-size: 12px; font-weight: bold; color: var(--primary); text-transform: uppercase; margin-bottom: 8px; border-bottom: 1px solid var(--border); padding-bottom: 5px;}
         
-        .cl-item {
-            display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border);
-            transition: all 0.2s;
-        }
+        .cl-item { display: flex; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
         .cl-item:last-child { border-bottom: none; }
         
-        /* Solid Checkbox Logic */
         .cl-check-box {
-            width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; margin-right: 10px;
-            display: flex; align-items: center; justify-content: center; font-size: 16px; color: white;
-            transition: 0.2s; flex-shrink: 0;
+            width: 24px; height: 24px; border: 2px solid #ccc; border-radius: 6px; margin-right: 12px;
+            display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;
         }
         .cl-text { flex: 1; font-size: 16px; color: var(--text); }
 
-        /* Checked State */
         .cl-item.is-checked .cl-check-box { background: var(--success); border-color: var(--success); }
+        .cl-item.is-checked .cl-check-box::after { content: '✔'; font-size: 14px; }
         .cl-item.is-checked .cl-text { text-decoration: line-through; color: #aaa; }
         .cl-item.is-checked { opacity: 0.6; }
 
@@ -161,43 +165,49 @@
             padding: 12px; border-bottom: 1px solid var(--border);
         }
         .add-btn {
-            width: 35px; height: 35px; border-radius: 50%; border: none; background: #eee;
+            width: 36px; height: 36px; border-radius: 50%; border: none; background: #eee;
             font-size: 20px; display: flex; align-items: center; justify-content: center;
         }
         .add-btn.added { background: var(--success); color: white; }
 
-        /* Shelf Grid */
         .shelf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; padding-bottom: 10px;}
         .shelf-btn {
             display: flex; flex-direction: column; align-items: center; padding: 10px;
             border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: 11px;
         }
         
-        /* New Category Form */
-        #new-cat-form {
-            background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none;
-        }
+        #new-cat-form { background: var(--bg); padding: 10px; border-radius: 8px; margin-bottom: 10px; display: none; }
 
     </style>
 </head>
 <body data-theme="light">
 
     <header>
-        <h1>Smart Shop 2.0</h1>
-        <div class="header-controls">
-            <button class="icon-btn" onclick="toggleTheme()">🌗</button>
-            <button class="icon-btn" onclick="openTemplateModal()">📂</button>
+        <h1>Planer 3.0</h1>
+        <div style="display:flex; gap:10px;">
+            <button class="header-btn" onclick="toggleTheme()">
+                <svg class="icon-svg" viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36-.98 1.37-2.58 2.26-4.4 2.26-3.03 0-5.5-2.47-5.5-5.5 0-1.82.89-3.42 2.26-4.4-.44-.06-.9-.1-1.36-.1z"/></svg>
+                Motyw
+            </button>
+            <button class="header-btn" onclick="openTemplateModal()">
+                <svg class="icon-svg" viewBox="0 0 24 24" style="width:16px; height:16px;"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                Zapisz
+            </button>
         </div>
     </header>
 
-    <!-- CONTROLS FOR AISLE LENGTH -->
-    <div id="aisle-controls" class="length-controls" style="display:none;">
-        <span style="font-size:12px; display:flex; align-items:center; color:var(--text);">Długość sklepu:</span>
-        <button class="len-btn" onclick="changeLength(-1)">➖ Krótszy</button>
-        <button class="len-btn" onclick="changeLength(1)">➕ Dłuższy</button>
+    <!-- PASEK KONTROLI DŁUGOŚCI -->
+    <div id="aisle-controls">
+        <button class="len-btn" onclick="changeLength(-1)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>
+        </button>
+        <span style="font-size:12px; color:var(--text); font-weight:bold;">DŁUGOŚĆ</span>
+        <button class="len-btn" onclick="changeLength(1)">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        </button>
     </div>
 
-    <!-- VIEWS -->
+    <!-- WIDOKI -->
     <div id="aisle-view" class="view-section active-view">
         <div id="aisle-container"></div>
     </div>
@@ -208,11 +218,15 @@
 
     <nav>
         <button class="nav-btn active" onclick="switchMode('plan')" id="nav-plan">
-            <span class="icon">🏪</span><span>Sklep</span>
+            <!-- IKONA SKLEPU SVG -->
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 4H4v2h16V4zm1 10v-2l-1-5H4l-1 5v2h1v6h10v-6h4v6h2v-6h1zm-9 4H6v-4h6v4z"/></svg>
+            <span>Sklep</span>
             <span id="badge-plan" class="badge">0</span>
         </button>
         <button class="nav-btn" onclick="switchMode('list')" id="nav-list">
-            <span class="icon">✅</span><span>Lista</span>
+            <!-- IKONA LISTY SVG -->
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M19 3h-4.18C14.4 1.84 13.3 1 12 1c-1.3 0-2.4.84-2.82 2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 0c.55 0 1 .45 1 1s-.45 1-1 1-1-.45-1-1 .45-1 1-1zm2 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+            <span>Lista</span>
             <span id="badge-list" class="badge">0</span>
         </button>
     </nav>
@@ -225,29 +239,25 @@
                 <button onclick="closeModal()" style="border:none; background:none; font-size:24px; color:var(--text)">&times;</button>
             </div>
             <div style="display:flex; gap:10px; margin-top:15px;">
-                <input type="text" id="custom-input" placeholder="Wpisz nowy produkt..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px;">
+                <input type="text" id="custom-input" placeholder="Dodaj własny produkt..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px;">
                 <button onclick="addCustomProduct()" style="background:var(--primary); color:white; border:none; border-radius:6px; width:40px; font-size:20px;">+</button>
             </div>
             <div id="pm-list" class="prod-list"></div>
         </div>
     </div>
 
-    <!-- MODAL EDYCJI REGAŁU -->
+    <!-- MODAL EDYCJI -->
     <div id="edit-modal" class="modal">
         <div class="modal-content" style="height:85vh;">
-            <h3 style="margin-top:0;">Wybierz Regał</h3>
-            
-            <!-- Formularz nowej kategorii -->
-            <button onclick="toggleNewCatForm()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:6px; margin-bottom:10px;">➕ Stwórz nową kategorię</button>
-            
+            <h3 style="margin-top:0;">Edytuj Regał</h3>
+            <button onclick="toggleNewCatForm()" style="width:100%; padding:10px; background:var(--primary); color:white; border:none; border-radius:6px; margin-bottom:10px;">➕ Stwórz własną kategorię</button>
             <div id="new-cat-form">
                 <div style="display:flex; gap:5px; margin-bottom:5px;">
                     <input type="text" id="new-cat-icon" placeholder="Ikona (np. 🚗)" style="width:60px; text-align:center; padding:8px; border:1px solid #ccc; border-radius:4px;">
                     <input type="text" id="new-cat-name" placeholder="Nazwa (np. Auto)" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;">
                 </div>
-                <button onclick="saveNewCategory()" style="width:100%; background:var(--accent); color:white; border:none; padding:8px; border-radius:4px;">Zapisz i Użyj</button>
+                <button onclick="saveNewCategory()" style="width:100%; background:var(--accent); color:white; border:none; padding:8px; border-radius:4px;">Zapisz</button>
             </div>
-
             <div style="overflow-y:auto; flex:1;">
                 <div class="shelf-grid" id="shelf-grid"></div>
             </div>
@@ -258,7 +268,7 @@
     <!-- MODAL SZABLONÓW -->
     <div id="tpl-modal" class="modal">
         <div class="modal-content" style="height:auto;">
-            <h3>Zapisane Sklepy</h3>
+            <h3>Zapisz Sklep</h3>
             <div style="display:flex; gap:5px; margin-bottom:15px;">
                 <input type="text" id="tpl-name" placeholder="Nazwa..." style="flex:1; padding:10px; border:1px solid #ccc; border-radius:6px;">
                 <button onclick="saveTemplate()" style="background:var(--primary); color:white; border:none; padding:10px; border-radius:6px;">Zapisz</button>
@@ -269,55 +279,46 @@
     </div>
 
     <script>
-        // --- STATE & DATA ---
-        // Default Categories
+        // Domyślne kategorie
         const DEFAULT_CATS = {
             "Pieczywo": {icon:"🍞", items:["Chleb", "Bułki", "Bagietka"]},
-            "Warzywa": {icon:"🥦", items:["Ziemniaki", "Pomidory", "Ogórki"]},
-            "Owoce": {icon:"🍎", items:["Banany", "Jabłka", "Cytryny"]},
-            "Nabiał": {icon:"🥛", items:["Mleko", "Masło", "Ser"]},
+            "Warzywa": {icon:"🥦", items:["Ziemniaki", "Pomidory", "Ogórki", "Cebula"]},
+            "Owoce": {icon:"🍎", items:["Banany", "Jabłka", "Cytryny", "Winogrona"]},
+            "Nabiał": {icon:"🥛", items:["Mleko", "Masło", "Ser", "Jogurt"]},
             "Mięso": {icon:"🥩", items:["Kurczak", "Szynka", "Kiełbasa"]},
-            "Napoje": {icon:"🥤", items:["Woda", "Sok", "Cola"]},
+            "Napoje": {icon:"🥤", items:["Woda", "Sok", "Cola", "Kawa"]},
             "Słodycze": {icon:"🍫", items:["Czekolada", "Baton", "Ciastka"]},
             "Chemia": {icon:"🧼", items:["Papier", "Płyn", "Proszek"]},
             "Mrożonki": {icon:"🧊", items:["Frytki", "Pizza", "Lody"]},
-            "Święta": {icon:"🎅", items:["Karp", "Opłatek", "Barszcz"]},
-            "Sylwester": {icon:"🎆", items:["Szampan", "Chipsy"]}
+            "Święta": {icon:"🎅", items:["Karp", "Opłatek", "Barszcz", "Pierogi"]},
+            "Sylwester": {icon:"🎆", items:["Szampan", "Chipsy", "Przekąski"]}
         };
 
         let storeLayout = [];
         let shoppingList = [];
-        let categories = {}; // Will be loaded from LS or Default
+        let categories = {};
         let editTarget = {row:0, side:'left'};
         let playerPos = -1;
         let holdTimer = null;
 
-        // --- INIT ---
         function init() {
-            // Load Categories from LocalStorage to allow persistence of new items/cats
+            // Ładowanie kategorii z pamięci
             const savedCats = localStorage.getItem('shop_cats');
-            if(savedCats) {
-                categories = JSON.parse(savedCats);
-            } else {
-                categories = JSON.parse(JSON.stringify(DEFAULT_CATS));
-            }
+            categories = savedCats ? JSON.parse(savedCats) : JSON.parse(JSON.stringify(DEFAULT_CATS));
 
-            // Init Store
-            // Check if we have a temp layout or create new
-            storeLayout = [];
-            for(let i=0; i<20; i++) storeLayout.push({left:null, right:null});
+            // Inicjalizacja sklepu
+            for(let i=0; i<15; i++) storeLayout.push({left:null, right:null});
             
             // Demo
             storeLayout[0].left = {cat:"WEJŚCIE", icon:"🚪", type:"entrance"};
             storeLayout[1].left = {cat:"Pieczywo", icon:"🍞"};
             storeLayout[1].right = {cat:"Nabiał", icon:"🥛"};
-            storeLayout[19].right = {cat:"KASA", icon:"💳", type:"checkout"};
+            storeLayout[14].right = {cat:"KASA", icon:"💳", type:"checkout"};
 
             renderStore();
             renderShelfGrid();
         }
 
-        // --- CORE RENDERING ---
         function renderStore() {
             const container = document.getElementById('aisle-container');
             container.innerHTML = '';
@@ -344,26 +345,20 @@
             if(data) {
                 el.classList.add('filled');
                 if(data.type) el.style.borderColor = data.type === 'entrance' ? '#28a745' : '#ffc107';
-                el.innerHTML = `
-                    <span class="s-icon">${data.icon}</span>
-                    <span>${data.cat}</span>
-                    <div class="hold-bar"></div>
-                `;
+                el.innerHTML = `<span class="s-icon">${data.icon}</span><span>${data.cat}</span><div class="hold-bar"></div>`;
             } else {
                 el.innerHTML = `<span style="font-size:20px; opacity:0.2;">+</span>`;
             }
 
-            // Interaction Logic
             const startHold = () => {
                 const bar = el.querySelector('.hold-bar');
                 if(bar) bar.style.width = '100%';
                 holdTimer = setTimeout(() => {
                     if(bar) bar.style.width = '0%';
-                    // Open Edit
                     editTarget = {row:r, side:side};
-                    document.getElementById('new-cat-form').style.display = 'none'; // Reset form
+                    document.getElementById('new-cat-form').style.display = 'none';
                     document.getElementById('edit-modal').style.display = 'flex';
-                }, 600); // 600ms hold
+                }, 600);
             };
 
             const endHold = () => {
@@ -372,54 +367,44 @@
                 if(bar) bar.style.width = '0%';
             };
 
-            // Touch events
             el.addEventListener('touchstart', startHold);
             el.addEventListener('touchend', endHold);
             el.addEventListener('mousedown', startHold);
             el.addEventListener('mouseup', endHold);
 
             el.onclick = () => {
-                clearTimeout(holdTimer); // Ensure click doesn't trigger hold
+                clearTimeout(holdTimer);
                 if(!data) {
-                    // Empty -> Edit
                     editTarget = {row:r, side:side};
                     document.getElementById('edit-modal').style.display = 'flex';
                 } else if(!data.type) {
-                    // Filled Shelf -> Open Products & Move Cart
                     playerPos = r;
                     renderStore();
                     el.scrollIntoView({behavior:'smooth', block:'center'});
                     setTimeout(() => openProducts(data.cat), 200);
                 }
             };
-
             return el;
         }
 
-        // --- PRODUCT LOGIC ---
         function openProducts(catName) {
             document.getElementById('pm-title').innerText = catName;
             const list = document.getElementById('pm-list');
             list.innerHTML = '';
             
-            // Get items from our dynamic categories
             const items = categories[catName]?.items || [];
-            
             items.forEach(item => {
                 const row = document.createElement('div');
                 row.className = 'prod-row';
                 row.innerHTML = `<span>${item}</span>`;
-                
                 const btn = document.createElement('button');
                 btn.className = 'add-btn';
                 
                 if(shoppingList.some(i => i.name === item)) {
-                    btn.classList.add('added');
-                    btn.innerText = '✔';
+                    btn.classList.add('added'); btn.innerText = '✔';
                 } else {
                     btn.innerText = '+';
                 }
-
                 btn.onclick = () => toggleProduct(item, catName, btn);
                 row.appendChild(btn);
                 list.appendChild(row);
@@ -431,50 +416,37 @@
             const idx = shoppingList.findIndex(i => i.name === name);
             if(idx > -1) {
                 shoppingList.splice(idx, 1);
-                btn.classList.remove('added');
-                btn.innerText = '+';
+                btn.classList.remove('added'); btn.innerText = '+';
             } else {
                 shoppingList.push({name, cat, checked:false});
-                btn.classList.add('added');
-                btn.innerText = '✔';
+                btn.classList.add('added'); btn.innerText = '✔';
             }
             updateBadge();
         }
 
-        // --- KEY FEATURE: SAVE CUSTOM PRODUCT ---
         function addCustomProduct() {
-            const inp = document.getElementById('custom-input');
-            const val = inp.value.trim();
+            const val = document.getElementById('custom-input').value.trim();
             const cat = document.getElementById('pm-title').innerText;
-
             if(val && categories[cat]) {
-                // 1. Add to shopping list
                 shoppingList.push({name: val, cat, checked: false});
-                
-                // 2. Add to Category Memory if not exists
                 if(!categories[cat].items.includes(val)) {
                     categories[cat].items.push(val);
-                    saveCategories(); // Persist to LS
+                    localStorage.setItem('shop_cats', JSON.stringify(categories));
                 }
-
-                inp.value = '';
+                document.getElementById('custom-input').value = '';
                 updateBadge();
-                // Refresh view to show it added
                 openProducts(cat);
             }
         }
 
-        // --- KEY FEATURE: CHECKLIST LOGIC ---
         function renderChecklist() {
             const container = document.getElementById('checklist-container');
             container.innerHTML = '';
-
             if(shoppingList.length === 0) {
                 container.innerHTML = '<div style="text-align:center; margin-top:50px; opacity:0.5;">Koszyk pusty</div>';
                 return;
             }
 
-            // Group by Category
             const grouped = {};
             shoppingList.forEach((item, i) => {
                 if(!grouped[item.cat]) grouped[item.cat] = [];
@@ -484,72 +456,52 @@
             for(const cat in grouped) {
                 const grp = document.createElement('div');
                 grp.className = 'cl-group';
-                
                 const title = document.createElement('div');
-                title.className = 'cl-title';
-                title.innerText = cat;
+                title.className = 'cl-title'; title.innerText = cat;
                 grp.appendChild(title);
 
                 grouped[cat].forEach(item => {
                     const row = document.createElement('div');
                     row.className = 'cl-item' + (item.checked ? ' is-checked' : '');
                     
-                    // Checkbox visual
                     const check = document.createElement('div');
                     check.className = 'cl-check-box';
                     if(item.checked) check.innerText = '✔';
 
                     const text = document.createElement('div');
-                    text.className = 'cl-text';
-                    text.innerText = item.name;
+                    text.className = 'cl-text'; text.innerText = item.name;
 
                     const delBtn = document.createElement('button');
-                    delBtn.innerHTML = '🗑';
+                    delBtn.innerHTML = '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>';
                     delBtn.style.border='none'; delBtn.style.background='none'; delBtn.style.marginLeft='10px';
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
                         shoppingList.splice(item.idx, 1);
-                        renderChecklist();
-                        updateBadge();
+                        renderChecklist(); updateBadge();
                     };
 
-                    row.appendChild(check);
-                    row.appendChild(text);
-                    row.appendChild(delBtn);
-
-                    // Toggle Logic
+                    row.appendChild(check); row.appendChild(text); row.appendChild(delBtn);
                     row.onclick = () => {
                         shoppingList[item.idx].checked = !shoppingList[item.idx].checked;
-                        renderChecklist();
-                        updateBadge();
+                        renderChecklist(); updateBadge();
                     };
-
                     grp.appendChild(row);
                 });
                 container.appendChild(grp);
             }
         }
 
-        // --- SHELF EDITING & CREATION ---
         function renderShelfGrid() {
             const grid = document.getElementById('shelf-grid');
             grid.innerHTML = '';
-            
-            // Specials
-            const specials = [
-                {n:"WEJŚCIE", i:"🚪", t:"entrance", c:"#28a745"},
-                {n:"KASA", i:"💳", t:"checkout", c:"#ffc107"}
-            ];
+            const specials = [{n:"WEJŚCIE", i:"🚪", t:"entrance", c:"#28a745"}, {n:"KASA", i:"💳", t:"checkout", c:"#ffc107"}];
             specials.forEach(s => {
                 const btn = document.createElement('button');
-                btn.className = 'shelf-btn';
-                btn.style.borderColor = s.c;
+                btn.className = 'shelf-btn'; btn.style.borderColor = s.c;
                 btn.innerHTML = `<span style="font-size:20px">${s.i}</span><b>${s.n}</b>`;
                 btn.onclick = () => setShelf(s.n, s.i, s.t);
                 grid.appendChild(btn);
             });
-
-            // Categories from Object
             Object.keys(categories).forEach(cat => {
                 const btn = document.createElement('button');
                 btn.className = 'shelf-btn';
@@ -567,22 +519,11 @@
         function saveNewCategory() {
             const name = document.getElementById('new-cat-name').value.trim();
             const icon = document.getElementById('new-cat-icon').value.trim() || '📦';
-            
             if(name) {
-                // Add to memory
                 categories[name] = { icon: icon, items: [] };
-                saveCategories(); // Persist
-                
-                // Refresh Grid
-                renderShelfGrid();
-                
-                // Select immediately
-                setShelf(name, icon);
-                
-                // Reset form
+                localStorage.setItem('shop_cats', JSON.stringify(categories));
+                renderShelfGrid(); setShelf(name, icon);
                 document.getElementById('new-cat-name').value = '';
-                document.getElementById('new-cat-icon').value = '';
-                document.getElementById('new-cat-form').style.display = 'none';
             }
         }
 
@@ -590,41 +531,28 @@
             const {row, side} = editTarget;
             if(cat === null) storeLayout[row][side] = null;
             else storeLayout[row][side] = {cat, icon, type};
-            closeModal();
-            renderStore();
+            closeModal(); renderStore();
         }
 
-        // --- STORE LENGTH ---
-        function changeLength(delta) {
-            if(delta === 1) {
-                storeLayout.push({left:null, right:null});
-            } else {
-                if(storeLayout.length > 5) storeLayout.pop(); // Minimum 5 rows
-                else alert("Sklep nie może być krótszy!");
-            }
+        function changeLength(d) {
+            if(d===1) storeLayout.push({left:null, right:null});
+            else if(storeLayout.length > 5) storeLayout.pop();
             renderStore();
-        }
-
-        // --- SYSTEM ---
-        function saveCategories() {
-            localStorage.setItem('shop_cats', JSON.stringify(categories));
         }
 
         function updateBadge() {
             const n = shoppingList.filter(i => !i.checked).length;
             document.querySelectorAll('.badge').forEach(b => {
-                b.innerText = n;
-                b.style.display = n > 0 ? 'inline-block' : 'none';
+                b.innerText = n; b.style.display = n > 0 ? 'inline-block' : 'none';
             });
         }
 
         function switchMode(m) {
             document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active-view'));
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            
             if(m === 'plan') {
                 document.getElementById('aisle-view').classList.add('active-view');
-                document.getElementById('aisle-controls').style.display = 'flex'; // Show length controls
+                document.getElementById('aisle-controls').style.display = 'flex';
                 document.getElementById('nav-plan').classList.add('active');
             } else {
                 document.getElementById('checklist-view').classList.add('active-view');
@@ -638,19 +566,16 @@
             const b = document.body;
             b.setAttribute('data-theme', b.getAttribute('data-theme')==='light'?'dark':'light');
         }
-
         function openTemplateModal() { document.getElementById('tpl-modal').style.display='flex'; loadTemplates(); }
         function closeModal() { document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
-
-        // Template logic
+        
         function saveTemplate() {
             const name = document.getElementById('tpl-name').value;
             if(name) {
                 const db = JSON.parse(localStorage.getItem('layouts') || '{}');
                 db[name] = storeLayout;
                 localStorage.setItem('layouts', JSON.stringify(db));
-                loadTemplates();
-                document.getElementById('tpl-name').value = '';
+                loadTemplates(); document.getElementById('tpl-name').value = '';
             }
         }
         function loadTemplates() {
@@ -659,12 +584,11 @@
             const db = JSON.parse(localStorage.getItem('layouts') || '{}');
             Object.keys(db).forEach(k => {
                 const d = document.createElement('div');
-                d.style.borderBottom='1px solid #ccc'; d.style.padding='10px'; d.style.display='flex'; d.style.justifyContent='space-between';
+                d.style.padding='10px'; d.style.borderBottom='1px solid #eee'; d.style.display='flex'; d.style.justifyContent='space-between';
                 d.innerHTML = `<span>${k}</span>`;
                 const b = document.createElement('button'); b.innerText='Wczytaj';
                 b.onclick = ()=>{ storeLayout=db[k]; renderStore(); closeModal(); };
-                d.appendChild(b);
-                list.appendChild(d);
+                d.appendChild(b); list.appendChild(d);
             });
         }
 

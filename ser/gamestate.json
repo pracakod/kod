@@ -1,0 +1,19 @@
+{
+  "players": {
+    "1": {
+      "id": 1,
+      "name": "DareG",
+      "joined": false
+    },
+    "2": {
+      "id": 2,
+      "name": "Prawdziwy_97",
+      "joined": false
+    }
+  },
+  "totalClicks": 27,
+  "autoClickers": 0,
+  "clickBonus": 1,
+  "gameStatus": "playing",
+  "playerIdCounter": 3
+}

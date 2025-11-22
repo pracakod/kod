@@ -1,0 +1,3590 @@
+<!doctype html>
+<html lang="pl">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎣</text></svg>">
+  <title>Wędkarze RPG</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(135deg, #0a1628 0%, #0e1a2e 50%, #1a2940 100%);
+      color: #fff;
+      font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      overflow: hidden;
+    }
+
+    #game {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+      background: radial-gradient(ellipse at center, #0d1626 0%, #0a0f1a 100%);
+      box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.5);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: calc(12vh + env(safe-area-inset-bottom, 8px));
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, rgba(30, 144, 255, 0.95), rgba(0, 100, 200, 0.95));
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      z-index: 40;
+      box-shadow: 0 8px 24px rgba(30, 144, 255, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(-8px) scale(1.02);
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.8));
+      z-index: 50;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .panel {
+      width: min(92vw, 520px);
+      background: linear-gradient(135deg, rgba(20, 30, 48, 0.95), rgba(15, 20, 35, 0.95));
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 24px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
+      animation: panelSlideIn 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    @keyframes panelSlideIn {
+      from {
+        opacity: 0;
+        transform: scale(0.9) translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+      }
+    }
+
+    .panel h2 {
+      margin: 6px 0 16px;
+      font-size: 22px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #4ecdc4, #44a7f6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 2px 10px rgba(78, 205, 196, 0.5);
+    }
+
+    .field {
+      display: flex;
+      gap: 8px;
+    }
+
+    .field input {
+      flex: 1;
+      background: rgba(15, 25, 45, 0.8);
+      color: #fff;
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 16px;
+      outline: none;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .field input:focus {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.4);
+      background: rgba(15, 25, 45, 0.95);
+    }
+
+    .btn {
+      background: linear-gradient(135deg, #2c7be5, #0056b3);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: 600;
+      min-width: 100px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(44, 123, 229, 0.4);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(44, 123, 229, 0.6);
+    }
+
+    .btn:active {
+      transform: translateY(0px);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, #6c757d, #495057);
+      box-shadow: 0 4px 15px rgba(108, 117, 125, 0.4);
+    }
+
+    .btn-secondary:hover {
+      box-shadow: 0 6px 20px rgba(108, 117, 125, 0.6);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, #28a745, #1e7e34);
+      box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+    }
+
+    .btn-success:hover {
+      box-shadow: 0 6px 20px rgba(40, 167, 69, 0.6);
+    }
+
+    .btn-warning {
+      background: linear-gradient(135deg, #ffc107, #e0a800);
+      color: #212529;
+      box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    }
+
+    .btn-warning:hover {
+      box-shadow: 0 6px 20px rgba(255, 193, 7, 0.6);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, #dc3545, #bd2130);
+      box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    }
+
+    .btn-danger:hover {
+      box-shadow: 0 6px 20px rgba(220, 53, 69, 0.6);
+    }
+
+    #chatBar {
+      position: fixed;
+      left: 10px;
+      right: 10px;
+      bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+      display: flex;
+      gap: 10px;
+      z-index: 45;
+    }
+
+    #chatBar input {
+      flex: 1;
+      background: rgba(15, 25, 45, 0.9);
+      color: #fff;
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      border-radius: 25px;
+      padding: 12px 18px;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #chatBar input:focus {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.5), 0 4px 15px rgba(0, 0, 0, 0.3);
+    }
+
+    #chatBar button {
+      background: linear-gradient(135deg, #4ecdc4, #44a7f6);
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 12px 24px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(78, 205, 196, 0.4);
+    }
+
+    #chatBar button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(78, 205, 196, 0.6);
+    }
+
+    .moneyHud {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      z-index: 41;
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(218, 165, 32, 0.2));
+      backdrop-filter: blur(15px);
+      padding: 10px 16px;
+      border-radius: 15px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 2px solid rgba(255, 215, 0, 0.6);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+
+    #eqBtn,
+    #mapBtn,
+    #statsBtn,
+    #buildBtn {
+      position: fixed;
+      right: 10px;
+      z-index: 41;
+      background: linear-gradient(135deg, rgba(78, 205, 196, 0.3), rgba(68, 167, 246, 0.3));
+      backdrop-filter: blur(10px);
+      color: #fff;
+      border: 2px solid rgba(78, 205, 196, 0.5);
+      border-radius: 50%;
+      padding: 0;
+      font-size: 16px;
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(78, 205, 196, 0.3);
+    }
+
+    #eqBtn:hover,
+    #mapBtn:hover,
+    #statsBtn:hover,
+    #buildBtn:hover {
+      transform: scale(1.1);
+      border-color: #4ecdc4;
+      box-shadow: 0 0 25px rgba(78, 205, 196, 0.6);
+    }
+
+    #eqBtn {
+      top: 70px;
+    }
+
+    #mapBtn {
+      top: 130px;
+    }
+
+    #statsBtn {
+      top: 190px;
+    }
+
+    #buildBtn {
+      top: 250px;
+    }
+
+    /* Sklep/Ekwipunek listy */
+    .shop-list {
+      max-height: 52vh;
+      overflow: auto;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      background: #0b1120;
+      text-align: left;
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      padding: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .row:last-child {
+      border-bottom: none;
+    }
+
+    .row-header {
+      background: rgba(255, 255, 255, 0.05);
+      font-weight: bold;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #fff;
+    }
+
+    .pill.common {
+      background: #3a8f46;
+    }
+
+    .pill.uncommon {
+      background: #2c8fe5;
+    }
+
+    .pill.rare {
+      background: #9e59ff;
+    }
+
+    .pill.epic {
+      background: #ff7b59;
+    }
+
+    .pill.junk {
+      background: #888;
+    }
+
+    .pill.legendary {
+      background: #ffcc00;
+    }
+
+    /* Kolorowe tier'y dla przedmiotów w sklepie */
+    .row[data-tier="starter"] {
+      background: linear-gradient(90deg, rgba(58, 143, 70, 0.15), rgba(58, 143, 70, 0.05));
+      border-left: 3px solid #3a8f46;
+    }
+
+    .row[data-tier="basic"] {
+      background: linear-gradient(90deg, rgba(44, 143, 229, 0.15), rgba(44, 143, 229, 0.05));
+      border-left: 3px solid #2c8fe5;
+    }
+
+    .row[data-tier="intermediate"] {
+      background: linear-gradient(90deg, rgba(138, 89, 255, 0.15), rgba(138, 89, 255, 0.05));
+      border-left: 3px solid #8a59ff;
+    }
+
+    .row[data-tier="advanced"] {
+      background: linear-gradient(90deg, rgba(255, 123, 89, 0.15), rgba(255, 123, 89, 0.05));
+      border-left: 3px solid #ff7b59;
+    }
+
+    .row[data-tier="legendary"] {
+      background: linear-gradient(90deg, rgba(255, 204, 0, 0.2), rgba(255, 204, 0, 0.05));
+      border-left: 3px solid #ffcc00;
+      box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+      animation: legendaryGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes legendaryGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 15px rgba(255, 204, 0, 0.3);
+      }
+
+      50% {
+        box-shadow: 0 0 25px rgba(255, 204, 0, 0.6);
+      }
+    }
+
+    /* Emotka przedmiotu większa i wycentrowana */
+    .row .item-emoji {
+      font-size: 24px;
+      min-width: 32px;
+      text-align: center;
+    }
+
+    /* ===== DIABLO-STYLE INVENTORY UI ===== */
+
+    /* Equipment Panel */
+    .equipment-panel {
+      background: linear-gradient(135deg, rgba(15, 20, 35, 0.98), rgba(10, 15, 25, 0.98));
+      border: 2px solid rgba(139, 92, 46, 0.6);
+      border-radius: 10px;
+      padding: 12px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 215, 0, 0.2);
+      max-width: 400px;
+      /* Zmniejszono z 500px */
+      margin: 0 auto;
+    }
+
+    .equipment-panel h3 {
+      margin: 0 0 12px 0;
+      font-size: 16px;
+      /* Zmniejszono z 20px */
+      font-weight: 700;
+      text-align: center;
+      color: #d4af37;
+      text-shadow: 0 0 8px rgba(212, 175, 55, 0.8), 0 2px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(139, 92, 46, 0.4);
+      padding-bottom: 8px;
+    }
+
+    /* Equipment Slots */
+    .equipment-slots {
+      display: grid;
+      grid-template-columns: 2.5fr 1fr;
+      /* Wędka dużo szersza od dodatków */
+      grid-template-rows: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 16px;
+      height: 140px;
+      /* Zmniejszona wysokość całości */
+    }
+
+    /* Slot Wędki - Duży po lewej */
+    #slot-rod {
+      grid-row: 1 / span 2;
+      /* Zajmuje 2 wiersze */
+      aspect-ratio: auto;
+      /* Wyłącz aspect-ratio żeby wypełnił wysokość */
+      background: linear-gradient(135deg, rgba(25, 30, 50, 0.95), rgba(15, 20, 35, 0.95));
+      border: 2px solid rgba(139, 92, 46, 0.5);
+    }
+
+    #slot-rod .equipment-slot-icon {
+      font-size: 56px;
+      /* Jeszcze większa wędka */
+      margin-bottom: 8px;
+    }
+
+    #slot-rod .equipment-slot-name {
+      font-size: 13px;
+      max-width: 150px;
+      white-space: normal;
+      /* Pozwól na zawijanie tekstu */
+      line-height: 1.2;
+    }
+
+    /* Sloty Haczyk/Przynęta - Malutkie po prawej */
+    #slot-hook,
+    #slot-bait {
+      aspect-ratio: auto;
+      padding: 2px;
+    }
+
+    #slot-hook .equipment-slot-icon,
+    #slot-bait .equipment-slot-icon {
+      font-size: 18px;
+      /* Bardzo małe ikony */
+      margin: 0;
+    }
+
+    #slot-hook .equipment-slot-label,
+    #slot-bait .equipment-slot-label {
+      font-size: 8px;
+      margin-bottom: 0;
+    }
+
+    #slot-hook .equipment-slot-name,
+    #slot-bait .equipment-slot-name {
+      font-size: 9px;
+      margin-top: 1px;
+    }
+
+    .equipment-slot {
+      position: relative;
+      background: linear-gradient(135deg, rgba(20, 25, 40, 0.9), rgba(10, 15, 25, 0.9));
+      border: 1px solid rgba(100, 100, 120, 0.4);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      padding: 4px;
+    }
+
+    .equipment-slot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.1), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .equipment-slot:hover {
+      border-color: rgba(212, 175, 55, 0.8);
+      box-shadow: 0 0 15px rgba(212, 175, 55, 0.4);
+      transform: translateY(-1px);
+    }
+
+    .equipment-slot:hover::before {
+      opacity: 1;
+    }
+
+    .equipment-slot.filled {
+      border-color: rgba(78, 205, 196, 0.6);
+    }
+
+    .equipment-slot.filled:hover {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 20px rgba(78, 205, 196, 0.6);
+    }
+
+    .equipment-slot-label {
+      font-size: 9px;
+      /* Zmniejszono z 10px */
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+      font-weight: 600;
+    }
+
+    .equipment-slot-icon {
+      font-size: 24px;
+      /* Zmniejszono z 32px */
+      line-height: 1;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.8));
+      margin: 2px 0;
+    }
+
+    .equipment-slot-name {
+      font-size: 10px;
+      /* Zmniejszono z 11px */
+      color: #4ecdc4;
+      margin-top: 2px;
+      text-align: center;
+      max-width: 95%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    /* Inventory Grid */
+    .inventory-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .inventory-slot {
+      position: relative;
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, rgba(20, 25, 40, 0.8), rgba(10, 15, 25, 0.8));
+      border: 2px solid rgba(80, 80, 100, 0.4);
+      border-radius: 6px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+    }
+
+    .inventory-slot::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.08), transparent);
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .inventory-slot:hover::before {
+      opacity: 1;
+    }
+
+    .inventory-slot.empty {
+      opacity: 0.4;
+      border-style: dashed;
+    }
+
+    .inventory-slot.empty:hover {
+      opacity: 0.6;
+    }
+
+    /* Quality borders */
+    .inventory-slot.common,
+    .equipment-slot.common {
+      border-color: rgba(58, 143, 70, 0.8);
+    }
+
+    .inventory-slot.common:hover,
+    .equipment-slot.common:hover {
+      box-shadow: 0 0 15px rgba(58, 143, 70, 0.6);
+    }
+
+    .inventory-slot.uncommon,
+    .equipment-slot.uncommon {
+      border-color: rgba(44, 143, 229, 0.8);
+    }
+
+    .inventory-slot.uncommon:hover,
+    .equipment-slot.uncommon:hover {
+      box-shadow: 0 0 15px rgba(44, 143, 229, 0.6);
+    }
+
+    .inventory-slot.rare,
+    .equipment-slot.rare {
+      border-color: rgba(158, 89, 255, 0.8);
+    }
+
+    .inventory-slot.rare:hover,
+    .equipment-slot.rare:hover {
+      box-shadow: 0 0 15px rgba(158, 89, 255, 0.6);
+    }
+
+    .inventory-slot.epic,
+    .equipment-slot.epic {
+      border-color: rgba(255, 123, 89, 0.8);
+    }
+
+    .inventory-slot.epic:hover,
+    .equipment-slot.epic:hover {
+      box-shadow: 0 0 15px rgba(255, 123, 89, 0.6);
+    }
+
+    .inventory-slot.legendary,
+    .equipment-slot.legendary {
+      border-color: rgba(255, 204, 0, 0.9);
+      background: linear-gradient(135deg, rgba(40, 35, 20, 0.9), rgba(20, 18, 10, 0.9));
+      animation: legendaryItemGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes legendaryItemGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+      }
+    }
+
+    .item-icon {
+      font-size: 28px;
+      line-height: 1;
+      filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.9));
+    }
+
+    .item-count {
+      position: absolute;
+      bottom: 4px;
+      right: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      color: #fff;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    /* Shop Items List */
+    .shop-items-list {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 8px;
+      margin-top: 16px;
+    }
+
+    .shop-items-list::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .shop-items-list::-webkit-scrollbar-track {
+      background: rgba(10, 15, 25, 0.6);
+      border-radius: 4px;
+    }
+
+    .shop-items-list::-webkit-scrollbar-thumb {
+      background: rgba(139, 92, 46, 0.6);
+      border-radius: 4px;
+    }
+
+    .shop-items-list::-webkit-scrollbar-thumb:hover {
+      background: rgba(212, 175, 55, 0.8);
+    }
+
+    .shop-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      background: linear-gradient(90deg, rgba(20, 25, 40, 0.7), rgba(15, 20, 35, 0.7));
+      border: 2px solid rgba(80, 80, 100, 0.4);
+      border-left: 4px solid;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .shop-item:hover {
+      background: linear-gradient(90deg, rgba(30, 35, 50, 0.9), rgba(25, 30, 45, 0.9));
+      transform: translateX(4px);
+    }
+
+    .shop-item.common {
+      border-left-color: #3a8f46;
+    }
+
+    .shop-item.uncommon {
+      border-left-color: #2c8fe5;
+    }
+
+    .shop-item.rare {
+      border-left-color: #9e59ff;
+    }
+
+    .shop-item.epic {
+      border-left-color: #ff7b59;
+    }
+
+    .shop-item.legendary {
+      border-left-color: #ffcc00;
+      background: linear-gradient(90deg, rgba(40, 35, 20, 0.7), rgba(30, 25, 15, 0.7));
+    }
+
+    .shop-item.legendary:hover {
+      box-shadow: 0 0 20px rgba(255, 204, 0, 0.3);
+    }
+
+    .shop-item-icon {
+      font-size: 36px;
+      min-width: 48px;
+      text-align: center;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+    }
+
+    .shop-item-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .shop-item-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .shop-item-name.legendary {
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    }
+
+    .shop-item-stats {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.7);
+      display: flex;
+      gap: 12px;
+    }
+
+    .shop-item-stat {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .shop-item-stat .icon {
+      color: #4ecdc4;
+    }
+
+    .shop-item-price {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.5);
+      min-width: 80px;
+      text-align: right;
+    }
+
+    .shop-item-buy-btn {
+      padding: 8px 16px;
+      background: linear-gradient(135deg, #2c7be5, #0056b3);
+      border: none;
+      border-radius: 6px;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(44, 123, 229, 0.4);
+    }
+
+    .shop-item-buy-btn:hover {
+      background: linear-gradient(135deg, #3a89f3, #0066d3);
+      box-shadow: 0 4px 12px rgba(44, 123, 229, 0.6);
+      transform: translateY(-1px);
+    }
+
+    .shop-item-buy-btn:active {
+      transform: translateY(0);
+    }
+
+    .shop-item-buy-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    /* Tooltip */
+    .item-tooltip {
+      position: absolute;
+      background: linear-gradient(135deg, rgba(10, 15, 25, 0.98), rgba(5, 10, 20, 0.98));
+      border: 2px solid rgba(139, 92, 46, 0.8);
+      border-radius: 8px;
+      padding: 12px;
+      pointer-events: none;
+      z-index: 1000;
+      min-width: 200px;
+      max-width: 300px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+      display: none;
+    }
+
+    .item-tooltip.show {
+      display: block;
+    }
+
+    .tooltip-name {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(139, 92, 46, 0.4);
+    }
+
+    .tooltip-name.legendary {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+    }
+
+    .tooltip-stats {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.9);
+      line-height: 1.6;
+    }
+
+    .tooltip-stat {
+      color: #4ecdc4;
+    }
+
+    .tooltip-flavor {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(139, 92, 46, 0.4);
+      font-size: 11px;
+      font-style: italic;
+      color: rgba(212, 175, 55, 0.8);
+    }
+
+    /* Interakcja przycisk (nad joystickiem) */
+    #interactHint {
+      display: none;
+      /* Ukryte całkowicie, bo mamy przycisk interakcji */
+    }
+
+    /* Mini mapa */
+    #miniMap {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      width: 120px;
+      height: 120px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      z-index: 41;
+      display: none;
+    }
+
+    #miniMapCanvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    #playerMarker {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: #ff0000;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 42;
+    }
+
+    /* Budowanie */
+    .build-element {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .build-element:last-child {
+      border-bottom: none;
+    }
+
+    .build-icon {
+      font-size: 24px;
+      margin-right: 10px;
+      width: 30px;
+      text-align: center;
+    }
+
+    .build-info {
+      flex: 1;
+    }
+
+    .build-name {
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .build-cost {
+      font-size: 12px;
+      opacity: 0.8;
+    }
+
+    .build-btn {
+      min-width: 80px;
+    }
+
+    /* Domki */
+    .house-preview {
+      position: absolute;
+      border: 2px dashed #4ecdc4;
+      background: rgba(78, 205, 196, 0.3);
+      pointer-events: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="game"></canvas>
+  <div id="miniMap">
+    <canvas id="miniMapCanvas"></canvas>
+    <div id="playerMarker"></div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+  <div class="moneyHud" id="moneyHud">💰 Kasa: 0 zł</div>
+  <button id="eqBtn">🎒</button>
+  <button id="mapBtn">🗺️</button>
+  <button id="statsBtn">📊</button>
+  <button id="buildBtn">🏠</button>
+  <div id="interactHint">Sklep</div>
+
+  <div id="scoreboard" class="scoreboard hidden">
+    <div class="scoreboard-header">🏆 TOP WĘDKARZE</div>
+    <div id="scoreboardList" class="scoreboard-list"></div>
+  </div>
+
+  <!-- Nick -->
+  <!-- Lobby / Ekran Startowy -->
+  <div id="nickOverlay" class="overlay">
+    <div class="lobby-panel">
+      <h1 class="game-title">WĘDKARZE RPG</h1>
+      <div class="lobby-content">
+        <p style="color: #aaa; margin-bottom: 20px;">Wpisz swoje imię, aby rozpocząć przygodę</p>
+        <div class="field-group">
+          <input id="nickInput" maxlength="16" placeholder="Twoje Imię" autocomplete="off" />
+          <button id="nickSave" class="btn-play">GRAJ</button>
+        </div>
+      </div>
+      <div class="lobby-footer">v1.0 • MMORPG Fishing Game</div>
+    </div>
+  </div>
+
+  <style>
+    /* Lobby Styles */
+    #nickOverlay {
+      background: radial-gradient(circle at center, #1a2a3a 0%, #0a0f15 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .lobby-panel {
+      text-align: center;
+      animation: fadeIn 1s ease-out;
+    }
+
+    .game-title {
+      font-family: 'Cinzel', serif;
+      /* Jeśli dostępna, inaczej fallback */
+      font-size: 48px;
+      font-weight: 900;
+      background: linear-gradient(to bottom, #ffd700, #b8860b);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+      margin-bottom: 40px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    .lobby-content {
+      background: rgba(20, 25, 35, 0.8);
+      padding: 40px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .field-group {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    #nickInput {
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      padding: 15px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      text-align: center;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    #nickInput:focus {
+      border-color: #4ecdc4;
+      box-shadow: 0 0 15px rgba(78, 205, 196, 0.3);
+    }
+
+    .btn-play {
+      background: linear-gradient(135deg, #4ecdc4, #2980b9);
+      border: none;
+      padding: 15px;
+      border-radius: 10px;
+      color: #fff;
+      font-size: 20px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      box-shadow: 0 5px 15px rgba(41, 128, 185, 0.4);
+    }
+
+    .btn-play:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(41, 128, 185, 0.6);
+      filter: brightness(1.1);
+    }
+
+    .lobby-footer {
+      margin-top: 30px;
+      color: rgba(255, 255, 255, 0.2);
+      font-size: 12px;
+      letter-spacing: 1px;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+
+  <!-- Sklep/Ekwipunek -->
+  <div id="shopOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2 id="shopTitle">Sklep</h2>
+      <div id="shopSummary" style="margin-bottom:8px; opacity:.8;"></div>
+      <div id="shopList" class="shop-list" style="margin-bottom:10px;"></div>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button id="shopClose" class="btn btn-secondary">Zamknij</button>
+        <button id="shopAction" class="btn btn-success">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statystyki -->
+  <div id="statsOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Statystyki</h2>
+      <div id="statsContent" style="text-align: left; padding: 10px;"></div>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top: 10px;">
+        <button id="resetCharBtn" class="btn btn-danger">Reset postaci</button>
+        <button id="statsClose" class="btn btn-secondary">Zamknij</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budowanie -->
+  <div id="buildOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Budowanie</h2>
+      <div id="buildElements" class="shop-list" style="margin-bottom:10px;"></div>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button id="buildClose" class="btn btn-secondary">Zamknij</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budowanie domku -->
+  <div id="houseBuildOverlay" class="overlay hidden">
+    <div class="panel">
+      <h2>Budowanie Domku</h2>
+      <div style="padding: 20px;">
+        <p>Wybierz miejsce na mapie i kliknij, aby zbudować domek</p>
+        <p>Koszt: 5000 zł</p>
+        <div style="display:flex; gap:8px; justify-content:center; margin-top: 20px;">
+          <button id="cancelHouseBuild" class="btn btn-secondary">Anuluj</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Chat -->
+  <!-- Chat usunięty -->
+
+  <div id="overlay" class="overlay hidden">
+    <div class="panel">Łączenie...</div>
+  </div>
+
+  <script>
+    (() => {
+      'use strict';
+
+      // ====== Canvas ======
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d', { alpha: false });
+      const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+      let W = 0, H = 0;
+
+      // ====== Stałe ======
+      const TILE = 32;
+      const CHUNK_T = 16;
+      const CHUNK_P = CHUNK_T * TILE;
+
+      // ====== UI refs ======
+      const toastEl = document.getElementById('toast');
+      const moneyHud = document.getElementById('moneyHud');
+      const eqBtn = document.getElementById('eqBtn');
+      const mapBtn = document.getElementById('mapBtn');
+      const statsBtn = document.getElementById('statsBtn');
+      const buildBtn = document.getElementById('buildBtn');
+      const shopOverlay = document.getElementById('shopOverlay');
+      const shopTitle = document.getElementById('shopTitle');
+      const shopSummary = document.getElementById('shopSummary');
+      const shopList = document.getElementById('shopList');
+      const shopClose = document.getElementById('shopClose');
+      const shopAction = document.getElementById('shopAction');
+      const interactHint = document.getElementById('interactHint');
+      const miniMap = document.getElementById('miniMap');
+      const miniMapCanvas = document.getElementById('miniMapCanvas');
+      const playerMarker = document.getElementById('playerMarker');
+      const statsOverlay = document.getElementById('statsOverlay');
+      const statsContent = document.getElementById('statsContent');
+      const statsClose = document.getElementById('statsClose');
+      const resetCharBtn = document.getElementById('resetCharBtn');
+      const buildOverlay = document.getElementById('buildOverlay');
+      const buildElements = document.getElementById('buildElements');
+      const buildClose = document.getElementById('buildClose');
+      const houseBuildOverlay = document.getElementById('houseBuildOverlay');
+      const cancelHouseBuild = document.getElementById('cancelHouseBuild');
+
+      // ====== Joystick (definicja przed użyciem) ======
+      const joystick = { baseR: 60, knobR: 28, active: false, id: -1, baseX: 100, baseY: 0, knobX: 100, knobY: 0, vx: 0, vy: 0 };
+      function placeJoystick() {
+        joystick.baseX = 90; joystick.baseY = H - 90;
+        joystick.knobX = joystick.baseX; joystick.knobY = joystick.baseY;
+      }
+      function drawJoystick() {
+        if (!joystick.active && !('ontouchstart' in window)) return; // Pokaż tylko na dotyku lub gdy aktywny
+
+        ctx.save();
+
+        // Baza joysticka - Glassmorphism
+        const baseGradient = ctx.createRadialGradient(joystick.baseX, joystick.baseY, 10, joystick.baseX, joystick.baseY, joystick.baseR);
+        baseGradient.addColorStop(0, 'rgba(255, 255, 255, 0.1)');
+        baseGradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.05)');
+        baseGradient.addColorStop(1, 'rgba(255, 255, 255, 0.02)');
+
+        ctx.fillStyle = baseGradient;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.beginPath();
+        ctx.arc(joystick.baseX, joystick.baseY, joystick.baseR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Obramowanie bazy
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Gałka joysticka - Neon style
+        const knobGradient = ctx.createRadialGradient(joystick.knobX - 5, joystick.knobY - 5, 2, joystick.knobX, joystick.knobY, joystick.knobR);
+        knobGradient.addColorStop(0, '#4ecdc4');
+        knobGradient.addColorStop(1, '#2980b9');
+
+        ctx.fillStyle = knobGradient;
+        ctx.shadowColor = '#4ecdc4';
+        ctx.shadowBlur = 15;
+        ctx.beginPath();
+        ctx.arc(joystick.knobX, joystick.knobY, joystick.knobR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Highlight na gałce
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+        ctx.beginPath();
+        ctx.arc(joystick.knobX - 6, joystick.knobY - 6, 8, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+      }
+
+      function resize() {
+        W = Math.floor(window.innerWidth);
+        H = Math.floor(window.innerHeight);
+        canvas.width = Math.floor(W * DPR);
+        canvas.height = Math.floor(H * DPR);
+        canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+        ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        placeJoystick();
+        resizeMiniMap();
+      }
+      window.addEventListener('resize', resize);
+      resize();
+
+      // ====== Mini mapa ======
+      function resizeMiniMap() {
+        miniMapCanvas.width = 120;
+        miniMapCanvas.height = 120;
+      }
+      function drawMiniMap(camX, camY) {
+        if (miniMap.style.display === 'none') return;
+
+        const ctx = miniMapCanvas.getContext('2d');
+        ctx.clearRect(0, 0, 120, 120);
+
+        // Rysowanie mapy
+        const scale = 120 / (MAP_W * TILE);
+        ctx.fillStyle = '#1e5a2a';
+        ctx.fillRect(0, 0, 120, 120);
+
+        // Rysowanie wody
+        ctx.fillStyle = '#1a6aad';
+        for (let y = 0; y < MAP_H; y++) {
+          for (let x = 0; x < MAP_W; x++) {
+            if (TILES[y][x] === 'w') {
+              ctx.fillRect(x * scale, y * scale, scale, scale);
+            }
+          }
+        }
+
+        // Rysowanie miasta
+        if (CITY) {
+          ctx.fillStyle = '#506690';
+          ctx.fillRect(CITY.x * TILE * scale, CITY.y * TILE * scale, CITY.w * TILE * scale, CITY.h * TILE * scale);
+        }
+
+        // Rysowanie gracza
+        const playerX = (me.x - camX) * scale;
+        const playerY = (me.y - camY) * scale;
+        playerMarker.style.left = `${playerX}px`;
+        playerMarker.style.top = `${playerY}px`;
+      }
+
+      // ====== Sieć ======
+      const protocol = location.protocol === 'https:' ? 'wss' : 'ws';
+      const socket = new WebSocket(`${protocol}://${location.host}/ws`);
+
+      // (Usunięto zduplikowane handlery)
+
+      socket.addEventListener('error', (err) => {
+        console.error('WebSocket error:', err);
+      });
+
+      function generateToken() {
+        return Array.from({ length: 20 }, () => Math.random().toString(36)[2] || '0').join('');
+      }
+
+      // ====== Stan ======
+      let MAP_W = 0, MAP_H = 0;
+      let TILES = []; let LAKES = []; let DECOR = []; let CITY = null; let SHOPS = null;
+
+      let myId = null;
+      let me = { id: null, name: '', color: '#fff', x: 0, y: 0, dir: 0, level: 1, xp: 0, gold: 0, fishCaught: 0, totalTime: 0 };
+      let bag = [];
+      let inventory = { rods: ['rod_basic'], hooks: ['hook_small'], baits: ['bait_bread'], materials: [] };
+      let equipment = { rod: 'rod_basic', hook: 'hook_small', bait: 'bait_bread' };
+      let stats = { fishCaught: 0, totalWeight: 0, totalTime: 0, rarestFish: null };
+
+      const others = new Map(); // id -> {x,y,tx,ty,dir,tdir,last}
+      let scoreboard = [];
+      const bubbles = new Map();
+
+      // app state
+      let nearestShop = null; // 'sell'|'rods'|'baits'|'hooks'|'npc'
+      let canFish = false;
+      let buildingHouse = false;
+      let housePreview = null;
+
+      // ====== Chunk cache ======
+      const chunkCache = new Map();
+      const chunkLRU = []; const CHUNK_CACHE_MAX = 60;
+
+      function buildTilesFromLakes() {
+        TILES = Array.from({ length: MAP_H }, () => Array.from({ length: MAP_W }, () => 'g'));
+        for (const { cx, cy, r } of LAKES) {
+          for (let y = Math.max(0, cy - r - 3); y < Math.min(MAP_H, cy + r + 3); y++) {
+            for (let x = Math.max(0, cx - r - 3); x < Math.min(MAP_W, cx + r + 3); x++) {
+              const dx = x - cx, dy = y - cy;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              const wobble = (Math.sin(x * 0.9) + Math.cos(y * 1.1)) * 0.4;
+              if (dist + wobble < r) TILES[y][x] = 'w';
+            }
+          }
+        }
+      }
+      function isWaterTile(tx, ty) {
+        if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return true;
+        return TILES[ty][tx] === 'w';
+      }
+      function nearWaterTile(tx, ty) {
+        for (let dy = -1; dy <= 1; dy++)
+          for (let dx = -1; dx <= 1; dx++) {
+            const x = tx + dx, y = ty + dy;
+            if (x >= 0 && y >= 0 && x < MAP_W && y < MAP_H && TILES[y][x] === 'w') return true;
+          }
+        return false;
+      }
+      function pseudoRandom(x, y) {
+        return ((Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1 + 1) % 1;
+      }
+
+      function getChunk(cx, cy) {
+        const key = cx + ',' + cy;
+        if (chunkCache.has(key)) {
+          const i = chunkLRU.indexOf(key); if (i >= 0) chunkLRU.splice(i, 1);
+          chunkLRU.push(key); return chunkCache.get(key);
+        }
+        const c = document.createElement('canvas'); c.width = CHUNK_P; c.height = CHUNK_P;
+        const cctx = c.getContext('2d');
+        const startX = cx * CHUNK_T, startY = cy * CHUNK_T;
+
+        for (let gy = 0; gy < CHUNK_T; gy++) for (let gx = 0; gx < CHUNK_T; gx++) {
+          const tx = startX + gx, ty = startY + gy;
+          if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) continue;
+          const x = gx * TILE, y = gy * TILE;
+          const t = TILES[ty][tx];
+
+          if (t === 'g') {
+            // === TRAWA ===
+            // Baza - zróżnicowana zieleń
+            const noise = pseudoRandom(tx, ty);
+            const baseG = 100 + Math.floor(noise * 40); // 100-140
+            cctx.fillStyle = `rgb(30, ${baseG}, 40)`;
+            cctx.fillRect(x, y, TILE, TILE);
+
+            // Tekstura trawy (kępy)
+            for (let i = 0; i < 3; i++) {
+              const rx = pseudoRandom(tx * i, ty + i) * TILE;
+              const ry = pseudoRandom(tx + i, ty * i) * TILE;
+              cctx.fillStyle = `rgba(50, ${baseG + 20}, 50, 0.3)`;
+              cctx.fillRect(x + rx, y + ry, 2, 2);
+            }
+
+            // Brzeg (piasek/ziemia przy wodzie)
+            if (nearWaterTile(tx, ty)) {
+              cctx.fillStyle = 'rgba(210, 180, 140, 0.3)'; // Piaskowy
+              if (isWaterTile(tx, ty - 1)) cctx.fillRect(x, y, TILE, 4);
+              if (isWaterTile(tx + 1, ty)) cctx.fillRect(x + TILE - 4, y, 4, TILE);
+              if (isWaterTile(tx, ty + 1)) cctx.fillRect(x, y + TILE - 4, TILE, 4);
+              if (isWaterTile(tx - 1, ty)) cctx.fillRect(x, y, 4, TILE);
+            }
+          } else {
+            // === WODA ===
+            // Głęboka woda gradient
+            const grad = cctx.createRadialGradient(x + TILE / 2, y + TILE / 2, 0, x + TILE / 2, y + TILE / 2, TILE);
+            grad.addColorStop(0, '#2980b9');
+            grad.addColorStop(1, '#1a5276');
+            cctx.fillStyle = grad;
+            cctx.fillRect(x, y, TILE, TILE);
+
+            // Fale (statyczne)
+            cctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            const waveOff = pseudoRandom(tx, ty) * TILE;
+            cctx.beginPath();
+            cctx.arc(x + waveOff, y + waveOff, 5, 0, Math.PI * 2);
+            cctx.fill();
+
+            // Piana przy brzegu
+            cctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+            if (!isWaterTile(tx, ty - 1)) cctx.fillRect(x, y, TILE, 2); // Góra
+            if (!isWaterTile(tx, ty + 1)) cctx.fillRect(x, y + TILE - 2, TILE, 2); // Dół
+            if (!isWaterTile(tx - 1, ty)) cctx.fillRect(x, y, 2, TILE); // Lewo
+            if (!isWaterTile(tx + 1, ty)) cctx.fillRect(x + TILE - 2, y, 2, TILE); // Prawo
+          }
+        }
+        chunkCache.set(key, c); chunkLRU.push(key);
+        if (chunkLRU.length > CHUNK_CACHE_MAX) { const oldKey = chunkLRU.shift(); chunkCache.delete(oldKey); }
+        return c;
+      }
+
+      function drawDecor(d, x, y) {
+        ctx.save(); // Save context state
+
+        switch (d.type) {
+          case 'tree':
+            // Cień drzewa
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 15, 18, 8, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Pień z teksturą
+            const trunkGradient = ctx.createLinearGradient(x - 5, y, x + 5, y);
+            trunkGradient.addColorStop(0, '#4a2f1a');
+            trunkGradient.addColorStop(0.5, '#5b3a20');
+            trunkGradient.addColorStop(1, '#3d2515');
+            ctx.fillStyle = trunkGradient;
+            ctx.fillRect(x - 5, y + 2, 10, 14);
+
+            // Linie na pniu (kora)
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y + 5);
+            ctx.lineTo(x - 3, y + 14);
+            ctx.moveTo(x + 3, y + 7);
+            ctx.lineTo(x + 3, y + 15);
+            ctx.stroke();
+
+            // Korona - warstwowa
+            const leafGradient = ctx.createRadialGradient(x - 4, y - 10, 2, x, y - 8, 18);
+            leafGradient.addColorStop(0, '#4fa85a');
+            leafGradient.addColorStop(0.7, '#3a8f45');
+            leafGradient.addColorStop(1, '#2f7538');
+            ctx.fillStyle = leafGradient;
+            ctx.beginPath();
+            ctx.arc(x, y - 8, 16, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Highlights na liściach
+            ctx.fillStyle = 'rgba(144,238,144,0.6)';
+            ctx.beginPath();
+            ctx.arc(x - 6, y - 12, 6, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Dodatkowe gałęzie
+            ctx.fillStyle = 'rgba(47,143,58,0.7)';
+            ctx.beginPath();
+            ctx.arc(x - 10, y - 4, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 10, y - 6, 7, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+          case 'bush':
+            // Cień krzaka
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 8, 12, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Krzak - gradient
+            const bushGradient = ctx.createRadialGradient(x - 3, y - 2, 2, x, y, 10);
+            bushGradient.addColorStop(0, '#5fc96a');
+            bushGradient.addColorStop(0.6, '#3fb150');
+            bushGradient.addColorStop(1, '#2d8a3c');
+
+            ctx.fillStyle = bushGradient;
+            ctx.beginPath();
+            ctx.arc(x - 6, y, 9, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x + 6, y + 1, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(x, y - 3, 7, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Światło
+            ctx.fillStyle = 'rgba(144,238,144,0.4)';
+            ctx.beginPath();
+            ctx.arc(x - 4, y - 2, 4, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+          case 'rock':
+            // Cień kamienia
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.ellipse(x, y + 6, 12, 5, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Kamień - gradient
+            const rockGradient = ctx.createRadialGradient(x - 3, y - 2, 2, x, y, 10);
+            rockGradient.addColorStop(0, '#b0bcc8');
+            rockGradient.addColorStop(0.6, '#8c9aa8');
+            rockGradient.addColorStop(1, '#6a7580');
+            ctx.fillStyle = rockGradient;
+            ctx.beginPath();
+            ctx.ellipse(x, y, 11, 8, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.5)';
+            ctx.beginPath();
+            ctx.ellipse(x - 3, y - 2, 4, 3, 0.3, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+          case 'flower':
+            // Łodyga
+            ctx.strokeStyle = '#4a8f3a';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x, y + 3);
+            ctx.lineTo(x, y - 2);
+            ctx.stroke();
+
+            // Płatki
+            ctx.fillStyle = '#ff6bb5';
+            for (let i = 0; i < 5; i++) {
+              const angle = (i / 5) * Math.PI * 2;
+              ctx.beginPath();
+              ctx.arc(x + Math.cos(angle) * 3, y - 2 + Math.sin(angle) * 3, 2, 0, Math.PI * 2);
+              ctx.fill();
+            }
+
+            // Środek kwiatka
+            ctx.fillStyle = '#ffd700';
+            ctx.beginPath();
+            ctx.arc(x, y - 2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+          case 'campfire':
+            const t = performance.now() * 0.006;
+            const flick = 1 + Math.sin(t + x * 0.1) * 0.15;
+
+            // Poświata ogniska
+            const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, 25 * flick);
+            glowGradient.addColorStop(0, 'rgba(255,100,20,0.4)');
+            glowGradient.addColorStop(0.5, 'rgba(255,80,10,0.2)');
+            glowGradient.addColorStop(1, 'rgba(255,50,0,0)');
+            ctx.fillStyle = glowGradient;
+            ctx.beginPath();
+            ctx.arc(x, y, 25 * flick, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Polana na drewno
+            ctx.fillStyle = '#654321';
+            ctx.fillRect(x - 8, y + 5, 16, 5);
+            ctx.fillRect(x - 10, y + 3, 5, 3);
+            ctx.fillRect(x + 5, y + 4, 5, 3);
+
+            // Czerwony żar
+            ctx.fillStyle = 'rgba(255,80,40,0.8)';
+            ctx.beginPath();
+            ctx.arc(x, y + 3, 10 * flick, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Płomienie
+            ctx.fillStyle = 'rgba(255,150,50,0.9)';
+            ctx.beginPath();
+            ctx.moveTo(x, y - 15 * flick);
+            ctx.quadraticCurveTo(x + 8, y - 5, x + 2, y + 2);
+            ctx.lineTo(x - 2, y + 2);
+            ctx.quadraticCurveTo(x - 8, y - 5, x, y - 15 * flick);
+            ctx.fill();
+
+            // Żółte środki płomieni
+            ctx.fillStyle = '#ffef66';
+            ctx.beginPath();
+            ctx.moveTo(x, y - 12 * flick);
+            ctx.quadraticCurveTo(x + 5, y - 3, x, y);
+            ctx.quadraticCurveTo(x - 5, y - 3, x, y - 12 * flick);
+            ctx.fill();
+            break;
+
+          case 'tent':
+            // Cień namiotu
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.moveTo(x - 22, y + 12);
+            ctx.lineTo(x + 22, y + 12);
+            ctx.lineTo(x, y + 8);
+            ctx.closePath();
+            ctx.fill();
+
+            // Namiot - gradient
+            const tentGradient = ctx.createLinearGradient(x - 20, y - 20, x + 20, y + 10);
+            tentGradient.addColorStop(0, '#7a9cff');
+            tentGradient.addColorStop(0.5, '#6a8cff');
+            tentGradient.addColorStop(1, '#5a7cef');
+            ctx.fillStyle = tentGradient;
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y + 10);
+            ctx.lineTo(x, y - 20);
+            ctx.lineTo(x + 20, y + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Wejście
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.moveTo(x - 8, y + 10);
+            ctx.lineTo(x, y - 5);
+            ctx.lineTo(x + 8, y + 10);
+            ctx.closePath();
+            ctx.fill();
+
+            // Highlight
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 20, y + 10);
+            ctx.lineTo(x, y - 20);
+            ctx.stroke();
+            break;
+
+          case 'fence':
+            // Cień płotu
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(x - 1, y - 8, 3, 20);
+
+            // Płot z teksturą drewna
+            const fenceGradient = ctx.createLinearGradient(x - 3, y, x + 3, y);
+            fenceGradient.addColorStop(0, '#8a7550');
+            fenceGradient.addColorStop(0.5, '#a38c5a');
+            fenceGradient.addColorStop(1, '#8a7550');
+            ctx.fillStyle = fenceGradient;
+            ctx.fillRect(x - 3, y - 10, 6, 20);
+
+            // Słoje drewna
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 1;
+            for (let i = -8; i < 8; i += 3) {
+              ctx.beginPath();
+              ctx.moveTo(x - 3, y + i);
+              ctx.lineTo(x + 3, y + i);
+              ctx.stroke();
+            }
+            break;
+
+          case 'gate':
+            // Cień bramy
+            ctx.fillStyle = 'rgba(0,0,0,0.25)';
+            ctx.fillRect(x - 19, y - 4, 40, 14);
+
+            // Brama - gradient złoty
+            const gateGradient = ctx.createLinearGradient(x, y - 6, x, y + 6);
+            gateGradient.addColorStop(0, '#e0c080');
+            gateGradient.addColorStop(0.5, '#cda96d');
+            gateGradient.addColorStop(1, '#b89860');
+            ctx.fillStyle = gateGradient;
+            ctx.fillRect(x - 20, y - 6, 40, 12);
+
+            // Ozdoby
+            ctx.fillStyle = '#8a6f45';
+            ctx.fillRect(x - 18, y - 5, 2, 10);
+            ctx.fillRect(x - 5, y - 5, 2, 10);
+            ctx.fillRect(x + 8, y - 5, 2, 10);
+            ctx.fillRect(x + 16, y - 5, 2, 10);
+
+            // Klamka
+            ctx.fillStyle = '#666';
+            ctx.beginPath();
+            ctx.arc(x + 12, y, 2, 0, Math.PI * 2);
+            ctx.fill();
+            break;
+
+          case 'shop':
+            // Cień budynku  
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.fillRect(x - 62, y + 64, 124, 8);
+
+            // Budynek - ściany z gradientem
+            const wallGradient = ctx.createLinearGradient(x - 64, y, x + 64, y);
+            wallGradient.addColorStop(0, '#1f2d42');
+            wallGradient.addColorStop(0.5, '#2b3a55');
+            wallGradient.addColorStop(1, '#1f2d42');
+            ctx.fillStyle = wallGradient;
+            ctx.fillRect(x - 64, y - 64, 128, 128);
+
+            // Dach z cieniem
+            const roofGradient = ctx.createLinearGradient(x, y - 64, x, y - 48);
+            roofGradient.addColorStop(0, '#4a5f80');
+            roofGradient.addColorStop(0.5, '#506690');
+            roofGradient.addColorStop(1, '#5a7098');
+            ctx.fillStyle = roofGradient;
+            ctx.fillRect(x - 64, y - 64, 128, 18);
+
+            // Okna z odbiciami
+            const windowGradient = ctx.createLinearGradient(x - 40, y - 20, x - 40, y + 20);
+            windowGradient.addColorStop(0, '#87ceeb');
+            windowGradient.addColorStop(0.5, '#5fa8d3');
+            windowGradient.addColorStop(1, '#4a8bb8');
+            ctx.fillStyle = windowGradient;
+            ctx.fillRect(x - 50, y - 30, 30, 40);
+            ctx.fillRect(x + 20, y - 30, 30, 40);
+
+            // Ramy okien
+            ctx.strokeStyle = '#2b3a55';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(x - 50, y - 30, 30, 40);
+            ctx.strokeRect(x + 20, y - 30, 30, 40);
+
+            // Krzyż w oknie
+            ctx.beginPath();
+            ctx.moveTo(x - 35, y - 30);
+            ctx.lineTo(x - 35, y + 10);
+            ctx.moveTo(x - 50, y - 10);
+            ctx.lineTo(x - 20, y - 10);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 35, y - 30);
+            ctx.lineTo(x + 35, y + 10);
+            ctx.moveTo(x + 20, y - 10);
+            ctx.lineTo(x + 50, y - 10);
+            ctx.stroke();
+
+            // Drzwi
+            const doorGradient = ctx.createLinearGradient(x - 15, y + 20, x + 15, y + 20);
+            doorGradient.addColorStop(0, '#5a3a2a');
+            doorGradient.addColorStop(0.5, '#6a4a3a');
+            doorGradient.addColorStop(1, '#5a3a2a');
+            ctx.fillStyle = doorGradient;
+            ctx.fillRect(x - 18, y + 10, 36, 54);
+
+            // Klamka
+            ctx.fillStyle = '#daa520';
+            ctx.beginPath();
+            ctx.arc(x + 12, y + 37, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Napis
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = 'rgba(78,205,196,0.8)';
+            ctx.fillStyle = '#4ecdc4';
+            ctx.font = 'bold 14px Poppins, system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(d.label || 'SKLEP', x, y - 52);
+            ctx.shadowBlur = 0;
+            break;
+
+          case 'npc':
+            if (d.label === 'Jarosław') {
+              // Cień NPC
+              ctx.fillStyle = 'rgba(0,0,0,0.3)';
+              ctx.beginPath();
+              ctx.ellipse(x, y + 14, 12, 5, 0, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Emoji Starca
+              ctx.font = '42px Segoe UI Emoji';
+              ctx.textAlign = 'center';
+              ctx.textBaseline = 'middle';
+              ctx.fillStyle = '#fff'; // Reset koloru dla pewności
+              ctx.fillText('👴', x, y - 5);
+
+              // Napis z cieniem
+              ctx.shadowBlur = 3;
+              ctx.shadowColor = 'rgba(0,0,0,0.7)';
+              ctx.fillStyle = '#ffd700'; // Złoty dla Jarosława
+              ctx.font = 'bold 12px Poppins, system-ui';
+              ctx.textAlign = 'center';
+              ctx.fillText(d.label, x, y - 30);
+              ctx.shadowBlur = 0;
+            } else {
+              // Standardowy NPC (Generic)
+              // Poświata NPC
+              const npcGlow = ctx.createRadialGradient(x, y, 2, x, y, 20);
+              npcGlow.addColorStop(0, 'rgba(255,210,106,0.6)');
+              npcGlow.addColorStop(0.7, 'rgba(255,210,106,0.2)');
+              npcGlow.addColorStop(1, 'rgba(255,210,106,0)');
+              ctx.fillStyle = npcGlow;
+              ctx.beginPath();
+              ctx.arc(x, y, 20, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Cień NPC
+              ctx.fillStyle = 'rgba(0,0,0,0.3)';
+              ctx.beginPath();
+              ctx.ellipse(x, y + 14, 10, 4, 0, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Ciało NPC - gradient
+              const npcGradient = ctx.createRadialGradient(x - 3, y - 3, 2, x, y, 12);
+              npcGradient.addColorStop(0, '#ffe080');
+              npcGradient.addColorStop(0.7, '#ffd26a');
+              npcGradient.addColorStop(1, '#ddb960');
+              ctx.fillStyle = npcGradient;
+              ctx.beginPath();
+              ctx.arc(x, y, 12, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Obramowanie
+              ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.arc(x, y, 12, 0, Math.PI * 2);
+              ctx.stroke();
+
+              // Oczy
+              ctx.fillStyle = '#333';
+              ctx.beginPath();
+              ctx.arc(x - 4, y - 2, 2, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.beginPath();
+              ctx.arc(x + 4, y - 2, 2, 0, Math.PI * 2);
+              ctx.fill();
+
+              // Uśmiech
+              ctx.strokeStyle = '#333';
+              ctx.lineWidth = 1.5;
+              ctx.beginPath();
+              ctx.arc(x, y + 2, 5, 0.2, Math.PI - 0.2);
+              ctx.stroke();
+
+              // Napis z cieniem
+              ctx.shadowBlur = 3;
+              ctx.shadowColor = 'rgba(0,0,0,0.7)';
+              ctx.fillStyle = '#fff';
+              ctx.font = 'bold 11px Poppins, system-ui';
+              ctx.textAlign = 'center';
+              ctx.fillText(d.label || 'NPC', x, y - 20);
+              ctx.shadowBlur = 0;
+            }
+            break;
+
+          case 'house':
+            // Cień domu (rzucany do tyłu)
+            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+            ctx.beginPath();
+            ctx.moveTo(x - 48, y + 32);
+            ctx.lineTo(x + 48, y + 32);
+            ctx.lineTo(x + 80, y - 64); // Skos w prawo-góra
+            ctx.lineTo(x - 16, y - 64);
+            ctx.closePath();
+            ctx.fill();
+
+            // Fundamenty z gradientem
+            const foundationGrad = ctx.createLinearGradient(x, y - 32, x, y + 32);
+            foundationGrad.addColorStop(0, '#7a5a3a');
+            foundationGrad.addColorStop(1, '#6a4a2a');
+            ctx.fillStyle = foundationGrad;
+            ctx.fillRect(x - 48, y - 32, 96, 64);
+
+            // Ściany z teksturą
+            const wallsGrad = ctx.createLinearGradient(x - 48, y - 64, x + 48, y - 32);
+            wallsGrad.addColorStop(0, '#8a5a32');
+            wallsGrad.addColorStop(0.5, '#a0522d');
+            wallsGrad.addColorStop(1, '#8a5a32');
+            ctx.fillStyle = wallsGrad;
+            ctx.fillRect(x - 48, y - 64, 96, 32);
+
+            // Linie na ścianach (deski)
+            ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+            ctx.lineWidth = 1;
+            for (let i = -44; i < 44; i += 8) {
+              ctx.beginPath();
+              ctx.moveTo(x + i, y - 64);
+              ctx.lineTo(x + i, y - 32);
+              ctx.stroke();
+            }
+
+            // Dach - gradient czerwony
+            const roofGrad = ctx.createLinearGradient(x, y - 96, x, y - 64);
+            roofGrad.addColorStop(0, '#a02020');
+            roofGrad.addColorStop(0.5, '#8b0000');
+            roofGrad.addColorStop(1, '#6a0000');
+            ctx.fillStyle = roofGrad;
+            ctx.beginPath();
+            ctx.moveTo(x - 64, y - 64);
+            ctx.lineTo(x, y - 96);
+            ctx.lineTo(x + 64, y - 64);
+            ctx.closePath();
+            ctx.fill();
+
+            // Cień dachu
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.beginPath();
+            ctx.moveTo(x - 64, y - 64);
+            ctx.lineTo(x, y - 96);
+            ctx.lineTo(x, y - 64);
+            ctx.closePath();
+            ctx.fill();
+
+            // Drzwi z gradientem
+            const houseDoorGrad = ctx.createLinearGradient(x - 12, y - 32, x + 12, y);
+            houseDoorGrad.addColorStop(0, '#4a3020');
+            houseDoorGrad.addColorStop(0.5, '#654321');
+            houseDoorGrad.addColorStop(1, '#4a3020');
+            ctx.fillStyle = houseDoorGrad;
+            ctx.fillRect(x - 12, y - 32, 24, 32);
+
+            // Klamka drzwi
+            ctx.fillStyle = '#b8860b';
+            ctx.beginPath();
+            ctx.arc(x + 8, y - 16, 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Okna z odbiciami nieba
+            const houseWindowGrad = ctx.createLinearGradient(x - 36, y - 52, x - 36, y - 36);
+            houseWindowGrad.addColorStop(0, '#b0d4f1');
+            houseWindowGrad.addColorStop(0.5, '#87ceeb');
+            houseWindowGrad.addColorStop(1, '#5fa8d3');
+            ctx.fillStyle = houseWindowGrad;
+            ctx.fillRect(x - 36, y - 52, 16, 16);
+            ctx.fillRect(x + 20, y - 52, 16, 16);
+
+            // Ramy okien
+            ctx.strokeStyle = '#4a3a2a';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(x - 36, y - 52, 16, 16);
+            ctx.strokeRect(x + 20, y - 52, 16, 16);
+
+            // Krzyże w oknach
+            ctx.beginPath();
+            ctx.moveTo(x - 28, y - 52);
+            ctx.lineTo(x - 28, y - 36);
+            ctx.moveTo(x - 36, y - 44);
+            ctx.lineTo(x - 20, y - 44);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(x + 28, y - 52);
+            ctx.lineTo(x + 28, y - 36);
+            ctx.moveTo(x + 20, y - 44);
+            ctx.lineTo(x + 36, y - 44);
+            ctx.stroke();
+
+            // Highlight na dachu
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 64, y - 64);
+            ctx.lineTo(x, y - 96);
+            ctx.stroke();
+            break;
+        }
+
+        ctx.restore(); // Restore context state
+      }
+
+      function drawMap(camX, camY) {
+        const firstChunkX = Math.floor(camX / CHUNK_P);
+        const firstChunkY = Math.floor(camY / CHUNK_P);
+        const lastChunkX = Math.floor((camX + W) / CHUNK_P);
+        const lastChunkY = Math.floor((camY + H) / CHUNK_P);
+        for (let cy = firstChunkY; cy <= lastChunkY; cy++) for (let cx = firstChunkX; cx <= lastChunkX; cx++) {
+          const chunk = getChunk(cx, cy);
+          ctx.drawImage(chunk, cx * CHUNK_P - camX, cy * CHUNK_P - camY);
+        }
+        for (const d of DECOR) {
+          const dx = d.x - camX, dy = d.y - camY;
+          if (dx < -80 || dy < -80 || dx > W + 80 || dy > H + 80) continue;
+          drawDecor(d, dx, dy);
+        }
+
+        // Rysowanie podglądu domku
+        if (buildingHouse && housePreview) {
+          const px = housePreview.x - camX;
+          const py = housePreview.y - camY;
+          if (px >= -64 && py >= -64 && px <= W + 64 && py <= H + 64) {
+            ctx.globalAlpha = 0.7;
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(px - 48, py - 32, 96, 64);
+            ctx.fillStyle = '#A0522D';
+            ctx.fillRect(px - 48, py - 64, 96, 32);
+            ctx.fillStyle = '#8B0000';
+            ctx.beginPath();
+            ctx.moveTo(px - 64, py - 64);
+            ctx.lineTo(px, py - 96);
+            ctx.lineTo(px + 64, py - 64);
+            ctx.closePath();
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+          }
+        }
+      }
+
+      // ====== Interakcja: wykrycie najbliższego sklepu/NPC ======
+      // ====== Interakcja: wykrycie najbliższego sklepu/NPC ======
+      let npcDialogue = null; // { name: 'Jarosław', text: '...', alpha: 0 }
+
+      function detectNearestShop() {
+        nearestShop = null;
+        npcDialogue = null; // Reset dialogu
+
+        if (!SHOPS) return;
+        const near = [];
+        function add(type, pos) { if (!pos) return; near.push({ type, d: Math.hypot(me.x - pos.x, me.y - pos.y) }); }
+        add('sell', SHOPS.sell); add('rods', SHOPS.rods); add('baits', SHOPS.baits); add('hooks', SHOPS.hooks);
+        add('npc', SHOPS.npcJaroslaw);
+        near.sort((a, b) => a.d - b.d);
+
+        if (near.length && near[0].d < 120) nearestShop = near[0].type;
+        interactHint.style.display = nearestShop ? 'block' : 'none';
+
+        if (nearestShop === 'npc' && near[0].d < 100) {
+          npcDialogue = { name: 'Jarosław', text: 'Witaj wędrowcze! Masz może trochę... mleka?', avatar: '🧙‍♂️' };
+        }
+      }
+
+      const seenToasts = new Set();
+      function toastOnce(key, msg) { if (seenToasts.has(key)) return; seenToasts.add(key); toast(msg); }
+
+      // ====== Joystick & Input ======
+      function joyStart(x, y, id) {
+        const dx = x - joystick.baseX, dy = y - joystick.baseY;
+        if (Math.hypot(dx, dy) > 110) return;
+        joystick.active = true; joystick.id = id; joyMove(x, y);
+      }
+      function joyMove(x, y) {
+        const dx = x - joystick.baseX, dy = y - joystick.baseY;
+        const dist = Math.hypot(dx, dy), r = joystick.baseR;
+        if (dist > r) { const s = r / dist; joystick.knobX = joystick.baseX + dx * s; joystick.knobY = joystick.baseY + dy * s; joystick.vx = dx / r; joystick.vy = dy / r; }
+        else { joystick.knobX = x; joystick.knobY = y; joystick.vx = dx / r; joystick.vy = dy / r; }
+      }
+      function joyEnd() { joystick.active = false; joystick.id = -1; joystick.knobX = joystick.baseX; joystick.knobY = joystick.baseY; joystick.vx = 0; joystick.vy = 0; }
+
+      canvas.addEventListener('pointerdown', (e) => {
+        const x = e.clientX, y = e.clientY;
+
+        // Budowanie domku
+        if (buildingHouse) {
+          const worldX = x + camera().x;
+          const worldY = y + camera().y;
+          const tileX = Math.floor(worldX / TILE);
+          const tileY = Math.floor(worldY / TILE);
+
+          // Sprawdź czy miejsce jest wolne i na trawie
+          if (tileX >= 0 && tileY >= 0 && tileX < MAP_W && tileY < MAP_H) {
+            if (TILES[tileY][tileX] === 'g') {
+              // Sprawdź czy nie ma kolizji z innymi elementami
+              const isOccupied = DECOR.some(d => {
+                const dx = Math.floor(d.x / TILE);
+                const dy = Math.floor(d.y / TILE);
+                return Math.abs(dx - tileX) < 3 && Math.abs(dy - tileY) < 3;
+              });
+
+              if (!isOccupied) {
+                socket.send(JSON.stringify({
+                  type: 'buildHouse',
+                  x: tileX * TILE + TILE / 2,
+                  y: tileY * TILE + TILE / 2
+                }));
+                buildingHouse = false;
+                housePreview = null;
+                houseBuildOverlay.classList.add('hidden');
+                toast('Domek zbudowany!');
+                return;
+              }
+            }
+          }
+          toast('Nie można zbudować tutaj');
+          return;
+        }
+
+        if (x < W * 0.5) {
+          // klik po lewej: sprawdź przycisk Interakcja (powyżej joysticka)
+          const ix = 86, iy = H - 180; const br = 40;
+          if (nearestShop && Math.hypot(x - ix, y - iy) <= br) {
+            openShop(nearestShop);
+            return;
+          }
+          joyStart(x, y, e.pointerId);
+        } else {
+          if (!fishing.active && canFish) requestFishing();
+          if (fishing.state === 'power') commitCastPower();
+          else if (fishing.state === 'qte') tryTapQTE();
+        }
+      }, { passive: true });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (e.pointerId === joystick.id) joyMove(e.clientX, e.clientY);
+
+        // Podgląd pozycji domku
+        if (buildingHouse) {
+          const worldX = e.clientX + camera().x;
+          const worldY = e.clientY + camera().y;
+          const tileX = Math.floor(worldX / TILE);
+          const tileY = Math.floor(worldY / TILE);
+
+          if (tileX >= 0 && tileY >= 0 && tileX < MAP_W && tileY < MAP_H) {
+            housePreview = { x: tileX * TILE + TILE / 2, y: tileY * TILE + TILE / 2 };
+          }
+        }
+      }, { passive: true });
+
+      function endPointer(e) { if (e.pointerId === joystick.id) joyEnd(); }
+      canvas.addEventListener('pointerup', endPointer); canvas.addEventListener('pointercancel', endPointer);
+      canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+      // ====== Ruch ======
+      function isWater(px, py) {
+        const tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
+        if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) return true;
+        return TILES[ty][tx] === 'w';
+      }
+      function nearWaterClient(px, py) {
+        const tx = Math.floor(px / TILE), ty = Math.floor(py / TILE);
+        for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+          const x = tx + dx, y = ty + dy;
+          if (x >= 0 && y >= 0 && x < MAP_W && y < MAP_H && TILES[y][x] === 'w') return true;
+        } return false;
+      }
+
+      const SPEED = 165;
+      let lastSentMove = 0;
+      let lastMoveTime = 0;
+      function stepMovement(dt) {
+        const vx = joystick.vx, vy = joystick.vy;
+        const len = Math.hypot(vx, vy);
+        if (len > 0.02 && fishing.state !== 'casting' && fishing.state !== 'power' && fishing.state !== 'qte') {
+          const nx = vx / len, ny = vy / len;
+          const dx = nx * SPEED * dt, dy = ny * SPEED * dt;
+
+          // Ograniczenie prędkości (anty-cheat)
+          const now = performance.now();
+          if (lastMoveTime > 0) {
+            const timeDiff = now - lastMoveTime;
+            const maxDistance = SPEED * (timeDiff / 1000) * 1.5; // 50% margines
+            const actualDistance = Math.sqrt(dx * dx + dy * dy);
+            if (actualDistance > maxDistance) {
+              // Zredukuj prędkość
+              const reduction = maxDistance / actualDistance;
+              dx *= reduction;
+              dy *= reduction;
+            }
+          }
+          lastMoveTime = now;
+
+          const nxPos = me.x + dx, nyPos = me.y + dy;
+          if (!isWater(nxPos, me.y)) me.x = nxPos;
+          if (!isWater(me.x, nyPos)) me.y = nyPos;
+          me.dir = Math.atan2(ny, nx);
+        }
+        me.x = Math.max(TILE / 2, Math.min(me.x, MAP_W * TILE - TILE / 2));
+        me.y = Math.max(TILE / 2, Math.min(me.y, MAP_H * TILE - TILE / 2));
+        canFish = nearWaterClient(me.x, me.y);
+
+        const now = performance.now();
+        if (now - lastSentMove > 60) {
+          lastSentMove = now;
+          socket.send(JSON.stringify({ type: 'move', x: me.x, y: me.y, dir: me.dir }));
+        }
+        updateOthers(dt);
+        detectNearestShop();
+      }
+
+      function updateOthers(dt) {
+        const k = 12 * dt;
+        for (const p of others.values()) {
+          if (p.tx == null) continue;
+          p.x += (p.tx - p.x) * Math.min(1, k);
+          p.y += (p.ty - p.y) * Math.min(1, k);
+          const da = Math.atan2(Math.sin(p.tdir - p.dir), Math.cos(p.tdir - p.dir));
+          p.dir += da * Math.min(1, k);
+        }
+      }
+
+      // ====== Rysowanie gracza ======
+      function drawPlayer(p, camX, camY) {
+        const x = Math.round(p.x - camX), y = Math.round(p.y - camY);
+
+        ctx.save();
+
+        // Cień gracza (miękki, owalny)
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.beginPath();
+        ctx.ellipse(x, y + 12, 14, 7, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Ciało gracza - gradient dla 3D effect
+        const playerGradient = ctx.createRadialGradient(x - 4, y - 4, 2, x, y, 14);
+        playerGradient.addColorStop(0, lightenColor(p.color || '#fff', 30));
+        playerGradient.addColorStop(0.7, p.color || '#fff');
+        playerGradient.addColorStop(1, darkenColor(p.color || '#fff', 20));
+        ctx.fillStyle = playerGradient;
+        ctx.beginPath();
+        ctx.arc(x, y, 13, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Obramowanie ciała
+        ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x, y, 13, 0, Math.PI * 2);
+        ctx.stroke();
+
+        // Highlight (połysk światła)
+        const highlightGradient = ctx.createRadialGradient(x - 5, y - 6, 0, x - 5, y - 6, 9);
+        highlightGradient.addColorStop(0, 'rgba(255,255,255,0.5)');
+        highlightGradient.addColorStop(0.7, 'rgba(255,255,255,0.2)');
+        highlightGradient.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = highlightGradient;
+        ctx.beginPath();
+        ctx.arc(x - 5, y - 6, 9, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Oko/kierunek patrzenia - z głębią
+        const eyeX = x + Math.cos(p.dir) * 7;
+        const eyeY = y + Math.sin(p.dir) * 7;
+
+        // Białko oka
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, 3, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Źrenica
+        ctx.fillStyle = '#222';
+        ctx.beginPath();
+        ctx.arc(eyeX, eyeY, 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // B lask w oku
+        ctx.fillStyle = 'rgba(255,255,255,0.7)';
+        ctx.beginPath();
+        ctx.arc(eyeX - 0.7, eyeY - 0.7, 0.8, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Napis z nazwą i poziomem - lepsze tło
+        const lvl = p.level ? ` Lv${p.level}` : '';
+        const nameText = `${p.name || 'Gracz'}${lvl}`;
+
+        ctx.font = 'bold 11px Poppins, system-ui';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const nameWidth = ctx.measureText(nameText).width;
+
+        // Tło nazwy - gradient
+        const nameBgGradient = ctx.createLinearGradient(x - nameWidth / 2 - 6, y - 28, x + nameWidth / 2 + 6, y - 28);
+        nameBgGradient.addColorStop(0, 'rgba(0,0,0,0.3)');
+        nameBgGradient.addColorStop(0.5, 'rgba(0,0,0,0.7)');
+        nameBgGradient.addColorStop(1, 'rgba(0,0,0,0.3)');
+        ctx.fillStyle = nameBgGradient;
+        ctx.fillRect(x - nameWidth / 2 - 6, y - 34, nameWidth + 12, 16);
+
+        // Obramowanie nazwy
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(x - nameWidth / 2 - 6, y - 34, nameWidth + 12, 16);
+
+        // Tekst nazwy z cieniem
+        ctx.shadowBlur = 3;
+        ctx.shadowColor = 'rgba(0,0,0,0.8)';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(nameText, x, y - 26);
+        ctx.shadowBlur = 0;
+
+        // Bańka czatu
+        const b = bubbles.get(p.id);
+        if (b && b.until > performance.now()) {
+          const text = b.text;
+          ctx.font = '12px Poppins, system-ui';
+          const tw = ctx.measureText(text).width;
+          const bw = tw + 16, bh = 24;
+          const bubbleX = x - bw / 2, bubbleY = y - 60;
+
+          // Cień bańki
+          ctx.fillStyle = 'rgba(0,0,0,0.3)';
+          ctx.fillRect(bubbleX + 2, bubbleY + 2, bw, bh);
+
+          // Tło bańki - gradient
+          const bubbleGradient = ctx.createLinearGradient(bubbleX, bubbleY, bubbleX, bubbleY + bh);
+          bubbleGradient.addColorStop(0, 'rgba(30,30,30,0.95)');
+          bubbleGradient.addColorStop(1, 'rgba(10,10,10,0.95)');
+          ctx.fillStyle = bubbleGradient;
+          ctx.fillRect(bubbleX, bubbleY, bw, bh);
+
+          // Obramowanie bańki
+          ctx.strokeStyle = 'rgba(78,205,196,0.6)';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(bubbleX, bubbleY, bw, bh);
+
+          // Ogon bańki (trójkąt)
+          ctx.fillStyle = 'rgba(20,20,20,0.95)';
+          ctx.beginPath();
+          ctx.moveTo(x - 6, bubbleY + bh);
+          ctx.lineTo(x, bubbleY + bh + 6);
+          ctx.lineTo(x + 6, bubbleY + bh);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.strokeStyle = 'rgba(78,205,196,0.6)';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x - 6, bubbleY + bh);
+          ctx.lineTo(x, bubbleY + bh + 6);
+          ctx.lineTo(x + 6, bubbleY + bh);
+          ctx.stroke();
+
+          // Tekst w bańce
+          ctx.shadowBlur = 2;
+          ctx.shadowColor = 'rgba(0,0,0,0.8)';
+          ctx.fillStyle = '#4ecdc4';
+          ctx.textAlign = 'center';
+          ctx.fillText(text, x, bubbleY + bh / 2);
+          ctx.shadowBlur = 0;
+        }
+
+        ctx.restore();
+      }
+
+      // Funkcje pomocnicze dla gradientów koloru
+      function lightenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.min(255, (num >> 16) + amt);
+        const G = Math.min(255, ((num >> 8) & 0x00FF) + amt);
+        const B = Math.min(255, (num & 0x0000FF) + amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+      }
+
+      function darkenColor(color, percent) {
+        const num = parseInt(color.replace('#', ''), 16);
+        const amt = Math.round(2.55 * percent);
+        const R = Math.max(0, (num >> 16) - amt);
+        const G = Math.max(0, ((num >> 8) & 0x00FF) - amt);
+        const B = Math.max(0, (num & 0x0000FF) - amt);
+        return `#${(0x1000000 + R * 0x10000 + G * 0x100 + B).toString(16).slice(1)}`;
+      }
+
+      // ====== Łowienie – power + QTE center ======
+      const fishing = {
+        castTarget: { x: 0, y: 0 }, castEndAt: 0, endAt: 0,
+        requiredHits: 3, hits: 0, fails: 0,
+        needleAngle: 0, needleSpeed: 2.8, arcCenter: 0, arcWidth: Math.PI / 3,
+        precisionSum: 0, perfects: 0, castPower: 0.5, powerDir: 1, powerVal: 0.2,
+        lastHitPercent: -1, lastHitUntil: 0
+      };
+
+      function findNearestWaterTarget(px, py) {
+        const tx0 = Math.floor(px / TILE), ty0 = Math.floor(py / TILE);
+        let best = null, bestD2 = Infinity;
+        const R = 18;
+        for (let dy = -R; dy <= R; dy++)
+          for (let dx = -R; dx <= R; dx++) {
+            const tx = tx0 + dx, ty = ty0 + dy;
+            if (tx < 0 || ty < 0 || tx >= MAP_W || ty >= MAP_H) continue;
+            if (TILES[ty][tx] === 'w') {
+              const d2 = dx * dx + dy * dy;
+              if (d2 < bestD2) { bestD2 = d2; best = { x: tx * TILE + TILE / 2, y: ty * TILE + TILE / 2 }; }
+            }
+          }
+        return best || { x: px + 40, y: py };
+      }
+      function requestFishing() {
+        // Blokada wielokrotnego startu
+        if (fishing.active) return;
+        socket.send(JSON.stringify({ type: 'startFishing' }));
+      }
+
+      function startPower(cfg) {
+        fishing.active = true; fishing.state = 'power';
+        fishing.endAt = performance.now() + (cfg.timeLimitMs || 25000);
+        fishing.castEndAt = 0; fishing.castTarget = findNearestWaterTarget(me.x, me.y);
+        fishing.requiredHits = cfg.minigame?.requiredHits || 3;
+        fishing.hits = 0; fishing.fails = 0; fishing.precisionSum = 0; fishing.perfects = 0; fishing.lastHitPercent = -1; fishing.lastHitUntil = 0;
+        fishing.needleAngle = Math.random() * Math.PI * 2;
+        fishing.needleSpeed = cfg.minigame?.needleSpeed || 2.8;
+        fishing.arcWidth = (cfg.minigame?.arcWidthDeg || 60) * Math.PI / 180;
+        fishing.arcCenter = Math.random() * Math.PI * 2;
+        fishing.powerVal = 0.2; fishing.powerDir = 1;
+      }
+      function commitCastPower() {
+        if (fishing.state !== 'power') return;
+        fishing.castPower = fishing.powerVal; // 0..1
+        fishing.state = 'casting';
+        fishing.castEndAt = performance.now() + 600;
+      }
+      function startQTE() { fishing.state = 'qte'; }
+
+      function tryTapQTE() {
+        if (!fishing.active || fishing.state !== 'qte') return;
+
+        // Normalizacja kątów do 0..2PI
+        let ang = fishing.needleAngle % (Math.PI * 2);
+        if (ang < 0) ang += Math.PI * 2;
+
+        let center = fishing.arcCenter % (Math.PI * 2);
+        if (center < 0) center += Math.PI * 2;
+
+        // Obliczanie różnicy kątów (uwzględniając przejście przez 0)
+        let diff = Math.abs(ang - center);
+        if (diff > Math.PI) diff = Math.PI * 2 - diff;
+
+        const hit = diff <= (fishing.arcWidth / 2);
+
+        // Pozycja efektu (na okręgu)
+        const r = 100; // Promień z drawQTECenter
+        const ex = W / 2 + Math.cos(ang) * r;
+        const ey = H / 2 + Math.sin(ang) * r;
+
+        if (hit) {
+          fishing.hits++;
+          fishing.lastHit = performance.now(); // Do efektu pulsowania
+          addParticle(ex, ey, 'sparkle');
+          addParticle(ex, ey - 20, 'text');
+          triggerShake(5);
+
+          if (fishing.hits >= fishing.requiredHits) {
+            fishing.state = 'waiting';
+            socket.send(JSON.stringify({ type: 'fishingSuccess', id: myId }));
+          } else {
+            // Nowa runda QTE
+            fishing.arcCenter = Math.random() * Math.PI * 2;
+            fishing.needleSpeed = (Math.random() * 2 + 2) * (Math.random() < 0.5 ? 1 : -1);
+          }
+        } else {
+          addParticle(ex, ey, 'miss');
+          triggerShake(10);
+          fishing.active = false;
+          socket.send(JSON.stringify({ type: 'fishingFail', id: myId }));
+        }
+      }
+
+      function updateFishing(dt) {
+        if (!fishing.active) return;
+        if (performance.now() > fishing.endAt) { finishFishing(false); return; }
+        if (fishing.state === 'power') {
+          fishing.powerVal += fishing.powerDir * dt * 1.2;
+          if (fishing.powerVal >= 1) { fishing.powerVal = 1; fishing.powerDir = -1; }
+          if (fishing.powerVal <= 0) { fishing.powerVal = 0; fishing.powerDir = 1; }
+        } else if (fishing.state === 'casting') {
+          if (performance.now() >= fishing.castEndAt) startQTE();
+        } else if (fishing.state === 'qte') {
+          fishing.needleAngle = (fishing.needleAngle + fishing.needleSpeed * dt) % (Math.PI * 2);
+        }
+      }
+
+      function drawCasting(cam) {
+        if (fishing.state !== 'casting') return;
+        const sx = me.x - cam.x, sy = me.y - cam.y;
+        const tx = fishing.castTarget.x - cam.x, ty = fishing.castTarget.y - cam.y;
+        const k = clamp((fishing.castEndAt - performance.now()) / 600, 0, 1);
+        // Fizyczny rzut wędką zależny od siły
+        const castDistance = 40 + 160 * fishing.castPower;
+        const ex = sx + (tx - sx) * (1 - k) * (castDistance / 200), ey = sy + (ty - sy) * (1 - k) * (castDistance / 200);
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.moveTo(sx, sy - 8); ctx.quadraticCurveTo((sx + ex) / 2, ((sy + ey) / 2) - 20, ex, ey); ctx.stroke();
+        ctx.fillStyle = '#ffd26a'; ctx.beginPath(); ctx.arc(ex, ey, 4, 0, Math.PI * 2); ctx.fill();
+      }
+
+      function drawQTECenter() {
+        if (!fishing.active) return;
+
+        // Rysowanie efektów cząsteczkowych (jeśli są)
+        if (window.drawFishingEffects) window.drawFishingEffects(ctx);
+
+        const size = 240; // Duże koło
+        const cx = W / 2, cy = H / 2;
+        const r = 100;
+
+        // Tło panelu (lekkie przyciemnienie całego ekranu dla skupienia)
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(0, 0, W, H);
+
+        // Stan: Wybór siły
+        if (fishing.state === 'power') {
+          const bw = 300, bh = 30;
+          const bx = (W - bw) / 2, by = H / 2 + 100;
+
+          ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.roundRect(bx - 10, by - 10, bw + 20, bh + 20, 10); ctx.fill();
+          ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(bx, by, bw, bh);
+
+          // Gradient paska siły
+          const grad = ctx.createLinearGradient(bx, 0, bx + bw, 0);
+          grad.addColorStop(0, '#f1c40f'); grad.addColorStop(0.5, '#2ecc71'); grad.addColorStop(1, '#e74c3c');
+          ctx.fillStyle = grad;
+          ctx.fillRect(bx, by, bw * fishing.powerVal, bh);
+
+          ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Poppins'; ctx.textAlign = 'center';
+          ctx.fillText(`Siła: ${Math.round(fishing.powerVal * 100)}%`, W / 2, by - 20);
+          ctx.font = '14px Poppins'; ctx.fillStyle = 'rgba(255,255,255,0.8)';
+          ctx.fillText('(Kliknij, aby zarzucić)', W / 2, by + 55);
+          return;
+        }
+
+        if (fishing.state === 'casting') return;
+
+        // === MINIGRA KOŁOWA ===
+
+        // 1. Tor (Tło)
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+        ctx.lineWidth = 20;
+        ctx.stroke();
+
+        // 2. Strefa Trafienia (Target Zone)
+        const startAngle = fishing.arcCenter - fishing.arcWidth / 2;
+        const endAngle = fishing.arcCenter + fishing.arcWidth / 2;
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, startAngle, endAngle);
+        ctx.strokeStyle = '#2ecc71'; // Zielony
+        ctx.lineWidth = 20;
+        ctx.lineCap = 'round';
+        ctx.shadowColor = '#2ecc71';
+        ctx.shadowBlur = 15;
+        ctx.stroke();
+        ctx.shadowBlur = 0; // Reset cienia
+
+        // 3. Wskaźnik (Haczyk)
+        const needleX = cx + Math.cos(fishing.needleAngle) * r;
+        const needleY = cy + Math.sin(fishing.needleAngle) * r;
+
+        // Linia od środka do haczyka (opcjonalne, dla czytelności)
+        // ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(needleX, needleY);
+        // ctx.strokeStyle = 'rgba(255,255,255,0.2)'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Ikona Haczyka
+        ctx.font = '32px Segoe UI Emoji';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText('🪝', needleX, needleY);
+
+        // 4. Środek - Postęp i Ryba
+        // Tło środka
+        ctx.beginPath(); ctx.arc(cx, cy, r - 25, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 20, 40, 0.8)'; ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)'; ctx.lineWidth = 2; ctx.stroke();
+
+        // Ikona Ryby (pulsuje przy trafieniu)
+        const pulse = fishing.lastHit && (performance.now() - fishing.lastHit < 200) ? 1.2 : 1.0;
+        ctx.font = `${48 * pulse}px Segoe UI Emoji`;
+        ctx.fillText('🐟', cx, cy - 10);
+
+        // Tekst postępu
+        ctx.font = 'bold 24px Poppins';
+        ctx.fillStyle = '#fff';
+        ctx.fillText(`${fishing.hits}/${fishing.requiredHits}`, cx, cy + 35);
+
+        ctx.font = '12px Poppins';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.fillText('TRAFIENIA', cx, cy + 55);
+
+        // Pasek postępu dookoła środka (opcjonalny "Fight Bar")
+        const progress = fishing.hits / fishing.requiredHits;
+        if (progress > 0) {
+          ctx.beginPath();
+          ctx.arc(cx, cy, r - 35, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * progress));
+          ctx.strokeStyle = '#f1c40f'; // Złoty
+          ctx.lineWidth = 4;
+          ctx.stroke();
+        }
+      }
+
+      function finishFishing(success) {
+        if (!fishing.active) return;
+        let score = 0;
+        if (success) {
+          const hitRatio = fishing.hits / fishing.requiredHits;
+          const precisionAvg = fishing.hits > 0 ? fishing.precisionSum / fishing.hits : 0;
+          score = clamp(hitRatio * 0.6 + precisionAvg * 0.4, 0, 1);
+        }
+        socket.send(JSON.stringify({ type: 'fishingResult', score, perfects: fishing.perfects, castPower: fishing.castPower }));
+        fishing.active = false; fishing.state = 'idle';
+      }
+
+      // ====== Scoreboard ======
+      const scoreboardEl = document.getElementById('scoreboard');
+      const scoreboardList = document.getElementById('scoreboardList');
+
+      function updateScoreboardUI() {
+        if (!scoreboard || scoreboard.length === 0) {
+          scoreboardEl.classList.add('hidden');
+          return;
+        }
+        scoreboardEl.classList.remove('hidden');
+        scoreboardList.innerHTML = '';
+
+        const rows = Math.min(5, scoreboard.length);
+        for (let i = 0; i < rows; i++) {
+          const s = scoreboard[i];
+          const isMe = s.id === myId;
+
+          const item = document.createElement('div');
+          item.className = `scoreboard-item ${isMe ? 'me' : ''}`;
+
+          const rankClass = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : '';
+
+          item.innerHTML = `
+            <div class="scoreboard-rank ${rankClass}">${i + 1}</div>
+            <div class="scoreboard-name">${s.name} <span style="font-weight:400; opacity:0.7; font-size:10px;">(Lv${s.level || 1})</span></div>
+            <div class="scoreboard-stats">
+              <div class="scoreboard-stat-row">
+                <span class="stat-icon">🐟</span> ${s.fishCount}
+              </div>
+              <div class="scoreboard-stat-row">
+                <span class="stat-icon">⚖️</span> ${s.bestWeight ? s.bestWeight.toFixed(2) + 'kg' : '-'}
+              </div>
+            </div>
+          `;
+          scoreboardList.appendChild(item);
+        }
+      }
+
+      // ====== Przyciski (łowienie i interakcja) ======
+      function drawFishButton() {
+        if (!canFish || fishing.active) return;
+        const r = 36; const x = W - 86, y = H - 90;
+
+        ctx.save();
+
+        // Pulsowanie
+        const pulse = 1 + Math.sin(performance.now() * 0.008) * 0.05;
+
+        // Cień
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath(); ctx.arc(x, y + 5, r, 0, Math.PI * 2); ctx.fill();
+
+        // Gradient przycisku
+        const grad = ctx.createRadialGradient(x - 10, y - 10, 5, x, y, r);
+        grad.addColorStop(0, '#4facfe');
+        grad.addColorStop(1, '#00f2fe');
+
+        ctx.fillStyle = grad;
+        ctx.shadowColor = '#00f2fe';
+        ctx.shadowBlur = 15;
+        ctx.beginPath(); ctx.arc(x, y, r * pulse, 0, Math.PI * 2); ctx.fill();
+
+        // Obramowanie
+        ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        // Ikona
+        ctx.font = '32px Segoe UI Emoji';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowBlur = 0;
+        ctx.fillText('🎣', x, y - 2);
+
+        // Tekst
+        ctx.font = 'bold 11px Poppins';
+        ctx.fillStyle = '#fff';
+        ctx.fillText('ŁÓW', x, y + 22);
+
+        ctx.restore();
+      }
+
+      function drawInteractButton() {
+        if (!nearestShop || fishing.active) return;
+        const x = 86, y = H - 180, r = 32; // Większy przycisk
+
+        ctx.save();
+
+        // Pulsowanie
+        const pulse = 1 + Math.sin(performance.now() * 0.005) * 0.05;
+
+        // Cień pod przyciskiem
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath();
+        ctx.arc(x, y + 4, r, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Tło przycisku - Gradient
+        const btnGradient = ctx.createRadialGradient(x - 10, y - 10, 5, x, y, r);
+        if (nearestShop === 'sell') {
+          btnGradient.addColorStop(0, '#ffd700');
+          btnGradient.addColorStop(1, '#ffa500');
+          ctx.shadowColor = '#ffd700';
+        } else {
+          btnGradient.addColorStop(0, '#4ecdc4');
+          btnGradient.addColorStop(1, '#2980b9');
+          ctx.shadowColor = '#4ecdc4';
+        }
+
+        ctx.fillStyle = btnGradient;
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.arc(x, y, r * pulse, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Obramowanie
+        ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Ikona / Tekst
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.shadowBlur = 0;
+
+        if (nearestShop === 'sell') {
+          ctx.font = '24px Segoe UI Emoji';
+          ctx.fillText('💰', x, y);
+          ctx.font = 'bold 10px Poppins';
+          ctx.fillStyle = '#fff';
+          ctx.fillText('SPRZEDAJ', x, y + 20);
+        } else {
+          ctx.font = '32px Segoe UI Emoji';
+          ctx.fillText('🛒', x, y + 2);
+        }
+
+        ctx.restore();
+      }
+
+      function drawDialogue() {
+        if (!npcDialogue) return;
+
+        const w = Math.min(600, W - 40);
+        const h = 100;
+        const x = (W - w) / 2;
+        const y = H - 120; // Nad joystickiem
+
+        ctx.save();
+
+        // Tło dialogu
+        ctx.fillStyle = 'rgba(10, 15, 25, 0.95)';
+        ctx.shadowColor = 'rgba(0,0,0,0.5)';
+        ctx.shadowBlur = 20;
+        ctx.beginPath();
+        ctx.roundRect(x, y, w, h, 10);
+        ctx.fill();
+
+        // Obramowanie
+        ctx.strokeStyle = '#d4af37';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Avatar
+        ctx.font = '48px Segoe UI Emoji';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(npcDialogue.avatar, x + 50, y + h / 2);
+
+        // Separator
+        ctx.beginPath();
+        ctx.moveTo(x + 100, y + 15);
+        ctx.lineTo(x + 100, y + h - 15);
+        ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        ctx.stroke();
+
+        // Nazwa
+        ctx.font = 'bold 16px Poppins';
+        ctx.fillStyle = '#d4af37';
+        ctx.textAlign = 'left';
+        ctx.fillText(npcDialogue.name, x + 120, y + 30);
+
+        // Tekst (z zawijaniem)
+        ctx.font = '14px Poppins';
+        ctx.fillStyle = '#fff';
+        wrapText(ctx, npcDialogue.text, x + 120, y + 55, w - 140, 20);
+
+        ctx.restore();
+      }
+
+      function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+        const words = text.split(' ');
+        let line = '';
+        for (let i = 0; i < words.length; i++) {
+          const testLine = line + words[i] + ' ';
+          const metrics = ctx.measureText(testLine);
+          const testWidth = metrics.width;
+          if (testWidth > maxWidth && i > 0) {
+            ctx.fillText(line, x, y);
+            line = words[i] + ' ';
+            y += lineHeight;
+          } else {
+            line = testLine;
+          }
+        }
+        ctx.fillText(line, x, y);
+      }
+
+      // ====== Kompas/strzałki (tylko realni gracze, last<5s) ======
+      function drawCompass(cam) {
+        const now = performance.now();
+        for (const p of others.values()) {
+          if (p.id === myId) continue;
+          if (!p.last || now - p.last > 5000) continue;
+          const x = p.x - cam.x, y = p.y - cam.y;
+          if (x < 0 || y < 0 || x > W || y > H) {
+            const ang2 = Math.atan2(y - H / 2, x - W / 2);
+            drawArrowAtEdge(ang2, p.color || '#ffd26a', 12);
+          }
+        }
+      }
+      function drawArrowAtEdge(angle, color = '#6ad2ff', size = 18) {
+        const cx = W / 2, cy = H / 2;
+        const sx = Math.cos(angle), sy = Math.sin(angle);
+        const margin = 24;
+        const candidates = [];
+        if (sx !== 0) candidates.push(sx > 0 ? (W - margin - cx) / sx : (margin - cx) / sx);
+        if (sy !== 0) candidates.push(sy > 0 ? (H - margin - cy) / sy : (margin - cy) / sy);
+        const t = Math.min(...candidates);
+        const ex = cx + sx * t, ey = cy + sy * t;
+
+        ctx.save(); ctx.translate(ex, ey); ctx.rotate(angle);
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.beginPath(); ctx.moveTo(-size, -size); ctx.lineTo(0, -size * 1.4); ctx.lineTo(size, -size); ctx.lineTo(0, size * 1.2); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.moveTo(-size * 0.7, -size * 0.7); ctx.lineTo(0, -size * 1.1); ctx.lineTo(size * 0.7, -size * 0.7); ctx.lineTo(0, size * 0.9); ctx.closePath(); ctx.fill();
+        ctx.restore();
+      }
+
+      // ====== HUD ======
+      function toast(msg) {
+        toastEl.textContent = msg; toastEl.classList.add('show');
+        clearTimeout(toastEl._t); toastEl._t = setTimeout(() => toastEl.classList.remove('show'), 2200);
+      }
+      function showOverlay(html) { const o = document.getElementById('overlay'); o.innerHTML = `<div class="panel">${html}</div>`; o.classList.remove('hidden'); }
+      function hideOverlay() { document.getElementById('overlay').classList.add('hidden'); }
+      function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+      // ====== Nick ======
+      const nickOverlay = document.getElementById('nickOverlay');
+      const nickInput = document.getElementById('nickInput');
+      const nickSave = document.getElementById('nickSave');
+
+      function askNick(force) {
+        // Auto-login jeśli mamy zapisany nick i to jest start (force=true)
+        if (force) {
+          const saved = localStorage.getItem('rpo_nick');
+          if (saved) {
+            socket.send(JSON.stringify({ type: 'rename', name: saved }));
+            nickOverlay.classList.add('hidden'); // Wymuś ukrycie
+            return;
+          }
+        }
+
+        // Jeśli nie ma zapisanego nicku lub wywołano ręcznie (force=false)
+        if (!me.name || me.name.startsWith('Gracz') || !force) {
+          nickOverlay.classList.remove('hidden');
+          nickInput.value = localStorage.getItem('rpo_nick') || '';
+          nickInput.focus();
+        }
+      }
+
+      nickSave.addEventListener('click', () => {
+        const val = nickInput.value.trim().slice(0, 16);
+        if (val) {
+          socket.send(JSON.stringify({ type: 'rename', name: val }));
+          localStorage.setItem('rpo_nick', val);
+          nickOverlay.style.opacity = '0';
+          setTimeout(() => {
+            nickOverlay.classList.add('hidden');
+            nickOverlay.style.opacity = '1';
+          }, 500);
+        } else {
+          toast('Wpisz jakieś imię!');
+        }
+      });
+
+      nickInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') nickSave.click();
+      });
+
+      // ====== Ekwipunek/Sklep ======
+      let shopMode = 'sell'; // 'sell'|'rods'|'baits'|'hooks'|'eq'
+      shopClose.addEventListener('click', () => shopOverlay.classList.add('hidden'));
+      shopAction.addEventListener('click', () => {
+        if (shopMode === 'sell') socket.send(JSON.stringify({ type: 'sellAll' }));
+        else if (shopMode === 'eq') shopOverlay.classList.add('hidden');
+      });
+      eqBtn.addEventListener('click', () => openShop('eq'));
+
+      function openShop(mode) {
+        shopMode = mode;
+        if (mode === 'sell') {
+          shopTitle.textContent = '💰 SKUP RYB';
+          let total = bag.reduce((a, b) => a + (b.value || 0), 0);
+          shopSummary.textContent = `W torbie: ${bag.length} szt. | Wartość: ${total} zł`;
+          shopList.innerHTML = '';
+
+          if (bag.length === 0) {
+            shopList.innerHTML = '<div style="opacity:.6; padding:40px; text-align:center; font-style:italic;">Twoja torba jest pusta.<br>Idź złowić jakieś ryby! 🎣</div>';
+          } else {
+            const itemsContainer = document.createElement('div');
+            itemsContainer.className = 'shop-items-list';
+            itemsContainer.style.maxHeight = '400px';
+
+            // Grupuj ryby? Nie, pokaż wszystkie jako grid
+            for (const f of bag) {
+              const rarity = f.rarity || 'common';
+              const shopItem = document.createElement('div');
+              shopItem.className = `shop-item ${rarity}`;
+
+              // Emoji ryby (można dodać mapowanie gatunków na emoji)
+              const fishEmoji = '🐟';
+
+              shopItem.innerHTML = `
+                \u003cdiv class="shop-item-icon"\u003e${fishEmoji}\u003c/div\u003e
+                \u003cdiv class="shop-item-info"\u003e
+                  \u003cdiv class="shop-item-name ${rarity === 'legendary' ? 'legendary' : ''}"\u003e
+                    ${f.species}
+                  \u003c/div\u003e
+                  \u003cdiv class="shop-item-stats"\u003e
+                    \u003cdiv class="shop-item-stat"\u003e⚖️ ${f.weight ? f.weight + 'kg' : '?'}\u003c/div\u003e
+                    \u003cdiv class="shop-item-stat"\u003e✨ ${f.rarity}\u003c/div\u003e
+                  \u003c/div\u003e
+                \u003c/div\u003e
+                \u003cdiv class="shop-item-price"\u003e
+                  ${f.value} 💰
+                \u003c/div\u003e
+              `;
+              itemsContainer.appendChild(shopItem);
+            }
+            shopList.appendChild(itemsContainer);
+          }
+
+          shopAction.textContent = 'Sprzedaj wszystko';
+          shopAction.className = 'btn btn-success';
+          shopAction.style.width = '100%';
+          shopAction.style.padding = '12px';
+          shopAction.style.fontSize = '16px';
+          shopAction.style.display = 'block'; // Pokaż przycisk
+        } else if (mode === 'rods' || mode === 'hooks' || mode === 'baits') {
+          const label = mode === 'rods' ? '🎣 Sklep wędek' : mode === 'hooks' ? '🪝 Sklep haczyków' : '🍞 Sklep zanęt';
+          shopTitle.textContent = label;
+          shopSummary.textContent = `Złoto: ${me.gold} zł`;
+          shopList.innerHTML = '';
+
+          const items = mode === 'rods' ? RODS : mode === 'hooks' ? HOOKS : mode === 'baits' ? BAITS : [];
+          const ownedArr = mode === 'rods' ? inventory.rods : mode === 'hooks' ? inventory.hooks : mode === 'baits' ? inventory.baits : [];
+
+          // Nowa funkcja renderująca sklep w stylu Diablo
+          addShopSectionDiablo(items, ownedArr, mode);
+
+          shopAction.style.display = 'none'; // Ukryj przycisk (jest X u góry)
+        } else if (mode === 'eq') {
+          shopTitle.textContent = '⚔️ EKWIPUNEK';
+          shopSummary.textContent = `Złoto: ${me.gold} zł`;
+
+          // Nowy Diablo-style UI
+          shopList.innerHTML = `
+            \u003cdiv class="equipment-panel"\u003e
+              \u003ch3\u003e🎣 Wyposażenie\u003c/h3\u003e
+              \u003cdiv class="equipment-slots"\u003e
+                \u003cdiv class="equipment-slot filled" id="slot-rod"\u003e
+                  \u003cdiv class="equipment-slot-label"\u003eWĘDKA\u003c/div\u003e
+                  \u003cdiv class="equipment-slot-icon"\u003e🎣\u003c/div\u003e
+                  \u003cdi class="equipment-slot-name"\u003e${nameOf(equipment.rod)}\u003c/div\u003e
+                \u003c/div\u003e
+                \u003cdiv class="equipment-slot filled" id="slot-hook"\u003e
+                  \u003cdiv class="equipment-slot-label"\u003eHACZYK\u003c/div\u003e
+                  \u003cdiv class="equipment-slot-icon"\u003e🪝\u003c/div\u003e
+                  \u003cdiv class="equipment-slot-name"\u003e${nameOf(equipment.hook)}\u003c/div\u003e
+                \u003c/div\u003e
+                \u003cdiv class="equipment-slot filled" id="slot-bait"\u003e
+                  \u003cdiv class="equipment-slot-label"\u003ePRZYNĘTA\u003c/div\u003e
+                  \u003cdiv class="equipment-slot-icon"\u003e🍞\u003c/div\u003e
+                  \u003cdiv class="equipment-slot-name"\u003e${nameOf(equipment.bait)}\u003c/div\u003e
+                \u003c/div\u003e
+              \u003c/div\u003e
+            \u003c/div\u003e
+          `;
+
+          // Dodaj sekcje z przedmiotami
+          addEquipSectionDiablo('🎣 Wędki', RODS, inventory.rods, 'rod');
+          addEquipSectionDiablo('🪝 Haczyki', HOOKS, inventory.hooks, 'hook');
+          addEquipSectionDiablo('🍞 Przynęty', BAITS, inventory.baits, 'bait');
+
+          // Wypełnij sloty
+          // ... (logika slotów)
+
+          shopAction.style.display = 'none'; // Ukryj przycisk (jest X u góry)
+        }
+        shopOverlay.classList.remove('hidden');
+      }
+
+      // Nowa funkcja dla Diablo-style equipment section
+      function addEquipSectionDiablo(title, items, ownedArr, key) {
+        const section = document.createElement('div');
+        section.style.marginTop = '24px';
+
+        const sectionTitle = document.createElement('h3');
+        sectionTitle.style.cssText = 'font-size: 16px; font-weight: 700; color: #d4af37; margin-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;';
+        sectionTitle.textContent = title;
+        section.appendChild(sectionTitle);
+
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'shop-items-list';
+        itemsContainer.style.maxHeight = '300px';
+
+        for (const it of items) {
+          if (!ownedArr.includes(it.id)) continue;
+
+          const isEquipped = (equipment[key] === it.id);
+
+          // Określ tier na podstawie power/modWeight/rarityBias
+          let tier = 'common';
+          const stat = it.power != null ? it.power : it.modWeight != null ? it.modWeight * 10 : it.rarityBias != null ? it.rarityBias : 0;
+          if (stat > 15) tier = 'legendary';
+          else if (stat > 10) tier = 'epic';
+          else if (stat > 5) tier = 'rare';
+          else if (stat > 2) tier = 'uncommon';
+
+          const shopItem = document.createElement('div');
+          shopItem.className = `shop-item ${tier}`;
+
+          // Wyciągnij emoji z nazwy (pierwsze znaki)
+          const emoji = it.name.match(/[\p{Emoji}]/u)?.[0] || '🎣';
+          const cleanName = it.name.replace(/[\p{Emoji}]/gu, '').trim();
+
+          shopItem.innerHTML = `
+            \u003cdiv class="shop-item-icon"\u003e${emoji}\u003c/div\u003e
+            \u003cdiv class="shop-item-info"\u003e
+              \u003cdiv class="shop-item-name ${tier === 'legendary' ? 'legendary' : ''}"\u003e
+                ${cleanName} ${isEquipped ? '✓' : ''}
+              \u003c/div\u003e
+              \u003cdiv class="shop-item-stats"\u003e
+                \u003cdiv class="shop-item-stat"\u003e\u003cspan class="icon"\u003e⚡\u003c/span\u003e ${statOf(it)}\u003c/div\u003e
+                ${isEquipped ? '\u003cdiv style="color: #4ecdc4; font-weight: 600;"\u003eWYPOSAŻONE\u003c/div\u003e' : ''}
+              \u003c/div\u003e
+            \u003c/div\u003e
+          `;
+
+          if (!isEquipped) {
+            const btn = document.createElement('button');
+            btn.className = 'shop-item-buy-btn';
+            btn.textContent = 'Wyposaż';
+            btn.onclick = () => {
+              socket.send(JSON.stringify({ type: 'equip', [key]: it.id }));
+            };
+            shopItem.appendChild(btn);
+          }
+
+          itemsContainer.appendChild(shopItem);
+        }
+
+        section.appendChild(itemsContainer);
+        shopList.appendChild(section);
+      }
+
+      // Nowa funkcja dla Diablo-style shop section
+      function addShopSectionDiablo(items, ownedArr, mode) {
+        const itemsContainer = document.createElement('div');
+        itemsContainer.className = 'shop-items-list';
+        itemsContainer.style.maxHeight = '400px';
+
+        for (const it of items) {
+          const have = ownedArr.includes(it.id);
+
+          // Określ tier
+          let tier = 'common';
+          const stat = it.power != null ? it.power : it.modWeight != null ? it.modWeight * 10 : it.rarityBias != null ? it.rarityBias : 0;
+          if (stat > 15) tier = 'legendary';
+          else if (stat > 10) tier = 'epic';
+          else if (stat > 5) tier = 'rare';
+          else if (stat > 2) tier = 'uncommon';
+
+          const shopItem = document.createElement('div');
+          shopItem.className = `shop-item ${tier}`;
+
+          // Wyciągnij emoji
+          const emoji = it.name.match(/[\p{Emoji}]/u)?.[0] || '🎁';
+          const cleanName = it.name.replace(/[\p{Emoji}]/gu, '').trim();
+
+          shopItem.innerHTML = `
+            \u003cdiv class="shop-item-icon"\u003e${emoji}\u003c/div\u003e
+            \u003cdiv class="shop-item-info"\u003e
+              \u003cdiv class="shop-item-name ${tier === 'legendary' ? 'legendary' : ''}"\u003e
+                ${cleanName} ${have ? '✓' : ''}
+              \u003c/div\u003e
+              \u003cdiv class="shop-item-stats"\u003e
+                \u003cdiv class="shop-item-stat"\u003e\u003cspan class="icon"\u003e⚡\u003c/span\u003e ${statOf(it)}\u003c/div\u003e
+              \u003c/div\u003e
+            \u003c/div\u003e
+            \u003cdiv class="shop-item-price"\u003e
+              ${have ? '\u003cspan style="color:#4ecdc4; font-size:12px"\u003ePOSIADASZ\u003c/span\u003e' : it.price + ' 💰'}
+            \u003c/div\u003e
+          `;
+
+          if (!have && it.price > 0) {
+            const btn = document.createElement('button');
+            btn.className = 'shop-item-buy-btn';
+            btn.textContent = 'Kup';
+            if (me.gold < it.price) {
+              btn.style.opacity = '0.5';
+              btn.style.cursor = 'not-allowed';
+            }
+            btn.onclick = (e) => {
+              e.stopPropagation();
+              if (me.gold >= it.price) {
+                socket.send(JSON.stringify({ type: 'buyItem', category: mode === 'rods' ? 'rod' : mode === 'hooks' ? 'hook' : 'bait', itemId: it.id }));
+              } else {
+                toast('Za mało złota! 💰');
+              }
+            };
+            shopItem.appendChild(btn);
+          }
+
+          itemsContainer.appendChild(shopItem);
+        }
+
+        shopList.appendChild(itemsContainer);
+      }
+
+      // Stara funkcja (fallback)
+      function addEquipSection(title, items, ownedArr, key) {
+        const head = document.createElement('div'); head.className = 'row row-header'; head.innerHTML = `<div><strong>${title}</strong></div><div></div><div></div>`;
+        shopList.appendChild(head);
+        for (const it of items) {
+          if (!ownedArr.includes(it.id)) continue;
+          const row = document.createElement('div'); row.className = 'row';
+          const selected = (equipment[key] === it.id) ? ' (wybrane)' : '';
+          row.innerHTML = `<div>${it.name} ${statOf(it)} ${selected}</div><div></div><div></div>`;
+          const btn = document.createElement('button'); btn.className = 'btn'; btn.textContent = 'Wyposaż';
+          btn.onclick = () => socket.send(JSON.stringify({ type: 'equip', [key]: it.id }));
+          row.appendChild(btn);
+          shopList.appendChild(row);
+        }
+      }
+      function statOf(it) {
+        if (it.power != null) return `<span style="opacity:.8">[moc: ${it.power}]</span>`;
+        if (it.modWeight != null) return `<span style="opacity:.8">[waga+ ${Math.round(it.modWeight * 100)}%]</span>`;
+        if (it.rarityBias != null) return `<span style="opacity:.8">[rzadsze: +${Math.round(it.rarityBias * 100)}%]</span>`;
+        return '';
+      }
+      function nameOf(id) {
+        const all = [...RODS, ...HOOKS, ...BAITS]; const it = all.find(x => x.id === id); return it ? it.name : id;
+      }
+
+      // ====== Statystyki ======
+      statsClose.addEventListener('click', () => statsOverlay.classList.add('hidden'));
+      statsBtn.addEventListener('click', () => openStats());
+
+      function openStats() {
+        statsContent.innerHTML = `
+          <h3 style="color: #4ecdc4; margin-bottom: 15px;">Statystyki Gracza</h3>
+          <div class="row">
+            <div><strong>Poziom:</strong></div>
+            <div>${me.level}</div>
+          </div>
+          <div class="row">
+            <div><strong>Doświadczenie:</strong></div>
+            <div>${me.xp}/${xpNextFor(me.level)}</div>
+          </div>
+          <div class="row">
+            <div><strong>Złoto:</strong></div>
+            <div>${me.gold} zł</div>
+          </div>
+          <div class="row">
+            <div><strong>Złowione ryby:</strong></div>
+            <div>${stats.fishCaught}</div>
+          </div>
+          <div class="row">
+            <div><strong>Łączna waga ryb:</strong></div>
+            <div>${stats.totalWeight.toFixed(2)} kg</div>
+          </div>
+          <div class="row">
+            <div><strong>Czas w grze:</strong></div>
+            <div>${Math.floor(stats.totalTime / 3600)}h ${Math.floor((stats.totalTime % 3600) / 60)}m</div>
+          </div>
+          <div class="row">
+            <div><strong>Najrzadsza złowiona ryba:</strong></div>
+            <div>${stats.rarestFish || 'Brak'}</div>
+          </div>
+        `;
+        statsOverlay.classList.remove('hidden');
+      }
+
+      // ====== Budowanie ======
+      buildClose.addEventListener('click', () => buildOverlay.classList.add('hidden'));
+      buildBtn.addEventListener('click', () => openBuildMenu());
+      cancelHouseBuild.addEventListener('click', () => {
+        buildingHouse = false;
+        housePreview = null;
+        houseBuildOverlay.classList.add('hidden');
+      });
+
+      function openBuildMenu() {
+        const elements = [
+          { id: 'house', name: 'Domek', icon: '🏠', cost: 5000, description: 'Własny domek na mapie' },
+          { id: 'path', name: 'Chodnik', icon: '🧱', cost: 50, description: 'Chodnik do Twojego domku' },
+          { id: 'fence', name: 'Płot', icon: '建篗', cost: 100, description: 'Ogrodzenie terenu' },
+          { id: 'tree', name: 'Drzewo', icon: '🌳', cost: 30, description: 'Ozdoba ogrodu' }
+        ];
+
+        buildElements.innerHTML = '';
+
+        elements.forEach(el => {
+          const div = document.createElement('div');
+          div.className = 'build-element';
+          div.innerHTML = `
+            <div class="build-icon">${el.icon}</div>
+            <div class="build-info">
+              <div class="build-name">${el.name}</div>
+              <div class="build-cost">Koszt: ${el.cost} zł</div>
+              <div style="font-size:11px;opacity:0.7;">${el.description}</div>
+            </div>
+            <button class="btn build-btn" onclick="buildElement('${el.id}', ${el.cost})">Buduj</button>
+          `;
+          buildElements.appendChild(div);
+        });
+
+        buildOverlay.classList.remove('hidden');
+      }
+
+      function buildElement(elementId, cost) {
+        buildOverlay.classList.add('hidden');
+
+        if (elementId === 'house') {
+          if (me.gold < cost) {
+            toast('Za mało złota!');
+            return;
+          }
+
+          buildingHouse = true;
+          housePreview = null;
+          houseBuildOverlay.classList.remove('hidden');
+          toast('Kliknij w miejscu gdzie chcesz zbudować domek');
+        } else {
+          // Inne elementy budowane natychmiast
+          if (me.gold < cost) {
+            toast('Za mało złota!');
+            return;
+          }
+
+          // Współrzędne w centrum ekranu
+          const cam = camera();
+          const x = cam.x + W / 2;
+          const y = cam.y + H / 2;
+
+          socket.send(JSON.stringify({
+            type: 'buildElement',
+            elementId: elementId,
+            x: x,
+            y: y
+          }));
+
+          toast(`Zbudowano: ${elementId}`);
+        }
+      }
+
+      // ====== Mapa ======
+      mapBtn.addEventListener('click', () => {
+        miniMap.style.display = miniMap.style.display === 'none' ? 'block' : 'none';
+      });
+
+      // ====== Kamera ======
+      function camera() {
+        const camX = Math.round(me.x - W / 2);
+        const camY = Math.round(me.y - H / 2);
+        return { x: Math.max(0, Math.min(camX, MAP_W * TILE - W)), y: Math.max(0, Math.min(camY, MAP_H * TILE - H)) };
+      }
+
+      // zmiana nicku: usunięto (powodowało błędy)
+      // let holdStart = 0;
+      // canvas.addEventListener('pointerdown', (e) => { ... });
+      // canvas.addEventListener('pointerup', () => { ... });
+
+      // ====== Pętla ======
+      let last = performance.now();
+      let sessionStartTime = performance.now();
+      function frame() {
+        const now = performance.now();
+        const dt = Math.min(0.033, (now - last) / 1000);
+        last = now;
+
+        if (myId) {
+          stepMovement(dt);
+          updateFishing(dt);
+          const cam = camera();
+
+          ctx.fillStyle = '#0a0f1a'; ctx.fillRect(0, 0, W, H);
+          drawMap(cam.x, cam.y);
+          drawCasting(cam);
+
+          for (const p of others.values()) if (p.id !== myId) drawPlayer(p, cam.x, cam.y);
+          drawPlayer(me, cam.x, cam.y);
+
+          // drawScoreboard(); // Usunięte na rzecz HTML
+          drawCompass(cam);
+          drawFishButton();
+          drawInteractButton();
+          drawDialogue();
+          drawQTECenter();
+          drawJoystick();
+          drawMiniMap(cam.x, cam.y);
+
+          // Aktualizacja statystyk
+          stats.totalTime = (now - sessionStartTime) / 1000;
+        }
+
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+
+      // ====== Chat (Usunięty) ======
+      // const chatBar = document.getElementById('chatBar');
+      // const chatInput = document.getElementById('chatInput');
+      // const sendChat = document.getElementById('sendChat');
+      // function toggleChat(open) { if (open === undefined) open = chatBar.classList.contains('hidden'); chatBar.classList.toggle('hidden', !open); if (open) setTimeout(() => chatInput.focus(), 50); }
+      // function sendChatMsg() { const text = chatInput.value.trim(); if (!text) return; chatInput.value = ''; socket.send(JSON.stringify({ type: 'chat', text })); toggleChat(false); }
+      // chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMsg(); });
+
+      // ====== WS ======
+      // ====== WS ======
+      socket.addEventListener('open', () => {
+        console.log('Connected to server');
+        let token = localStorage.getItem('rpo_token');
+        if (!token) {
+          token = Math.random().toString(36).slice(2) + Date.now().toString(36);
+          localStorage.setItem('rpo_token', token);
+        }
+        socket.send(JSON.stringify({ type: 'resume', token }));
+      });
+
+      socket.addEventListener('message', (ev) => {
+        let msg; try { msg = JSON.parse(ev.data); } catch { return; }
+
+        if (msg.type === 'full') showOverlay('Serwer pełny (max 4 graczy). Spróbuj później.');
+
+        if (msg.type === 'init') {
+          hideOverlay();
+          myId = msg.you.id; me = { ...me, id: msg.you.id, name: msg.you.name, color: msg.you.color, level: msg.you.level || 1, xp: msg.you.xp || 0, gold: msg.you.gold || 0 };
+          moneyHud.textContent = `Kasa: ${me.gold} zł`;
+
+          MAP_W = msg.map.w; MAP_H = msg.map.h; LAKES = msg.map.lakes || []; DECOR = msg.map.decor || []; CITY = msg.map.city || null; SHOPS = msg.map.shops || null;
+          buildTilesFromLakes();
+
+          others.clear();
+          for (const p of msg.players) {
+            const rp = { ...p, tx: p.x, ty: p.y, tdir: p.dir, last: performance.now() };
+            others.set(p.id, rp);
+            if (p.id === myId) { me.x = p.x; me.y = p.y; me.dir = p.dir; }
+          }
+          scoreboard = msg.scoreboard || [];
+          updateScoreboardUI();
+
+          askNick(true);
+        }
+
+        if (msg.type === 'profile') {
+          me.gold = msg.gold || me.gold; moneyHud.textContent = `Kasa: ${me.gold} zł`;
+          bag = Array.isArray(msg.bag) ? msg.bag : [];
+          inventory = msg.inventory || inventory; equipment = msg.equipment || equipment;
+          stats = msg.stats || stats;
+        }
+
+        if (msg.type === 'join') {
+          const rp = { ...msg.player, tx: msg.player.x, ty: msg.player.y, tdir: msg.player.dir, last: performance.now() };
+          others.set(msg.player.id, rp);
+          toast(`${msg.player.name} dołączył`);
+        }
+
+        if (msg.type === 'state') {
+          if (msg.id !== myId) {
+            const p = others.get(msg.id);
+            if (p) { p.tx = msg.x; p.ty = msg.y; p.tdir = msg.dir; p.last = performance.now(); }
+            else others.set(msg.id, { id: msg.id, name: 'Gracz', color: '#fff', x: msg.x, y: msg.y, dir: msg.dir, tx: msg.x, ty: msg.y, tdir: msg.dir, level: 1, last: performance.now() });
+          }
+        }
+
+        if (msg.type === 'corr' && msg.id === myId) { me.x = msg.x; me.y = msg.y; me.dir = msg.dir; }
+
+        if (msg.type === 'leave') { const p = others.get(msg.id); if (p) toast(`${p.name} wyszedł`); others.delete(msg.id); }
+
+        if (msg.type === 'fishingDenied') toast('Stań na brzegu (trawa obok wody), żeby łowić.');
+
+        if (msg.type === 'fishingStart') { startPower({ timeLimitMs: msg.timeLimitMs, castTimeMs: msg.castTimeMs, minigame: msg.minigame }); }
+
+        if (msg.type === 'fishingResult' && !msg.ok) toast('Ryba uciekła...');
+
+        if (msg.type === 'fishEvent') {
+          scoreboard = msg.scoreboard || scoreboard;
+          updateScoreboardUI();
+          if (msg.id === myId) {
+            // Reset łowienia
+            fishing.active = false;
+            fishing.state = 'idle';
+
+            me.level = msg.catch.level || me.level;
+            bag.push({ species: msg.catch.species, weight: msg.catch.weight, rarity: msg.catch.rarity, quality: msg.catch.quality, value: msg.catch.value });
+            moneyHud.textContent = `Kasa: ${me.gold} zł`;
+
+            // Aktualizacja statystyk
+            stats.fishCaught++;
+            stats.totalWeight += msg.catch.weight;
+            if (!stats.rarestFish || rarOrder.indexOf(msg.catch.rarity) > rarOrder.indexOf(stats.rarestFish)) {
+              stats.rarestFish = msg.catch.rarity;
+            }
+
+            toast(`Złowiłeś: ${msg.catch.species} ${msg.catch.weight ? msg.catch.weight + 'kg' : ''} [${msg.catch.rarity}] +${msg.catch.xpGain} XP`);
+            if (!shopOverlay.classList.contains('hidden') && shopMode === 'sell') renderSellSummary();
+          } else {
+            const p = others.get(msg.id); if (p) p.level = msg.catch.level || p.level;
+            toast(`${msg.name} złowił: ${msg.catch.species} ${msg.catch.weight ? msg.catch.weight + 'kg' : ''}`);
+          }
+        }
+
+        if (msg.type === 'sellResult') {
+          if (msg.ok) {
+            me.gold = msg.gold || me.gold; bag = []; moneyHud.textContent = `Kasa: ${me.gold} zł`;
+            toast(`Sprzedano ${msg.sold} ryb za ${msg.earned} zł`);
+            if (shopMode === 'sell') openShop('sell');
+          }
+        }
+
+        if (msg.type === 'buyResult') {
+          if (!msg.ok) { toast(msg.reason === 'no-gold' ? 'Za mało złota!' : 'Nie udało się kupić.'); }
+          else {
+            me.gold = msg.gold || me.gold; inventory = msg.inventory || inventory; moneyHud.textContent = `Kasa: ${me.gold} zł`;
+            toast('Kupiono!'); openShop(shopMode);
+          }
+        }
+
+        if (msg.type === 'equipAck') { equipment = msg.equipment || equipment; toast('Wyposażono.'); openShop('eq'); }
+
+        if (msg.type === 'levelUp') {
+          const mine = msg.id === myId;
+          if (mine) me.level = msg.level; else { const p = others.get(msg.id); if (p) p.level = msg.level; }
+          toast(`${mine ? 'Awansowałeś' : 'Gracz'} na poziom ${msg.level}!`);
+        }
+
+        if (msg.type === 'nameAck' && msg.id === myId) { me.name = msg.name; toast(`Ustawiono nick: ${msg.name}`); }
+        if (msg.type === 'rename') { const p = others.get(msg.id); if (p) p.name = msg.name; }
+        if (msg.type === 'scoreboard') { scoreboard = msg.scoreboard || scoreboard; updateScoreboardUI(); }
+        if (msg.type === 'chat') {
+          const until = performance.now() + 5000; bubbles.set(msg.id, { text: msg.text, until });
+          if (msg.id !== myId) { const p = others.get(msg.id); if (p) toast(`${msg.name}: ${msg.text}`); }
+        }
+
+        if (msg.type === 'buildResult') {
+          if (msg.success) {
+            me.gold = msg.gold || me.gold;
+            moneyHud.textContent = `Kasa: ${me.gold} zł`;
+            toast('Element zbudowany!');
+            // Dodaj element do dekoracji
+            if (msg.element) {
+              DECOR.push(msg.element);
+            }
+          } else {
+            toast('Nie udało się zbudować: ' + (msg.error || 'nieznany błąd'));
+          }
+        }
+
+        if (msg.type === 'resetResult') {
+          if (msg.success) {
+            me.gold = msg.profile.gold || me.gold;
+            bag = Array.isArray(msg.profile.bag) ? msg.profile.bag : [];
+            inventory = msg.profile.inventory || { rods: ['rod_basic'], hooks: ['hook_small'], baits: ['bait_bread'], materials: [] };
+            equipment = msg.profile.equipment || { rod: 'rod_basic', hook: 'hook_small', bait: 'bait_bread' };
+            stats = msg.profile.stats || { fishCaught: 0, totalWeight: 0, totalTime: 0, rarestFish: null };
+            moneyHud.textContent = `Kasa: ${me.gold} zł`;
+            toast('Postać zresetowana!');
+          }
+        }
+      });
+
+      socket.addEventListener('close', () => { showOverlay('Rozłączono z serwerem.'); });
+
+      function renderSellSummary() { openShop('sell'); }
+
+      // ====== Dane katalogów na kliencie (do UI) ======
+      const rarOrder = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
+
+      const RODS = [
+        { id: 'rod_basic', name: 'Patyk', power: 0, price: 0 },
+        { id: 'rod_feeder', name: 'Feeder Pro', power: 1, price: 150 },
+        { id: 'rod_spin', name: 'Spin 3000', power: 2, price: 400 },
+        { id: 'rod_legend', name: 'Legendarny Kij', power: 3, price: 1200 },
+        { id: 'rod_carbon', name: 'Wędkarstwo Węglowe', power: 4, price: 2500 },
+        { id: 'rod_trolling', name: 'Trolling Master', power: 5, price: 5000 },
+        { id: 'rod_sea', name: 'Morska Potęga', power: 6, price: 10000 },
+        { id: 'rod_composite', name: 'Kompozytowy', power: 7, price: 18000 },
+        { id: 'rod_telescopic', name: 'Teleskopowy', power: 8, price: 30000 },
+        { id: 'rod_fiberglass', name: 'Szklano-Włóknisty', power: 9, price: 50000 },
+        { id: 'rod_graphite', name: 'Grafitowy', power: 10, price: 80000 },
+        { id: 'rod_nanotech', name: 'Nanotechnologia', power: 11, price: 120000 },
+        { id: 'rod_titanium', name: 'Tytanowy', power: 12, price: 180000 },
+        { id: 'rod_plasma', name: 'Plazmowy', power: 13, price: 250000 },
+        { id: 'rod_quantum', name: 'Kwantowy', power: 14, price: 350000 },
+        { id: 'rod_neutron', name: 'Neutronowy', power: 15, price: 500000 },
+        { id: 'rod_antimatter', name: 'Antymaterii', power: 16, price: 700000 },
+        { id: 'rod_blackhole', name: 'Czarna Dziura', power: 17, price: 1000000 },
+        { id: 'rod_multiverse', name: 'Multiversum', power: 18, price: 1500000 },
+        { id: 'rod_infinity', name: 'Nieskończoność', power: 19, price: 2000000 },
+      ];
+
+      const HOOKS = [
+        { id: 'hook_small', name: 'Mały haczyk', modWeight: 0.00, price: 50 },
+        { id: 'hook_med', name: 'Średni haczyk', modWeight: 0.05, price: 120 },
+        { id: 'hook_big', name: 'Duży haczyk', modWeight: 0.12, price: 260 },
+        { id: 'hook_treble', name: 'Potrójny', modWeight: 0.18, price: 450 },
+        { id: 'hook_circle', name: 'Okrągły', modWeight: 0.25, price: 750 },
+        { id: 'hook_jig', name: 'Jigging', modWeight: 0.32, price: 1200 },
+        { id: 'hook_spinner', name: 'Spinner', modWeight: 0.40, price: 1800 },
+        { id: 'hook_spoon', name: 'Łyżka', modWeight: 0.48, price: 2600 },
+        { id: 'hook_plug', name: 'Plug', modWeight: 0.57, price: 3800 },
+        { id: 'hook_crankbait', name: 'Crankbait', modWeight: 0.66, price: 5500 },
+        { id: 'hook_swimbait', name: 'Swimbait', modWeight: 0.76, price: 8000 },
+        { id: 'hook_frog', name: 'Żabka', modWeight: 0.87, price: 12000 },
+        { id: 'hook_mouse', name: 'Myszka', modWeight: 0.99, price: 18000 },
+        { id: 'hook_crawfish', name: 'Rak', modWeight: 1.12, price: 26000 },
+        { id: 'hook_minnow', name: 'Minóg', modWeight: 1.26, price: 38000 },
+        { id: 'hook_squid', name: 'Kalmar', modWeight: 1.41, price: 55000 },
+        { id: 'hook_eel', name: 'Węgorz', modWeight: 1.57, price: 80000 },
+        { id: 'hook_pike', name: 'Szczupak', modWeight: 1.74, price: 120000 },
+        { id: 'hook_bass', name: 'Okoń', modWeight: 1.92, price: 180000 },
+        { id: 'hook_tuna', name: 'Tuńczyk', modWeight: 2.11, price: 250000 },
+      ];
+
+      const BAITS = [
+        { id: 'bait_bread', name: 'Chleb', price: 10, power: 1.0, icon: '🍞', description: 'Podstawowa przynęta.' },
+        { id: 'bait_worm', name: 'Robak', price: 50, power: 1.2, icon: '🐛', description: 'Lepsza szansa na ryby.' },
+        { id: 'bait_cricket', name: 'Świerszcz', price: 150, power: 1.5, icon: '🦗', description: 'Wabi większe okazy.' },
+        { id: 'bait_shrimp', name: 'Krewetka', price: 400, power: 2.0, icon: '🦐', description: 'Przysmak rzadkich ryb.' },
+        { id: 'bait_magic', name: 'Magiczna Kulka', price: 1000, power: 3.0, icon: '✨', description: 'Legendarna przynęta.' },
+      ];
+
+      function xpNextFor(level) { return 100 * level; }
+
+      // Funkcje globalne dla HTML
+      window.buildElement = buildElement;
+    })();
+  </script>
+</body>
+
+</html>

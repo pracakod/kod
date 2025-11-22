@@ -1,0 +1,341 @@
+{
+  "profiles": {
+    "j3gz4ch2cxmfmf3v6c": {
+      "name": "daregsdsd",
+      "color": "hsl(128 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 5346,
+      "bag": [
+        {
+          "id": "1758099859762_803019",
+          "species": "Pstrąg",
+          "weight": 1.76,
+          "rarity": "uncommon",
+          "quality": 0.84,
+          "value": 80
+        }
+      ],
+      "inventory": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small",
+          "hook_spoon"
+        ],
+        "baits": [
+          "bait_bread"
+        ],
+        "materials": [
+          {
+            "id": "wood",
+            "amount": 4
+          },
+          {
+            "id": "metal",
+            "amount": 2
+          }
+        ]
+      },
+      "equipment": {
+        "rod": "rod_basic",
+        "hook": "hook_spoon",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 5,
+        "totalWeight": 50.32999999999999,
+        "totalTime": 0,
+        "rarestFish": "epic"
+      }
+    },
+    "jzhitkjj9ysmfmfbz9w": {
+      "name": "Dareg",
+      "color": "hsl(54 80% 60%)",
+      "level": 2,
+      "xp": 145,
+      "gold": 2768,
+      "bag": [],
+      "owned": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ]
+      },
+      "eq": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      }
+    },
+    "n24dsgtp9gmfnkpdjy": {
+      "name": "Rybol#284",
+      "color": "hsl(90 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 0,
+      "bag": [],
+      "owned": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ]
+      },
+      "eq": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 0,
+        "totalWeight": 0,
+        "totalTime": 0,
+        "rarestFish": null
+      },
+      "missions": []
+    },
+    "we3hcalxy9mfnkq19w": {
+      "name": "Elo",
+      "color": "hsl(166 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 0,
+      "bag": [],
+      "owned": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ]
+      },
+      "eq": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 0,
+        "totalWeight": 0,
+        "totalTime": 0,
+        "rarestFish": null
+      },
+      "missions": []
+    },
+    "ahe9ypiowvgmfnm6vgw": {
+      "name": "Karpik#251",
+      "color": "hsl(191 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 0,
+      "bag": [],
+      "inventory": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ],
+        "materials": []
+      },
+      "equipment": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 0,
+        "totalWeight": 0,
+        "totalTime": 0,
+        "rarestFish": null
+      },
+      "missions": [],
+      "workshop": {
+        "level": 1,
+        "experience": 0,
+        "recipes": [
+          "repair_rod"
+        ]
+      }
+    },
+    "h4bgrd8i77fmfnm7jqv": {
+      "name": "Darrr",
+      "color": "hsl(342 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 5062,
+      "bag": [
+        {
+          "id": "1758094982100_4874",
+          "species": "Amur",
+          "weight": 8.46,
+          "rarity": "rare",
+          "quality": 0.89,
+          "value": 792
+        }
+      ],
+      "inventory": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread",
+          "bait_pellets"
+        ],
+        "materials": []
+      },
+      "equipment": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_pellets"
+      },
+      "stats": {
+        "fishCaught": 5,
+        "totalWeight": 42.07,
+        "totalTime": 0,
+        "rarestFish": "epic"
+      },
+      "missions": [],
+      "workshop": {
+        "level": 1,
+        "experience": 0,
+        "recipes": [
+          "repair_rod"
+        ]
+      }
+    },
+    "zwr1th2a4zmiadnk9s": {
+      "name": "dareg",
+      "color": "hsl(259 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 0,
+      "bag": [],
+      "inventory": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ],
+        "materials": []
+      },
+      "equipment": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 0,
+        "totalWeight": 0,
+        "totalTime": 0,
+        "rarestFish": null
+      }
+    },
+    "b8jg8jjnbjhmiadopmj": {
+      "name": "asdasd",
+      "color": "hsl(64 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 909,
+      "bag": [
+        {
+          "id": "1763827754265_353831",
+          "species": "Szczupak",
+          "weight": 3.1,
+          "rarity": "uncommon",
+          "quality": 0.86,
+          "value": 144
+        }
+      ],
+      "inventory": {
+        "rods": [
+          "rod_basic",
+          "rod_feeder",
+          "rod_carbon"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ],
+        "materials": []
+      },
+      "equipment": {
+        "rod": "rod_carbon",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 6,
+        "totalWeight": 29.500000000000004,
+        "totalTime": 0,
+        "rarestFish": "epic"
+      }
+    },
+    "ux9kauq84fmmiaikoyr": {
+      "name": "Okonek#806",
+      "color": "hsl(282 80% 60%)",
+      "level": 1,
+      "xp": 0,
+      "gold": 156,
+      "bag": [],
+      "inventory": {
+        "rods": [
+          "rod_basic"
+        ],
+        "hooks": [
+          "hook_small"
+        ],
+        "baits": [
+          "bait_bread"
+        ],
+        "materials": [
+          {
+            "id": "plastic",
+            "amount": 1
+          },
+          {
+            "id": "wood",
+            "amount": 1
+          }
+        ]
+      },
+      "equipment": {
+        "rod": "rod_basic",
+        "hook": "hook_small",
+        "bait": "bait_bread"
+      },
+      "stats": {
+        "fishCaught": 1,
+        "totalWeight": 1.63,
+        "totalTime": 0,
+        "rarestFish": "rare"
+      }
+    }
+  }
+}

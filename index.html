@@ -1,1 +1,1046 @@
 
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
+    <title>Symulator Żurawia PRO</title>
+    <style>
+        body {
+            margin: 0; padding: 0; overflow: hidden;
+            background-color: #2b3a42;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            touch-action: none; user-select: none;
+        }
+        canvas { display: block; width: 100vw; height: 100vh; }
+        
+        /* WIRTUALNE JOYSTICKI */
+        .joystick-zone {
+            position: absolute; bottom: 30px; width: 100px; height: 100px;
+            background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%; touch-action: none; z-index: 20; backdrop-filter: blur(4px);
+        }
+        #joy-left { left: 20px; } #joy-right { right: 20px; }
+        .joystick-knob {
+            position: absolute; top: 50%; left: 50%; width: 40px; height: 40px;
+            margin-top: -20px; margin-left: -20px;
+            background: radial-gradient(circle at 30% 30%, #f1c40f, #e67e22);
+            border-radius: 50%; box-shadow: 0 4px 10px rgba(0,0,0,0.8), inset 0 -3px 5px rgba(0,0,0,0.3);
+            pointer-events: none; transition: transform 0.05s linear;
+        }
+        .joy-label { position: absolute; top: -25px; width: 100%; text-align: center; color: white; font-size: 0.7rem; font-weight: bold; text-shadow: 1px 1px 2px black; }
+
+        /* PRZYCISKI AKCJI (Bardzo Małe) */
+        #work-container { 
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); 
+            z-index: 20; display: flex; gap: 8px; 
+        }
+        .action-btn {
+            background-color: #c0392b; color: white; border: 1px solid #e74c3c; 
+            padding: 4px 8px; font-size: 0.55rem; font-weight: bold; border-radius: 4px; cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.6); text-transform: uppercase; transition: all 0.2s;
+        }
+        .action-btn:active { transform: scale(0.95); }
+        
+        
+        #lightBtn { background-color: #7f8c8d; border-color: #95a5a6; }
+        #lightBtn.active { background-color: #f1c40f; border-color: #f39c12; color: #000; }
+        
+        #camBtn { background-color: #2980b9; border-color: #3498db; }
+        #camBtn.active { background-color: #1f618d; }
+
+        /* JOYSTICK JAZDY - góra lewa */
+        #joy-drive {
+            position: absolute; top: 20px; left: 20px;
+            width: 90px; height: 90px;
+            background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.25);
+            border-radius: 50%; touch-action: none; z-index: 20; backdrop-filter: blur(4px);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="joy-drive"><div class="joystick-knob" id="knob-drive"></div></div>
+
+    <div id="joy-left" class="joystick-zone"><div class="joystick-knob" id="knob-left"></div></div>
+    
+    <div id="work-container">
+        <button id="camBtn" class="action-btn">🎥 WIDOK</button>
+        <button id="lightBtn" class="action-btn active">💡 ŚWIATŁA</button>
+    </div>
+
+    <div id="kg-counter" style="
+        position:fixed; top:14px; right:14px; z-index:30;
+        background:rgba(0,0,0,0.75); border:2px solid #f1c40f;
+        border-radius:10px; padding:8px 14px; color:white;
+        font-family:monospace; font-size:13px; text-align:center;
+        backdrop-filter:blur(4px); min-width:110px;
+    ">
+        <div style="color:#f1c40f;font-weight:bold;font-size:10px;letter-spacing:1px;">ROZDRABNIARKA</div>
+        <div id="kg-value" style="font-size:26px;font-weight:bold;color:#2ecc71;line-height:1.2;">0</div>
+        <div style="color:#aaa;font-size:10px;">kg złomu</div>
+    </div>
+    
+    <div id="joy-right" class="joystick-zone"><div class="joystick-knob" id="knob-right"></div></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        // --- KLASA JOYSTICKA ---
+        class Joystick {
+            constructor(zoneId, knobId) {
+                this.zone = document.getElementById(zoneId); this.knob = document.getElementById(knobId);
+                this.active = false; this.value = { x: 0, y: 0 }; this.origin = { x: 0, y: 0 }; this.maxDist = 35;
+                this.zone.addEventListener('pointerdown', this.start.bind(this));
+                window.addEventListener('pointermove', this.move.bind(this));
+                window.addEventListener('pointerup', this.end.bind(this));
+                window.addEventListener('pointerleave', this.end.bind(this));
+            }
+            start(e) { this.active = true; this.origin = { x: e.clientX, y: e.clientY }; }
+            move(e) {
+                if (!this.active) return;
+                let dx = e.clientX - this.origin.x, dy = e.clientY - this.origin.y;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist > this.maxDist) { dx = (dx/dist)*this.maxDist; dy = (dy/dist)*this.maxDist; }
+                this.knob.style.transform = `translate(${dx}px, ${dy}px)`;
+                this.value.x = dx / this.maxDist; this.value.y = dy / this.maxDist; 
+            }
+            end(e) { this.active = false; this.knob.style.transform = `translate(0px, 0px)`; this.value = { x: 0, y: 0 }; }
+        }
+        const joyLeft = new Joystick('joy-left', 'knob-left');
+        const joyRight = new Joystick('joy-right', 'knob-right');
+        const joyDrive = new Joystick('joy-drive', 'knob-drive');
+
+        // --- KONFIGURACJA SCENY ---
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color('#3a80c0');
+        scene.fog = new THREE.FogExp2('#7ab8d8', 0.004);
+
+        const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(-25, 20, 30); 
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.0;
+        document.body.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true; controls.dampingFactor = 0.05; controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+        // --- OŚWIETLENIE ---
+        const ambientLight = new THREE.HemisphereLight(0xffffff, 0x444455, 0.6);
+        scene.add(ambientLight);
+
+        const sunLight = new THREE.DirectionalLight(0xffeedd, 1.5);
+        sunLight.position.set(30, 40, 20);
+        sunLight.castShadow = true;
+        sunLight.shadow.camera.top = 30; sunLight.shadow.camera.bottom = -30;
+        sunLight.shadow.camera.left = -30; sunLight.shadow.camera.right = 30;
+        sunLight.shadow.mapSize.width = 2048; sunLight.shadow.mapSize.height = 2048;
+        sunLight.shadow.bias = -0.0005;
+        scene.add(sunLight);
+
+        // --- PROCEDURALNE TEKSTURY ---
+        function createHazardTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#f1c40f'; ctx.fillRect(0,0,512,512); 
+            ctx.fillStyle = '#111';
+            for(let i = -512; i < 1024; i += 60) {
+                ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i+30, 0);
+                ctx.lineTo(i+30-512, 512); ctx.lineTo(i-512, 512); ctx.fill();
+            }
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; return tex;
+        }
+
+        function createGrillTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#111'; ctx.fillRect(0,0,256,256);
+            ctx.fillStyle = '#333';
+            for(let y = 0; y < 256; y += 12) { ctx.fillRect(0, y, 256, 4); }
+            const tex = new THREE.CanvasTexture(canvas); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; return tex;
+        }
+
+        function createGridTexture() {
+            const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#22252a'; ctx.fillRect(0,0,512,512);
+            ctx.strokeStyle = '#1a1c20'; ctx.lineWidth = 4;
+            for(let i=0; i<=512; i+=64) {
+                ctx.beginPath(); ctx.moveTo(i,0); ctx.lineTo(i,512); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(0,i); ctx.lineTo(512,i); ctx.stroke();
+            }
+            const tex = new THREE.CanvasTexture(canvas); 
+            tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(30, 30);
+            return tex;
+        }
+
+        // --- MATERIAŁY PBR ---
+        const paintMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0x1E90FF, roughness: 0.4, metalness: 0.2, clearcoat: 0.5, clearcoatRoughness: 0.2 
+        });
+        const darkMetal = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.6 });
+        const chromeMetal = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.1, metalness: 0.95 }); 
+        const hazardMaterial = new THREE.MeshStandardMaterial({ map: createHazardTexture(), roughness: 0.5 });
+        const rustMaterial = new THREE.MeshStandardMaterial({ color: 0x8B4513, roughness: 0.9, metalness: 0.2 });
+        const grillMaterial = new THREE.MeshStandardMaterial({ map: createGrillTexture(), roughness: 0.8 });
+        const lampMat = new THREE.MeshStandardMaterial({ color: 0xeeeeee, emissive: 0xffffff, emissiveIntensity: 1.0 });
+        const glassMaterial = new THREE.MeshPhysicalMaterial({ 
+            color: 0xaaaaaa, metalness: 0.1, roughness: 0.05, transparent: true, transmission: 0.9, opacity: 1.0,
+            side: THREE.DoubleSide
+        });
+
+        // --- BUDOWA ŻURAWIA ---
+        const craneGroup = new THREE.Group(); scene.add(craneGroup);
+
+        const baseGroup = new THREE.Group(); craneGroup.add(baseGroup);
+        const baseMesh = new THREE.Mesh(new THREE.BoxGeometry(4.0, 1.2, 5.0), darkMetal);
+        baseMesh.position.set(0, 0.6, 0); baseMesh.castShadow = baseMesh.receiveShadow = true; baseGroup.add(baseMesh);
+
+        function createTrack(xPos) {
+            const trackGrp = new THREE.Group(); trackGrp.position.set(xPos, 0.7, 0);
+            const beltGeo = new THREE.BoxGeometry(1.3, 1.4, 6.2);
+            const belt = new THREE.Mesh(beltGeo, darkMetal); belt.castShadow = true; trackGrp.add(belt);
+            for(let z = -2.5; z <= 2.5; z += 1.0) {
+                const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.65, 0.65, 1.25, 16), chromeMetal);
+                wheel.rotation.z = Math.PI/2; wheel.position.set(0, -0.05, z); wheel.castShadow = true; trackGrp.add(wheel);
+            }
+            return trackGrp;
+        }
+        baseGroup.add(createTrack(-2.5)); baseGroup.add(createTrack(2.5));
+
+        const bodyPivot = new THREE.Group(); bodyPivot.position.set(0, 1.4, 0); craneGroup.add(bodyPivot);
+        const bodyMesh = new THREE.Mesh(new THREE.BoxGeometry(3.6, 2.5, 5.0), paintMaterial);
+        bodyMesh.position.set(0, 1.25, -0.2); bodyMesh.castShadow = bodyMesh.receiveShadow = true; bodyPivot.add(bodyMesh);
+
+        // KABINA
+        const cabinGroup = new THREE.Group(); cabinGroup.position.set(1.55, 1.55, 1.0); bodyPivot.add(cabinGroup);
+        const cabFrame = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.8, 2.0), darkMetal); cabFrame.position.set(0, 1.4, 0); cabinGroup.add(cabFrame);
+        const cabGlass = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.6, 1.9), glassMaterial); cabGlass.position.set(0, 1.4, 0); cabinGroup.add(cabGlass);
+        const seat = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.8, 0.6), darkMetal); seat.position.set(0, 0.5, -0.3); cabinGroup.add(seat);
+        const cabinCamPos = new THREE.Object3D(); cabinCamPos.position.set(0, 1.6, -0.2); cabinGroup.add(cabinCamPos);
+
+        const grill = new THREE.Mesh(new THREE.PlaneGeometry(2.5, 2), grillMaterial); grill.position.set(-1.82, 1.2, -1); grill.rotation.y = -Math.PI/2; bodyPivot.add(grill); 
+        const exhaust = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1.5, 8), darkMetal); exhaust.position.set(-1.2, 3.2, -2.0); bodyPivot.add(exhaust);
+        // NAPIS "340" na boku nadwozia (canvas texture)
+        const labelCanvas = document.createElement('canvas');
+        labelCanvas.width = 256; labelCanvas.height = 128;
+        const lctx = labelCanvas.getContext('2d');
+        lctx.fillStyle = 'transparent';
+        lctx.clearRect(0,0,256,128);
+        lctx.font = 'bold 90px Arial Black, Arial';
+        lctx.fillStyle = '#ffffff';
+        lctx.textAlign = 'center';
+        lctx.textBaseline = 'middle';
+        lctx.fillText('340', 128, 64);
+        const labelTex = new THREE.CanvasTexture(labelCanvas);
+        const labelMat = new THREE.MeshStandardMaterial({ map: labelTex, transparent: true, depthWrite: false });
+        const labelMesh = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.1), labelMat);
+        labelMesh.position.set(-1.82, 1.5, 0.2);
+        labelMesh.rotation.y = -Math.PI/2;
+        bodyPivot.add(labelMesh);
+
+        // RAMIONA
+        // Koparka: boom wychodzi z PRZODU-LEWEJ strony ciała, pochyla się DO PRZODU (+Z)
+        // W Three.js: rotation.x ujemne = czubek +Y obraca się ku +Z (do przodu) ✓
+        function addJointPin(parent, radius, length) {
+            const pin = new THREE.Mesh(new THREE.CylinderGeometry(radius, radius, length, 16), chromeMetal);
+            pin.rotation.z = Math.PI/2; parent.add(pin);
+        }
+
+        // BOOM (arm1): pivot na przodzie ciała, obraca się w płaszczyźnie przód-tył
+        const arm1Pivot = new THREE.Group();
+        arm1Pivot.position.set(-0.5, 3.0, 1.8); // przód ciała (z=+1.8), wyżej
+        bodyPivot.add(arm1Pivot);
+        addJointPin(arm1Pivot, 0.4, 2.0);
+        const boomLength = 10;
+        const arm1Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.8, boomLength, 1.2), paintMaterial);
+        arm1Mesh.position.set(0, boomLength / 2, 0);
+        arm1Mesh.castShadow = true;
+        arm1Pivot.add(arm1Mesh);
+        arm1Pivot.rotation.x = 1.38;
+
+        // STICK (arm2): pivot na czubku booma, mesh idzie w dół (-Y)
+        const arm2Pivot = new THREE.Group();
+        arm2Pivot.position.set(0, boomLength, 0);
+        arm1Pivot.add(arm2Pivot);
+        addJointPin(arm2Pivot, 0.35, 1.4);
+        const stickLength = 9;
+        const arm2Mesh = new THREE.Mesh(new THREE.BoxGeometry(0.6, stickLength, 0.8), paintMaterial);
+        arm2Mesh.position.set(0, -stickLength / 2, 0);
+        arm2Mesh.castShadow = true;
+        arm2Pivot.add(arm2Mesh);
+        arm2Pivot.rotation.x = -2.82;
+
+        const dangerStripe = new THREE.Mesh(new THREE.PlaneGeometry(0.61, 2), hazardMaterial);
+        dangerStripe.position.set(0, -stickLength/2, 0.42); arm2Pivot.add(dangerStripe);
+
+        // ŚWIATŁA ROBOCZE (po zdefiniowaniu ramion)
+        const workLight1 = new THREE.SpotLight(0xfff5cc, 3.5, 35, Math.PI/5, 0.3, 1.5);
+        workLight1.position.set(0, 0.3, 0.6);
+        workLight1.target.position.set(0, -8, 6);
+        arm1Pivot.add(workLight1); arm1Pivot.add(workLight1.target);
+
+        const workLight2 = new THREE.SpotLight(0xfff5cc, 3.5, 35, Math.PI/5, 0.3, 1.5);
+        workLight2.position.set(0, -0.2, 0.5);
+        workLight2.target.position.set(0, -6, 5);
+        arm2Pivot.add(workLight2); arm2Pivot.add(workLight2.target);
+
+        const lampGeoW = new THREE.SphereGeometry(0.18, 8, 8);
+        const lampMatW = new THREE.MeshStandardMaterial({ color: 0xffff99, emissive: 0xffff99, emissiveIntensity: 1.5 });
+        const lamp1Mesh = new THREE.Mesh(lampGeoW, lampMatW);
+        lamp1Mesh.position.set(0, 0.3, 0.6); arm1Pivot.add(lamp1Mesh);
+        const lamp2Mat = new THREE.MeshStandardMaterial({ color: 0xffff99, emissive: 0xffff99, emissiveIntensity: 1.5 });
+        const lamp2Mesh = new THREE.Mesh(lampGeoW.clone(), lamp2Mat);
+        lamp2Mesh.position.set(0, -0.2, 0.5); arm2Pivot.add(lamp2Mesh);
+
+
+        // CHWYTAK
+        const grapplePivot = new THREE.Group();
+        grapplePivot.position.set(0, -stickLength, 0); // dół sticka
+        arm2Pivot.add(grapplePivot);
+        const grappleBase = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.0, 16), paintMaterial); grappleBase.position.set(0, -0.5, 0); grapplePivot.add(grappleBase);
+        const claws = [];
+        const clawShape = new THREE.Shape(); 
+        clawShape.moveTo(0, 0); clawShape.lineTo(0.3, 0); clawShape.lineTo(0.1, -1.0); clawShape.lineTo(0.2, -1.5); clawShape.lineTo(0, -2.5);
+        clawShape.lineTo(-0.2, -1.5); clawShape.lineTo(-0.1, -1.0); clawShape.lineTo(-0.3, 0);
+        const clawGeo = new THREE.ExtrudeGeometry(clawShape, { depth: 0.3, bevelEnabled: true, bevelSegments: 2, steps: 1, bevelSize: 0.05, bevelThickness: 0.05 });
+        clawGeo.translate(0, 0, -0.15); 
+        for (let i = 0; i < 4; i++) {
+            const yaw = new THREE.Group(); yaw.position.set(0, -1.0, 0); yaw.rotation.y = (i * Math.PI) / 2; 
+            const pivot = new THREE.Group(); const mesh = new THREE.Mesh(clawGeo, darkMetal); mesh.position.set(0, -0.2, 0.3); mesh.rotation.x = -0.3; pivot.add(mesh);
+            yaw.add(pivot); grapplePivot.add(yaw); claws.push(pivot);
+        }
+        const payloadMesh = new THREE.Mesh(new THREE.SphereGeometry(0.8, 7, 7), rustMaterial); payloadMesh.position.set(0, -2.2, 0); payloadMesh.visible = false; grapplePivot.add(payloadMesh);
+
+        // REFLEKTOR NA CHWYTAK — świeci pionowo w dół
+        const grappleSpot = new THREE.SpotLight(0xffffff, 5.0, 18, Math.PI/6, 0.5, 1.5);
+        grappleSpot.position.set(0, 0.2, 0);
+        grappleSpot.target.position.set(0, -10, 0); // cel prosto w dół
+        grapplePivot.add(grappleSpot);
+        grapplePivot.add(grappleSpot.target);
+        // Mała lampka widoczna
+        const grappleLampMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 2.0 });
+        const grappleLamp = new THREE.Mesh(new THREE.SphereGeometry(0.1, 8, 8), grappleLampMat);
+        grappleLamp.position.set(0, 0.2, 0); grapplePivot.add(grappleLamp);
+
+        // DWA REFLEKTORY NA KABINIE — dodane do cabinGroup (lokalne współrzędne kabiny)
+        // cabFrame jest na y=1.4, height=2.8 → top = y=2.8. Przód kabiny = z=+1.0 (half of 2.0)
+        const cabSpot1 = new THREE.SpotLight(0xfff8e0, 4.0, 60, Math.PI/7, 0.25, 1.2);
+        cabSpot1.position.set(0.35, 2.75, 1.05);
+        cabSpot1.target.position.set(6, -3, 25);
+        cabinGroup.add(cabSpot1); cabinGroup.add(cabSpot1.target);
+
+        const cabSpot2 = new THREE.SpotLight(0xfff8e0, 4.0, 60, Math.PI/7, 0.25, 1.2);
+        cabSpot2.position.set(-0.35, 2.75, 1.05);
+        cabSpot2.target.position.set(-6, -3, 25);
+        cabinGroup.add(cabSpot2); cabinGroup.add(cabSpot2.target);
+
+        // Obudowy reflektorów (żółte) na przedniej ścianie kabiny
+        const headlampMat = new THREE.MeshStandardMaterial({ color: 0xffff99, emissive: 0xffff88, emissiveIntensity: 2.0 });
+        const hl1 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.10, 10), headlampMat);
+        hl1.rotation.x = Math.PI/2; hl1.position.set(0.35, 2.75, 1.06); cabinGroup.add(hl1);
+        const hl2 = new THREE.Mesh(new THREE.CylinderGeometry(0.13, 0.16, 0.10, 10), headlampMat.clone());
+        hl2.rotation.x = Math.PI/2; hl2.position.set(-0.35, 2.75, 1.06); cabinGroup.add(hl2);
+
+        // ŚWIATŁO W KABINIE
+        const cabinLight = new THREE.PointLight(0xfff0cc, 1.5, 6, 2);
+        cabinLight.position.set(0, 1.8, 0); cabinGroup.add(cabinLight);
+        const cabinLampMat = new THREE.MeshStandardMaterial({ color: 0xffeeaa, emissive: 0xffeeaa, emissiveIntensity: 1.5 });
+        const cabinLamp = new THREE.Mesh(new THREE.SphereGeometry(0.08, 8, 8), cabinLampMat);
+        cabinLamp.position.set(0, 2.6, 0); cabinGroup.add(cabinLamp);
+
+        // PRZYCISK ŚWIATEŁ
+        let lightsOn = true;
+        document.getElementById('lightBtn').addEventListener('click', () => {
+            lightsOn = !lightsOn;
+            const wi = lightsOn ? 3.5 : 0; const si = lightsOn ? 4.0 : 0; const e = lightsOn ? 1.5 : 0;
+            workLight1.intensity = wi; workLight2.intensity = wi;
+            cabSpot1.intensity = si; cabSpot2.intensity = si;
+            grappleSpot.intensity = lightsOn ? 5.0 : 0;
+            cabinLight.intensity = lightsOn ? 1.5 : 0;
+            lampMatW.emissiveIntensity = e; lamp2Mat.emissiveIntensity = e;
+            hl1.material.emissiveIntensity = lightsOn ? 2.0 : 0;
+            hl2.material.emissiveIntensity = lightsOn ? 2.0 : 0;
+            cabinLampMat.emissiveIntensity = e;
+            document.getElementById('lightBtn').classList.toggle('active', lightsOn);
+        });
+
+        // NIEBO — canvas texture jako tło sceny (najpewniejsza metoda)
+        const SKY_W = 512, SKY_H = 512;
+        const skyCanvas = document.createElement('canvas');
+        skyCanvas.width = SKY_W; skyCanvas.height = SKY_H;
+        const skyCtx = skyCanvas.getContext('2d');
+
+        // Gradient atmosfery od góry do horyzontu
+        const skyGrad = skyCtx.createLinearGradient(0, 0, 0, SKY_H);
+        skyGrad.addColorStop(0.0,  '#0d1f3c');
+        skyGrad.addColorStop(0.3,  '#1a4a8a');
+        skyGrad.addColorStop(0.55, '#3a80c0');
+        skyGrad.addColorStop(0.75, '#7ab8d8');
+        skyGrad.addColorStop(0.87, '#f0c87a');
+        skyGrad.addColorStop(0.94, '#e8855a');
+        skyGrad.addColorStop(1.0,  '#c04030');
+        skyCtx.fillStyle = skyGrad;
+        skyCtx.fillRect(0, 0, SKY_W, SKY_H);
+
+        // Słońce przy horyzoncie
+        const sunX = SKY_W * 0.7, sunY = SKY_H * 0.88;
+        const sunCore = skyCtx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 40);
+        sunCore.addColorStop(0,   'rgba(255,255,220,1)');
+        sunCore.addColorStop(0.2, 'rgba(255,220,80,1)');
+        sunCore.addColorStop(0.5, 'rgba(255,140,40,0.6)');
+        sunCore.addColorStop(1.0, 'rgba(255,80,0,0)');
+        skyCtx.fillStyle = sunCore;
+        skyCtx.beginPath(); skyCtx.arc(sunX, sunY, 40, 0, Math.PI*2); skyCtx.fill();
+
+        // Blask słońca
+        const glow = skyCtx.createRadialGradient(sunX, sunY, 20, sunX, sunY, 180);
+        glow.addColorStop(0,   'rgba(255,160,60,0.4)');
+        glow.addColorStop(0.6, 'rgba(255,100,20,0.15)');
+        glow.addColorStop(1,   'rgba(255,60,0,0)');
+        skyCtx.fillStyle = glow;
+        skyCtx.fillRect(sunX-180, sunY-180, 360, 360);
+
+        const skyTex = new THREE.CanvasTexture(skyCanvas);
+        scene.background = skyTex;
+        scene.fog = new THREE.FogExp2('#7ab8d8', 0.004);
+
+        // TEREN — nierówna ziemia z kamieniami i błotem
+        function createTerrainTexture() {
+            const c = document.createElement('canvas'); c.width = 512; c.height = 512;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = '#4a3728'; ctx.fillRect(0,0,512,512);
+            // Błoto i ziemia
+            for (let i = 0; i < 2000; i++) {
+                const x = Math.random()*512, y = Math.random()*512, r = Math.random()*8+2;
+                const shade = Math.floor(Math.random()*40+30);
+                ctx.fillStyle = `rgb(${shade+40},${shade+25},${shade+10})`;
+                ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+            }
+            // Kałuże
+            for (let i = 0; i < 15; i++) {
+                const x = Math.random()*512, y = Math.random()*512;
+                ctx.fillStyle = 'rgba(40,55,70,0.6)';
+                ctx.beginPath(); ctx.ellipse(x,y,Math.random()*30+10,Math.random()*15+5,Math.random()*Math.PI,0,Math.PI*2); ctx.fill();
+            }
+            const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(20, 20); return t;
+        }
+        const terrainMat = new THREE.MeshStandardMaterial({ map: createTerrainTexture(), roughness: 0.95, metalness: 0.0 });
+        const floor = new THREE.Mesh(new THREE.PlaneGeometry(400, 400, 40, 40), terrainMat);
+        floor.rotation.x = -Math.PI/2; floor.receiveShadow = true; scene.add(floor);
+
+        // Kamienie losowe w tle
+        const rockMat = new THREE.MeshStandardMaterial({ color: 0x5a5550, roughness: 0.9, metalness: 0.1 });
+        for (let i = 0; i < 30; i++) {
+            const s = Math.random()*1.5+0.3;
+            const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), rockMat);
+            const angle = Math.random()*Math.PI*2; const dist = Math.random()*60+25;
+            rock.position.set(Math.cos(angle)*dist, s*0.4, Math.sin(angle)*dist);
+            rock.rotation.set(Math.random(),Math.random(),Math.random());
+            rock.castShadow = true; scene.add(rock);
+        }
+        
+        // STERTA ZŁOMU (źródło)
+        const scrapGroup = new THREE.Group(); scrapGroup.position.set(0, 0, 18); scene.add(scrapGroup);
+        for(let i=0; i<80; i++) {
+            const mesh = new THREE.Mesh(new THREE.BoxGeometry(Math.random()+0.5, Math.random()+0.5, Math.random()+0.5), rustMaterial);
+            const radius = Math.random() * 5; const angle = Math.random() * Math.PI * 2;
+            mesh.position.set(Math.cos(angle)*radius, Math.random() * 2.5, Math.sin(angle)*radius);
+            mesh.rotation.set(Math.random(), Math.random(), Math.random()); 
+            mesh.castShadow = true; scrapGroup.add(mesh);
+        }
+
+        // ═══════════════════════════════════════════
+        // ROZDRABNIARKA (Arjes-style) + TAŚMA
+        // ═══════════════════════════════════════════
+        const shredderGroup = new THREE.Group();
+        shredderGroup.position.set(-10, 0, 14);
+        shredderGroup.rotation.y = Math.PI / 10;
+        scene.add(shredderGroup);
+
+        const steelMat  = new THREE.MeshStandardMaterial({ color: 0xe86010, roughness: 0.55, metalness: 0.7 });
+        const yellowMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5, metalness: 0.4 });
+        const toothMat  = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.4, metalness: 0.95 });
+        const convMat   = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9, metalness: 0.1 });
+        const convYellow= new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.5, metalness: 0.2 });
+
+        // --- KORPUS MASZYNY ---
+        const bodyW=6, bodyH=3.2, bodyD=4.5;
+
+        // Boki korpusu (bez góry — żeby widać wały)
+        const corpusMat = new THREE.MeshStandardMaterial({ color: 0xe86010, roughness: 0.55, metalness: 0.7 });
+        // Dno
+        const cFloor = new THREE.Mesh(new THREE.BoxGeometry(bodyW, 0.3, bodyD), corpusMat);
+        cFloor.position.set(0, 0.45, 0); cFloor.castShadow = true; shredderGroup.add(cFloor);
+        // Ściana przednia i tylna
+        ['front','back'].forEach((s,i) => {
+            const w = new THREE.Mesh(new THREE.BoxGeometry(bodyW, bodyH, 0.3), corpusMat);
+            w.position.set(0, bodyH/2+0.3, (i===0?1:-1)*(bodyD/2));
+            w.castShadow = true; shredderGroup.add(w);
+        });
+        // Ściany boczne
+        ['left','right'].forEach((s,i) => {
+            const w = new THREE.Mesh(new THREE.BoxGeometry(0.3, bodyH, bodyD), corpusMat);
+            w.position.set((i===0?-1:1)*(bodyW/2), bodyH/2+0.3, 0);
+            w.castShadow = true; shredderGroup.add(w);
+        });
+        // Żółte pasy ostrzegawcze na bokach
+        [-bodyW/2+0.01, bodyW/2-0.01].forEach((x,i) => {
+            [0.8, 2.2].forEach(y => {
+                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.25, bodyD*0.9), yellowMat);
+                stripe.position.set(x, y, 0); shredderGroup.add(stripe);
+            });
+        });
+
+        // ─── LEJEK WLOTOWY — szeroki i widoczny ───
+        const hopperMat = new THREE.MeshStandardMaterial({ color: 0xcc4400, roughness: 0.6, metalness: 0.75 });
+        const hopW = bodyW + 3.0;   // szerszy niż korpus
+        const hopD2 = bodyD + 2.5;
+        const hopH2 = 2.5;
+        const hopTop_y = bodyH + 0.3; // góra korpusu
+
+        // 4 ściany lejka pochylone — grubsze (0.4) i szersze
+        [
+            { pos:[0, hopTop_y + hopH2/2, -(hopD2/2 - 0.1)], rot:[-0.45,0,0], sz:[hopW+0.4, hopH2, 0.4] },
+            { pos:[0, hopTop_y + hopH2/2,  (hopD2/2 - 0.1)], rot:[ 0.45,0,0], sz:[hopW+0.4, hopH2, 0.4] },
+            { pos:[-(hopW/2-0.1), hopTop_y + hopH2/2, 0],    rot:[0,0, 0.45], sz:[0.4, hopH2, hopD2] },
+            { pos:[ (hopW/2-0.1), hopTop_y + hopH2/2, 0],    rot:[0,0,-0.45], sz:[0.4, hopH2, hopD2] },
+        ].forEach(({pos,rot,sz}) => {
+            const w = new THREE.Mesh(new THREE.BoxGeometry(...sz), hopperMat);
+            w.position.set(...pos); w.rotation.set(...rot);
+            w.castShadow = true; shredderGroup.add(w);
+        });
+        // Górna ramka lejka — widoczna krawędź
+        const rimMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.4, metalness: 0.6 });
+        [[hopW+0.4,0.18,0.18, 0, hopTop_y+hopH2, -(hopD2/2)],
+         [hopW+0.4,0.18,0.18, 0, hopTop_y+hopH2,  (hopD2/2)],
+         [0.18,0.18,hopD2,   -(hopW/2), hopTop_y+hopH2, 0],
+         [0.18,0.18,hopD2,    (hopW/2), hopTop_y+hopH2, 0],
+        ].forEach(([w,h,d,x,y,z]) => {
+            const rim = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), rimMat);
+            rim.position.set(x,y,z); shredderGroup.add(rim);
+        });
+
+        // ─── WAŁY Z ZĘBAMI — wyciągnięte do góry, widoczne ───
+        const shaftRadius = 0.55;
+        const shaftLen = bodyD + 0.2;
+        const toothCount = 10;
+        const shafts = [];
+
+        function makeShaft(xOffset) {
+            const shaftGroup = new THREE.Group();
+            // Wały na górze korpusu, widoczne z lotu ptaka i z boku
+            shaftGroup.position.set(xOffset, bodyH + 0.15, 0);
+            shredderGroup.add(shaftGroup);
+
+            // Wał główny — ciemny metal
+            const shaftMesh = new THREE.Mesh(
+                new THREE.CylinderGeometry(shaftRadius, shaftRadius, shaftLen, 20),
+                new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.4, metalness: 0.95 })
+            );
+            shaftMesh.rotation.x = Math.PI/2;
+            shaftGroup.add(shaftMesh);
+
+            // Zęby — równomiernie wzdłuż wału, duże i widoczne
+            const toothRowCount = 7; // rzędy wzdłuż osi Z
+            const anglesPerRow = 5;
+            for (let row = 0; row < toothRowCount; row++) {
+                const zPos = -shaftLen/2 + (row+0.5) * (shaftLen/toothRowCount);
+                const rowAngleOffset = (row % 2) * (Math.PI / anglesPerRow); // naprzemienne
+                for (let a = 0; a < anglesPerRow; a++) {
+                    const angle = rowAngleOffset + (a / anglesPerRow) * Math.PI * 2;
+                    const tooth = new THREE.Mesh(
+                        new THREE.BoxGeometry(0.28, 0.85, 0.38),
+                        toothMat
+                    );
+                    tooth.position.set(
+                        Math.cos(angle) * (shaftRadius + 0.3),
+                        Math.sin(angle) * (shaftRadius + 0.3),
+                        zPos
+                    );
+                    tooth.rotation.z = angle;
+                    shaftGroup.add(tooth);
+                }
+            }
+            shafts.push(shaftGroup);
+            return shaftGroup;
+        }
+
+        makeShaft(-1.3);
+        makeShaft( 1.3);
+
+        // Ciemna szczelina między wałami
+        const gapMesh = new THREE.Mesh(
+            new THREE.BoxGeometry(0.6, 0.4, shaftLen),
+            new THREE.MeshStandardMaterial({color:0x050505})
+        );
+        gapMesh.position.set(0, bodyH+0.15, 0); shredderGroup.add(gapMesh);
+
+        // Panel sterowania boczny
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.2, 1.8), new THREE.MeshStandardMaterial({color:0x1a3a1a, roughness:0.6}));
+        panel.position.set(bodyW/2+0.06, bodyH*0.65+0.3, 0); shredderGroup.add(panel);
+        [[0,0.4,0.5,'#00ff00'],[0,0.4,-0.5,'#ff0000'],[0,0,-0.3,'#ffff00']].forEach(([x,y,z,col]) => {
+            const lamp = new THREE.Mesh(new THREE.SphereGeometry(0.1,8,8),
+                new THREE.MeshStandardMaterial({color:col,emissive:col,emissiveIntensity:1.5}));
+            lamp.position.set(bodyW/2+0.15, bodyH*0.65+0.3+y, z); shredderGroup.add(lamp);
+        });
+
+        // Gąsienice
+        [[-bodyW/2+0.8,0],[bodyW/2-0.8,0]].forEach(([x,z]) => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.6,bodyD+0.5), corpusMat);
+            leg.position.set(x, 0.3, z); shredderGroup.add(leg);
+            const track = new THREE.Mesh(new THREE.BoxGeometry(0.85,0.38,bodyD+0.8), new THREE.MeshStandardMaterial({color:0x111,roughness:0.95}));
+            track.position.set(x, 0.0, z); shredderGroup.add(track);
+        });
+
+        // ─── TAŚMA TRANSPORTOWA — po lewej stronie maszyny (-X) ───
+        const beltGroup = new THREE.Group();
+        const beltLen = 14, beltW = 1.6, beltAngle = -0.15;
+        const beltDarkMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.7, metalness: 0.8 });
+        // Taśma wychodzi z boku korpusu na wysokości wałów
+        beltGroup.position.set(-bodyW/2 - beltLen/2 - 0.2, bodyH + 0.1, 0);
+        beltGroup.rotation.z = beltAngle;
+        shredderGroup.add(beltGroup);
+
+        // Rama taśmy
+        const beltFrame = new THREE.Mesh(new THREE.BoxGeometry(beltLen, 0.25, beltW+0.3), beltDarkMat);
+        beltFrame.position.set(0,0,0); beltGroup.add(beltFrame);
+
+        // Powierzchnia taśmy (ciemna guma)
+        const beltSurface = new THREE.Mesh(new THREE.BoxGeometry(beltLen-0.2, 0.15, beltW), convMat);
+        beltSurface.position.set(0, 0.15, 0); beltGroup.add(beltSurface);
+
+        // Poprzeczne listwy na taśmie
+        for (let i = 0; i < 16; i++) {
+            const slat = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.14, beltW), convYellow);
+            slat.position.set(-beltLen/2 + 0.5 + i*(beltLen-0.5)/15, 0.23, 0);
+            beltGroup.add(slat);
+        }
+
+        // Bębny na końcach taśmy
+        [-beltLen/2+0.15, beltLen/2-0.15].forEach(x => {
+            const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.32,0.32,beltW+0.3,16), beltDarkMat);
+            drum.rotation.x = Math.PI/2; drum.position.set(x,0,0); beltGroup.add(drum);
+        });
+
+        // Boczne prowadnice taśmy (żółte)
+        [-beltW/2-0.12, beltW/2+0.12].forEach(z => {
+            const guide = new THREE.Mesh(new THREE.BoxGeometry(beltLen, 0.45, 0.12), yellowMat);
+            guide.position.set(0, 0.28, z); beltGroup.add(guide);
+        });
+
+        // Nogi podporowe taśmy
+        [-beltLen*0.1, beltLen*0.3].forEach(xL => {
+            const leg = new THREE.Mesh(new THREE.BoxGeometry(0.22, 2.8, 0.22), beltDarkMat);
+            leg.position.set(xL, -1.5, 0); beltGroup.add(leg);
+            const foot = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.15, 0.7), beltDarkMat);
+            foot.position.set(xL, -2.95, 0); beltGroup.add(foot);
+        });
+
+        // ═══ HAŁDA na końcu taśmy ═══
+        // Koniec taśmy (lokalnie w beltGroup): x = -beltLen/2
+        // Pozycja w scenie obliczana po updateMatrixWorld
+        const pileGroup = new THREE.Group();
+        scene.add(pileGroup);
+        // Ustawimy pozycję po pierwszym render (bo shredderGroup jeszcze nie ma matrixWorld)
+        let pilePositioned = false;
+
+        const pileMats = [
+            new THREE.MeshStandardMaterial({ color: 0x3a2010, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ color: 0x2a2a2a, roughness: 0.9, metalness: 0.4 }),
+            new THREE.MeshStandardMaterial({ color: 0x4a3018, roughness: 0.95 }),
+            new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.8, metalness: 0.6 }),
+        ];
+
+        const pileChunks = []; // { mesh, targetY } — wszystkie kawałki hałdy
+        let pileCount = 0;
+
+        function addToPile() {
+            const geos = [
+                new THREE.BoxGeometry(
+                    0.2 + Math.random() * 0.5,
+                    0.15 + Math.random() * 0.3,
+                    0.2 + Math.random() * 0.4
+                ),
+                new THREE.DodecahedronGeometry(0.15 + Math.random() * 0.25, 0),
+            ];
+            const geo = geos[Math.floor(Math.random() * geos.length)];
+            const mat = pileMats[Math.floor(Math.random() * pileMats.length)];
+            const chunk = new THREE.Mesh(geo, mat);
+            chunk.castShadow = true;
+            chunk.receiveShadow = true;
+
+            const layer = Math.floor(pileCount / 8);
+            const radius = Math.max(0.3, 1.8 - layer * 0.25);
+            const angle = Math.random() * Math.PI * 2;
+            const r = Math.random() * radius;
+
+            // Pozycja XZ losowa wokół hałdy, Y startuje z końca taśmy (nie z nieba!)
+            chunk.position.set(
+                pileGroup.position.x + Math.cos(angle) * r,
+                pileGroup.userData.beltEndY || 3, // wysokość końca taśmy
+                pileGroup.position.z + Math.sin(angle) * r
+            );
+            chunk.rotation.set(
+                Math.random() * Math.PI,
+                Math.random() * Math.PI,
+                Math.random() * Math.PI
+            );
+
+            const targetY = 0.1 + layer * 0.28 + Math.random() * 0.15;
+            scene.add(chunk);
+            pileChunks.push({ mesh: chunk, targetY, falling: true });
+            pileCount++;
+        }
+        const beltScrapMat = new THREE.MeshStandardMaterial({color: 0x5a3010, roughness:0.95});
+        const beltScrapMat2 = new THREE.MeshStandardMaterial({color: 0x3a3a3a, roughness:0.9, metalness:0.4});
+        const beltFragments = [];
+        // Definicje kawałków: [offsetX wzdłuż taśmy (0-1), offsetZ, scaleX, scaleY, scaleZ, mat]
+        const fragDefs = [
+            [0.05, -0.3, 0.4,0.2,0.35, 0], [0.10,  0.2, 0.3,0.15,0.25, 1],
+            [0.15, -0.1, 0.5,0.25,0.4, 0], [0.20,  0.35, 0.25,0.18,0.3, 1],
+            [0.25, -0.4, 0.35,0.2,0.28, 0],[0.30,  0.1,  0.45,0.22,0.38, 1],
+            [0.35, -0.2, 0.3,0.15,0.3, 0], [0.40,  0.3,  0.5,0.28,0.35, 1],
+            [0.45, -0.35,0.38,0.2,0.32, 0],[0.50,  0.0,  0.42,0.18,0.4, 1],
+            [0.55,  0.25,0.3,0.22,0.28, 0],[0.60, -0.3,  0.48,0.25,0.35, 1],
+            [0.65,  0.15,0.35,0.2,0.3, 0], [0.70, -0.1,  0.4,0.18,0.38, 1],
+            [0.75,  0.35,0.28,0.22,0.32, 0],[0.80, -0.25,0.45,0.2,0.36, 1],
+            [0.88,  0.1, 0.32,0.18,0.28, 0],[0.94, -0.15,0.38,0.22,0.3, 1],
+        ];
+        fragDefs.forEach(([tx, tz, sx, sy, sz, mi]) => {
+            const geo = new THREE.BoxGeometry(sx, sy, sz);
+            const mesh = new THREE.Mesh(geo, mi === 0 ? beltScrapMat : beltScrapMat2);
+            mesh.rotation.set(Math.random()*0.4, Math.random()*Math.PI, Math.random()*0.3);
+            mesh.visible = false;
+            beltGroup.add(mesh);
+            beltFragments.push({ mesh, tx, tz });
+        });
+        let beltScrapT = -1; // -1 = nieaktywne
+
+        // Strefea zrzutu = nad lejkiem maszyny
+        const shredderDropZone = new THREE.Vector3();
+        shredderGroup.localToWorld(shredderDropZone.set(0, bodyH+1.5, 0));
+
+        // Marker strefy zrzutu na ziemi
+        const markerMat = new THREE.MeshStandardMaterial({ color: 0xf1c40f, roughness: 0.8, emissive: 0x553300, emissiveIntensity: 0.3 });
+        const marker = new THREE.Mesh(new THREE.PlaneGeometry(8, 6), markerMat);
+        marker.rotation.x = -Math.PI/2; marker.position.set(0, 0.01, 0);
+        shredderGroup.add(marker);
+
+        // STEROWANIE klawiaturą (opcjonalne)
+        const keys = { up: false, down: false, left: false, right: false };
+        window.addEventListener('keydown', (e) => {
+            if(e.code==='ArrowUp'||e.code==='KeyW') keys.up=true;
+            if(e.code==='ArrowDown'||e.code==='KeyS') keys.down=true;
+            if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left=true;
+            if(e.code==='ArrowRight'||e.code==='KeyD') keys.right=true;
+        });
+        window.addEventListener('keyup', (e) => {
+            if(e.code==='ArrowUp'||e.code==='KeyW') keys.up=false;
+            if(e.code==='ArrowDown'||e.code==='KeyS') keys.down=false;
+            if(e.code==='ArrowLeft'||e.code==='KeyA') keys.left=false;
+            if(e.code==='ArrowRight'||e.code==='KeyD') keys.right=false;
+        });
+
+        let cameraView = 0; const camBtn = document.getElementById('camBtn');
+
+        // FPV — rozglądanie się w kabinie
+        let fpvYaw = 0, fpvPitch = 0;
+        let fpvDrag = false, fpvLastX = 0, fpvLastY = 0;
+
+        renderer.domElement.addEventListener('pointerdown', (e) => {
+            if (cameraView !== 1) return;
+            // ignoruj joysticki (tylko środkowa część ekranu)
+            const cx = e.clientX / window.innerWidth;
+            if (cx < 0.25 || cx > 0.75) return;
+            fpvDrag = true; fpvLastX = e.clientX; fpvLastY = e.clientY;
+        });
+        window.addEventListener('pointermove', (e) => {
+            if (!fpvDrag) return;
+            const dx = e.clientX - fpvLastX;
+            const dy = e.clientY - fpvLastY;
+            fpvYaw   -= dx * 0.003;
+            fpvPitch -= dy * 0.003;
+            fpvPitch = Math.max(-0.6, Math.min(0.6, fpvPitch)); // limit góra/dół
+            fpvLastX = e.clientX; fpvLastY = e.clientY;
+        });
+        window.addEventListener('pointerup', () => { fpvDrag = false; });
+
+        camBtn.addEventListener('click', () => {
+            cameraView = (cameraView + 1) % 2;
+            if (cameraView === 0) {
+                controls.enabled = true; cabGlass.visible = true; camBtn.classList.remove('active');
+                camera.position.set(-40, 30, 50);
+                fpvYaw = 0; fpvPitch = 0;
+            } else {
+                controls.enabled = false; cabGlass.visible = false; camBtn.classList.add('active');
+                // Kamera patrzy do przodu kabiny (w stronę ramion)
+                fpvYaw = Math.PI;
+                fpvPitch = -0.3;
+            }
+        });
+
+        // ═══ DŹWIĘKI Web Audio API ═══
+        let audioCtx = null;
+        let shredderNodes = null; // trzyma węzły aktywnego dźwięku
+
+        function initAudio() {
+            if (audioCtx) return;
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+
+        function playShredderSound() {
+            initAudio();
+            if (shredderNodes) return; // już gra
+
+            const ctx = audioCtx;
+            const master = ctx.createGain();
+            master.gain.setValueAtTime(0, ctx.currentTime);
+            master.gain.linearRampToValueAtTime(0.45, ctx.currentTime + 0.3);
+            master.connect(ctx.destination);
+
+            // Szum jako baza (grinding)
+            const bufLen = ctx.sampleRate * 2;
+            const buffer = ctx.createBuffer(1, bufLen, ctx.sampleRate);
+            const data = buffer.getChannelData(0);
+            for (let i = 0; i < bufLen; i++) data[i] = Math.random() * 2 - 1;
+            const noise = ctx.createBufferSource();
+            noise.buffer = buffer; noise.loop = true;
+            const noiseFilter = ctx.createBiquadFilter();
+            noiseFilter.type = 'bandpass';
+            noiseFilter.frequency.value = 320;
+            noiseFilter.Q.value = 2.5;
+            noise.connect(noiseFilter); noiseFilter.connect(master);
+            noise.start();
+
+            // Niski pomruk silnika
+            const osc1 = ctx.createOscillator();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 58;
+            const g1 = ctx.createGain(); g1.gain.value = 0.18;
+            osc1.connect(g1); g1.connect(master); osc1.start();
+
+            // Metaliczne uderzenia (losowe kliknięcia)
+            function scheduleTick() {
+                if (!shredderNodes) return;
+                const tick = ctx.createOscillator();
+                tick.type = 'square'; tick.frequency.value = 180 + Math.random() * 120;
+                const tg = ctx.createGain();
+                tg.gain.setValueAtTime(0.25, ctx.currentTime);
+                tg.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+                tick.connect(tg); tg.connect(master);
+                tick.start(); tick.stop(ctx.currentTime + 0.08);
+                setTimeout(scheduleTick, 60 + Math.random() * 120);
+            }
+            scheduleTick();
+
+            shredderNodes = { noise, osc1, master };
+        }
+
+        function stopShredderSound() {
+            if (!shredderNodes || !audioCtx) return;
+            const { master, noise, osc1 } = shredderNodes;
+            master.gain.setValueAtTime(master.gain.value, audioCtx.currentTime);
+            master.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.6);
+            setTimeout(() => {
+                try { noise.stop(); osc1.stop(); } catch(e) {}
+                shredderNodes = null;
+            }, 700);
+        }
+        const droppedScraps = [];
+        let actualClawRot = -0.5;
+        let targetClawRot = -0.5;
+        let totalKg = 0;
+        const kgEl = document.getElementById('kg-value');
+        function addKg(kg) {
+            totalKg += kg;
+            kgEl.textContent = totalKg;
+            kgEl.style.color = totalKg > 500 ? '#e74c3c' : totalKg > 200 ? '#f39c12' : '#2ecc71';
+        }
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const delta = clock.getDelta();
+            const oldPos = craneGroup.position.clone();
+
+            // Jazda joyDrive (góra-lewo) + klawiatura
+            const fwd  = -joyDrive.value.y + (keys.up ? 1 : 0) - (keys.down ? 1 : 0);
+            const turn =  joyDrive.value.x + (keys.right ? 1 : 0) - (keys.left ? 1 : 0);
+            craneGroup.translateZ(fwd * 3.5 * delta);
+            craneGroup.rotation.y -= turn * 1.0 * delta;
+
+            if (cameraView === 0) {
+                controls.target.lerp(new THREE.Vector3(craneGroup.position.x, craneGroup.position.y + 4, craneGroup.position.z), 0.05);
+            } else {
+                // Pozycja kamery = cabinCamPos w świecie
+                const p = new THREE.Vector3(); cabinCamPos.getWorldPosition(p); camera.position.copy(p);
+                // Kierunek patrzenia = obrót kabiny + fpvYaw/Pitch od gracza
+                const cabinWorldQuat = new THREE.Quaternion(); cabinCamPos.getWorldQuaternion(cabinWorldQuat);
+                const localQuat = new THREE.Quaternion();
+                localQuat.setFromEuler(new THREE.Euler(fpvPitch, fpvYaw, 0, 'YXZ'));
+                camera.quaternion.copy(cabinWorldQuat).multiply(localQuat);
+            }
+
+            const oldBoom = arm1Pivot.rotation.x; const oldStick = arm2Pivot.rotation.x;
+            const gp = new THREE.Vector3(); grapplePivot.getWorldPosition(gp);
+
+            // LEWY JOYSTICK: X=obrót (wolniej), Y=STICK (małe ramię)
+            bodyPivot.rotation.y -= joyLeft.value.x * 0.4 * delta;
+            arm2Pivot.rotation.x += joyLeft.value.y * 1.2 * delta;
+
+            // PRAWY JOYSTICK: X=chwytak, Y=BOOM odwrócony (dół=podnieś, góra=opuść)
+            targetClawRot -= joyRight.value.x * 2.0 * delta;
+            targetClawRot = Math.max(-0.5, Math.min(targetClawRot, 0.5));
+            arm1Pivot.rotation.x -= joyRight.value.y * 0.7 * delta;
+
+            // --- LIMITY z debug session ---
+            arm1Pivot.rotation.x = Math.max(-0.11, Math.min(arm1Pivot.rotation.x, 1.38));
+            arm2Pivot.rotation.x = Math.max(-2.82, Math.min(arm2Pivot.rotation.x, -0.28));
+
+            // Fizyka podłogi (Chwytak nie przechodzi przez ziemię)
+            const newGP = new THREE.Vector3(); 
+            craneGroup.updateMatrixWorld(true);
+            grapplePivot.getWorldPosition(newGP);
+            if (newGP.y < 2.2 && newGP.y < gp.y) {
+                arm1Pivot.rotation.x = oldBoom;
+                arm2Pivot.rotation.x = oldStick;
+            }
+
+            grapplePivot.rotation.x = -(arm1Pivot.rotation.x + arm2Pivot.rotation.x);
+            const prevClawRot = actualClawRot;
+            actualClawRot += (targetClawRot - actualClawRot) * Math.min(8 * delta, 1);
+            claws.forEach(c => c.rotation.x = actualClawRot);
+
+            // KOLIZJA chwytak ↔ Arjes lejek — cofnij ramiona jeśli chwytak wchodzi w lejek
+            craneGroup.updateMatrixWorld(true);
+            shredderGroup.updateMatrixWorld(true);
+            const grappleW = new THREE.Vector3(); grapplePivot.getWorldPosition(grappleW);
+            const grappleLocal = shredderGroup.worldToLocal(grappleW.clone());
+            // Kolizja z lejkiem (szerszy niż korpus) i górą maszyny
+            const colHalfX = hopW/2 + 0.3;
+            const colHalfZ = hopD2/2 + 0.3;
+            const colYmin  = bodyH + 0.2;
+            const colYmax  = bodyH + hopH2 + 1.0;
+            if (Math.abs(grappleLocal.x) < colHalfX &&
+                grappleLocal.y > colYmin && grappleLocal.y < colYmax &&
+                Math.abs(grappleLocal.z) < colHalfZ) {
+                arm1Pivot.rotation.x = oldBoom;
+                arm2Pivot.rotation.x = oldStick;
+                grapplePivot.rotation.x = -(arm1Pivot.rotation.x + arm2Pivot.rotation.x);
+            }
+
+            // PICKUP: gdy chwytak się zamyka i jest blisko złomu
+            if (targetClawRot > 0.2 && !payloadMesh.visible) {
+                craneGroup.updateMatrixWorld(true);
+                const grapplePos = new THREE.Vector3(); grapplePivot.getWorldPosition(grapplePos);
+                const scrapWorldPos = new THREE.Vector3(0, 0, 18);
+                if (grapplePos.distanceTo(scrapWorldPos) < 9.0 && grapplePos.y < 8.0) {
+                    payloadMesh.visible = true;
+                }
+            }
+
+            // DROP: gdy chwytak się otwiera
+            if (targetClawRot < -0.2 && payloadMesh.visible) {
+                payloadMesh.visible = false;
+                craneGroup.updateMatrixWorld(true);
+                shredderGroup.updateMatrixWorld(true);
+                const dropPos = new THREE.Vector3(); grapplePivot.getWorldPosition(dropPos);
+                // Punkt wlotu (lejek) maszyny w świecie
+                const hopperPos = new THREE.Vector3(0, bodyH+1.5, 0);
+                shredderGroup.localToWorld(hopperPos);
+                const dist = dropPos.distanceTo(hopperPos);
+                if (dist < 6.0) {
+                    // TRAFIŁ W MASZYNĘ — uruchom taśmę i dźwięk
+                    const kg = Math.floor(Math.random() * 230 + 120);
+                    addKg(kg);
+                    kgEl.style.transform = 'scale(1.4)';
+                    setTimeout(() => kgEl.style.transform = 'scale(1)', 300);
+                    beltFragments.forEach(f => f.mesh.visible = true);
+                    beltScrapT = 0;
+                    playShredderSound();
+                    setTimeout(stopShredderSound, 5500);
+                    // Po dotarciu taśmy — dodaj kawałki do hałdy
+                    const delay = 1000 / 0.32 * 0.001 * beltLen; // czas przejazdu taśmy ~3s
+                    setTimeout(() => {
+                        const count = 6 + Math.floor(Math.random() * 6); // 6-12 kawałków
+                        for (let i = 0; i < count; i++) {
+                            setTimeout(addToPile, i * 180);
+                        }
+                    }, 3200);
+
+                } else {
+                    // Upuścił obok
+                    const scrap = new THREE.Mesh(new THREE.BoxGeometry(0.8,0.8,0.8), rustMaterial);
+                    scrap.position.copy(dropPos); scene.add(scrap);
+                    droppedScraps.push({ mesh: scrap, velocityY: 0 });
+                }
+            }
+
+            // Pozycjonuj hałdę na końcu taśmy (raz)
+            if (!pilePositioned) {
+                shredderGroup.updateMatrixWorld(true);
+                beltGroup.updateMatrixWorld(true);
+                const beltEnd = new THREE.Vector3(-beltLen/2, 0.2, 0);
+                beltGroup.localToWorld(beltEnd);
+                pileGroup.position.set(beltEnd.x, 0, beltEnd.z);
+                pileGroup.userData.beltEndY = beltEnd.y; // zapamiętaj wysokość końca taśmy
+                pilePositioned = true;
+            }
+
+            // Animacja kawałków spadających na hałdę
+            for (let i = pileChunks.length - 1; i >= 0; i--) {
+                const c = pileChunks[i];
+                if (c.falling) {
+                    c.mesh.position.y -= 8 * delta;
+                    if (c.mesh.position.y <= c.targetY) {
+                        c.mesh.position.y = c.targetY;
+                        c.falling = false;
+                    }
+                }
+            }
+            if (beltScrapT >= 0) {
+                beltScrapT += delta * 0.32;
+                beltFragments.forEach(({ mesh, tx, tz }) => {
+                    // tx to stały offset startu (0..1) — każdy kawałek startuje z prawej z opóźnieniem
+                    const t = beltScrapT - tx; // t rośnie od 0 (kiedy ten fragment startuje)
+                    if (t < 0) {
+                        mesh.visible = false;
+                    } else if (t < 1.05) {
+                        mesh.visible = true;
+                        mesh.position.x = (beltLen/2 - 0.5) - t * beltLen;
+                        mesh.position.y = 0.28;
+                        mesh.position.z = tz;
+                    } else {
+                        mesh.visible = false;
+                    }
+                });
+                if (beltScrapT > 2.1) { beltScrapT = -1; beltFragments.forEach(f => f.mesh.visible = false); }
+            }
+            // Obracaj wały rozdrabniarki
+            shafts[0].rotation.z += delta * 1.8;
+            shafts[1].rotation.z -= delta * 1.8;
+
+            for (let i = droppedScraps.length - 1; i >= 0; i--) {
+                const d = droppedScraps[i]; d.velocityY -= 20 * delta; d.mesh.position.y += d.velocityY * delta;
+                if (d.mesh.position.y <= 0.5) { d.mesh.position.y = 0.5; droppedScraps.splice(i, 1); }
+            }
+
+            if (cameraView === 0) controls.update();
+            renderer.render(scene, camera);
+        }
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        animate();
+    </script>
+</body>
+</html>
+

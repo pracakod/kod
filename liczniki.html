@@ -554,8 +554,6 @@ document.getElementById('btnInstall').addEventListener('click', function() {
       if (r.outcome === 'accepted') toast('✅ Zainstalowano!');
       deferredInstallPrompt = null;
     });
-  } else if (navigator.share) {
-    navigator.share({ title: 'Liczniki Skupu', url: window.location.href });
   } else {
     // Show overlay instructions
     var ov = document.createElement('div');

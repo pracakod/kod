@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Liczniki">
+<meta name="theme-color" content="#0a0a0a">
+<link rel="manifest" href="data:application/json,{%22name%22:%22Liczniki%20Skupu%22,%22short_name%22:%22Liczniki%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230a0a0a%22,%22theme_color%22:%22%230a0a0a%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d6a4f'/><text y='.9em' font-size='80' x='10'>⚙️</text></svg>%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
+<title>Liczniki Skupu</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  --bg: #0a0a0a; --surface: #161616; --surface2: #1e1e1e;
+  --border: #2a2a2a; --text: #f0ede8; --muted: #777;
+  --green: #2d6a4f; --green-light: #74c69d;
+  --red: #6b1f1f; --red-light: #ffaaaa;
+}
+body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; padding-bottom: 4rem; }
+
+.tabs { display: flex; position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); }
+.tab-btn { flex: 1; background: none; border: none; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 1rem 0.5rem; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
+.tab-btn.active { color: var(--text); border-bottom-color: var(--green-light); }
+
+.page { display: none; }
+.page.active { display: block; }
+
+.page-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem 0.5rem; }
+.page-header h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.4rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.icon-btn { background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.4rem 0.6rem; border-radius: 8px; }
+
+.menu-wrap { position: relative; }
+.dropdown { display: none; position: absolute; right: 0; top: 110%; background: #2a2a2a; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px #0009; min-width: 230px; z-index: 300; }
+.dropdown.open { display: block; }
+.dropdown button { display: block; width: 100%; background: none; border: none; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 0.95rem; padding: 0.9rem 1.2rem; text-align: left; cursor: pointer; border-bottom: 1px solid #333; }
+.dropdown button:last-child { border-bottom: none; }
+.dropdown button:active { background: #383838; }
+.dropdown button.danger { color: #ff6b6b; }
+
+.counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 0.75rem 1rem; }
+.counter-card { border-radius: 18px; padding: 0.85rem 0.75rem 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.counter-name { font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; color: rgba(255,255,255,0.8); }
+.counter-display { border-radius: 10px; background: rgba(0,0,0,0.28); text-align: center; padding: 0.5rem 0; font-family: 'Barlow Condensed', sans-serif; font-size: 2.6rem; font-weight: 900; color: #fff; min-height: 68px; display: flex; align-items: center; justify-content: center; }
+.counter-btns { display: flex; align-items: center; justify-content: space-around; }
+.counter-btns button { background: none; border: none; color: rgba(255,255,255,0.9); font-size: 2rem; font-weight: 700; cursor: pointer; padding: 0.2rem 1rem; border-radius: 8px; line-height: 1; }
+.counter-btns button:active { background: rgba(0,0,0,0.3); }
+.counter-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.2); }
+.counter-kg { font-size: 0.68rem; color: rgba(255,255,255,0.4); text-align: center; }
+
+
+
+.live-summary { margin: 0 1rem 1rem; background: var(--surface); border-radius: 16px; padding: 1rem 1.1rem; border: 1px solid var(--border); }
+.live-summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
+.live-summary-header h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.save-summary-btn { background: var(--green); color: var(--green-light); border: none; border-radius: 8px; padding: 0.4rem 0.9rem; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+.summary-row:last-child { border-bottom: none; }
+.summary-row .lbl { font-size: 0.9rem; color: #bbb; display: flex; align-items: center; gap: 0.5rem; }
+.summary-row .dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
+.summary-row .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.summary-total { margin-top: 0.8rem; padding-top: 0.75rem; border-top: 2px solid #333; display: flex; justify-content: space-between; align-items: center; }
+.summary-total .lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; color: #fff; }
+.summary-total .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--green-light); }
+
+.history-list { padding: 0.5rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.history-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 0.95rem; }
+.history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+.history-card-header { display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 1rem; background: var(--surface2); cursor: pointer; }
+.hdate { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.htime { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+.htotal { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 900; color: var(--green-light); flex-shrink: 0; margin-left: 0.5rem; }
+.history-card-body { display: none; padding: 0.75rem 1rem; border-top: 1px solid var(--border); }
+.history-card-body.open { display: block; }
+.history-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.9rem; color: #bbb; border-bottom: 1px solid #222; }
+.history-row:last-child { border-bottom: none; }
+.hval { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: var(--text); }
+.history-del { background: var(--red); color: var(--red-light); border: none; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.82rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; cursor: pointer; margin-top: 0.75rem; }
+.edit-label-btn { background: none; border: none; color: #666; font-size: 0.82rem; cursor: pointer; padding: 2px 5px; }
+
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: flex-end; justify-content: center; touch-action: none; overscroll-behavior: none; }
+.modal-overlay.open { display: flex; }
+.modal { background: #1e1e1e; border-radius: 20px 20px 0 0; padding: 1.5rem 1.5rem 2.5rem; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 1rem; max-height: 90vh; overflow-y: auto; }
+.modal-handle { width: 40px; height: 4px; background: #444; border-radius: 2px; margin: 0 auto 0.25rem; }
+.modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; }
+.modal label { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.25rem; display: block; }
+.modal input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 10px; padding: 0.75rem 1rem; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 1rem; outline: none; margin-bottom: 0.25rem; }
+.modal input:focus { border-color: #555; }
+.color-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.color-swatch { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; }
+.color-swatch.selected { border-color: #fff; }
+.modal-btns { display: flex; gap: 0.6rem; }
+.modal-btns button { flex: 1; padding: 0.85rem 0.3rem; border-radius: 12px; border: none; font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
+.btn-cancel { background: #2a2a2a; color: var(--text); }
+.btn-save { background: var(--green); color: var(--green-light); }
+.btn-delete { background: var(--red); color: var(--red-light); }
+
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(90px); background: #333; color: #fff; padding: 0.7rem 1.4rem; border-radius: 30px; font-size: 0.9rem; z-index: 9999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="counters">⚙️ Liczniki</button>
+  <button class="tab-btn" data-tab="history">📋 Historia</button>
+</div>
+
+<div class="page active" id="page-counters">
+  <div class="page-header">
+    <h2>Liczniki</h2>
+    <div class="menu-wrap">
+      <button class="icon-btn" id="menuBtn">&#8942;</button>
+      <div class="dropdown" id="dropdown">
+        <button id="btnResetCounts">🔄 Wyzeruj wszystkie</button>
+        <button id="btnResetWeights">⚖️ Przywróć domyślne wagi</button>
+        <button id="btnAdd">➕ Dodaj licznik</button>
+        <button id="btnInstall">📲 Zainstaluj aplikację</button>
+      </div>
+    </div>
+  </div>
+  <div class="counters-grid" id="grid"></div>
+
+  <div class="live-summary" id="liveSummary"></div>
+</div>
+
+<div class="page" id="page-history">
+  <div class="page-header"><h2>Historia zapisów</h2></div>
+  <div class="history-list" id="historyList"></div>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3 id="modalTitle">Edytuj licznik</h3>
+    <div>
+      <label>Nazwa</label>
+      <input type="text" id="editName" placeholder="Nazwa licznika">
+    </div>
+    <div>
+      <label>Waga jednostkowa (kg)</label>
+      <input type="number" id="editWeight" placeholder="np. 150" min="0" step="1">
+    </div>
+    <div>
+      <label>Kolor</label>
+      <div class="color-row" id="colorSwatches"></div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btnCancel">Anuluj</button>
+      <button class="btn-delete" id="btnDelete">Usuń</button>
+      <button class="btn-save" id="btnSave">Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAME MODAL -->
+<div class="modal-overlay" id="nameModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Nazwa zapisu</h3>
+    <div>
+      <label>Podaj nazwę (np. Dostawa rano, Kurs #5)</label>
+      <input type="text" id="summaryName" placeholder="Np. Dostawa 28.02">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btnNameCancel">Anuluj</button>
+      <button class="btn-save" id="btnNameSave">💾 Zapisz</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var COLORS = ['#7B3F2E','#4A7B8C','#C49A22','#2D6A4F','#5B3A6B','#6B3535','#3A5A3A','#2B4A6B','#6B5A2B','#555555'];
+var DEFAULT_WEIGHTS = {1:150, 2:195, 3:90, 4:135, 5:45};
+var DEFAULT_COUNTERS = [
+  {id:1, name:'Żeliwo', count:0, color:'#7B3F2E', weight:150},
+  {id:2, name:'Cały Żeliwo', count:0, color:'#7B3F2E', weight:195},
+  {id:3, name:'Aluminium', count:0, color:'#4A7B8C', weight:90},
+  {id:4, name:'Cały Alum', count:0, color:'#4A7B8C', weight:135},
+  {id:5, name:'Skrzynie', count:0, color:'#C49A22', weight:45}
+];
+var COUNTERS_KEY = 'liczniki_v5';
+var RECORDS_KEY = 'liczniki_historia_v1';
+
+var counters = JSON.parse(localStorage.getItem(COUNTERS_KEY) || 'null') || JSON.parse(JSON.stringify(DEFAULT_COUNTERS));
+var records = JSON.parse(localStorage.getItem(RECORDS_KEY) || '[]');
+var nextId = Math.max.apply(null, [0].concat(counters.map(function(c){return c.id;}))) + 1;
+var editingId = null;
+var selectedColor = COLORS[0];
+
+function saveCounters() { localStorage.setItem(COUNTERS_KEY, JSON.stringify(counters)); }
+function saveRecords() { localStorage.setItem(RECORDS_KEY, JSON.stringify(records)); }
+
+function toast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2200);
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function formatDate(ts) {
+  var d = new Date(ts);
+  return String(d.getDate()).padStart(2,'0')+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear();
+}
+function formatTime(ts) {
+  var d = new Date(ts);
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+
+function lockScroll() { document.body.style.overflow = 'hidden'; }
+function unlockScroll() { document.body.style.overflow = ''; }
+
+function openModalEl(id) { document.getElementById(id).classList.add('open'); lockScroll(); }
+function closeAllModals() {
+  document.getElementById('editModal').classList.remove('open');
+  document.getElementById('nameModal').classList.remove('open');
+  unlockScroll();
+}
+
+// ---- HOLD TO EDIT CARD ----
+function attachHoldEdit(el, onHold) {
+  var timer = null, moved = false, sx = 0, sy = 0;
+  function start(x, y) {
+    moved = false; sx = x; sy = y;
+    timer = setTimeout(function(){ if (!moved) onHold(); }, 650);
+  }
+  function cancel() { if (timer) { clearTimeout(timer); timer = null; } }
+  el.addEventListener('touchstart', function(e){ var t=e.touches[0]; start(t.clientX,t.clientY); }, {passive:true});
+  el.addEventListener('touchmove', function(e){ var t=e.touches[0]; if(Math.sqrt(Math.pow(t.clientX-sx,2)+Math.pow(t.clientY-sy,2))>8){moved=true;cancel();} }, {passive:true});
+  el.addEventListener('touchend', cancel);
+  el.addEventListener('touchcancel', cancel);
+  el.addEventListener('mousedown', function(e){ start(e.clientX,e.clientY); });
+  el.addEventListener('mousemove', function(e){ if(Math.sqrt(Math.pow(e.clientX-sx,2)+Math.pow(e.clientY-sy,2))>8){moved=true;cancel();} });
+  el.addEventListener('mouseup', cancel);
+  el.addEventListener('mouseleave', cancel);
+  el.addEventListener('contextmenu', function(e){ e.preventDefault(); });
+}
+
+// ---- REPEAT BUTTON ----
+var activeRepeat = null;
+function stopRepeat() {
+  if (activeRepeat) {
+    clearTimeout(activeRepeat.timer);
+    clearInterval(activeRepeat.interval);
+    activeRepeat = null;
+  }
+}
+function attachRepeatBtn(btn, id, delta) {
+  function tick() {
+    var c = counters.find(function(x){ return x.id===id; });
+    if (!c) return;
+    c.count = Math.max(0, c.count + delta);
+    if (navigator.vibrate) navigator.vibrate(30);
+    var card = document.querySelector('[data-cid="'+id+'"]');
+    if (card) {
+      card.querySelector('.counter-display').textContent = c.count;
+      card.querySelector('.counter-kg').textContent = (c.count*(c.weight||0))+' kg';
+    }
+  }
+  function start() {
+    stopRepeat();
+    tick();
+    var rep = {timer: null, interval: null};
+    rep.timer = setTimeout(function(){
+      rep.interval = setInterval(tick, 110);
+    }, 400);
+    activeRepeat = rep;
+  }
+  function stop() {
+    if (activeRepeat) {
+      stopRepeat();
+      saveCounters();
+      renderLiveSummary();
+    }
+  }
+  btn.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); start(); }, {passive:false});
+  btn.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); stop(); }, {passive:false});
+  btn.addEventListener('touchcancel', function(e){ stop(); });
+  btn.addEventListener('mousedown', function(e){ e.stopPropagation(); start(); });
+  btn.addEventListener('mouseup', function(e){ e.stopPropagation(); stop(); });
+  btn.addEventListener('mouseleave', function(e){ if(activeRepeat) stop(); });
+}
+document.addEventListener('touchend', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); renderLiveSummary(); } });
+document.addEventListener('mouseup', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); renderLiveSummary(); } });
+
+// ---- RENDER ----
+function render() {
+  var grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  counters.forEach(function(c) {
+    var card = document.createElement('div');
+    card.className = 'counter-card';
+    card.dataset.cid = c.id;
+    card.style.background = c.color;
+    var kg = c.count * (c.weight || 0);
+    card.innerHTML =
+      '<div class="counter-name">'+esc(c.name)+'</div>'+
+      '<div class="counter-display">'+c.count+'</div>'+
+      '<div class="counter-btns">'+
+        '<button class="minus-btn">&minus;</button>'+
+        '<div class="counter-divider"></div>'+
+        '<button class="plus-btn">+</button>'+
+      '</div>'+
+      '<div class="counter-kg">'+kg+' kg</div>';
+    attachRepeatBtn(card.querySelector('.minus-btn'), c.id, -1);
+    attachRepeatBtn(card.querySelector('.plus-btn'), c.id, 1);
+    attachHoldEdit(card, (function(id){ return function(){ openEdit(id); }; })(c.id));
+    grid.appendChild(card);
+  });
+  renderLiveSummary();
+}
+
+function change(id, delta) {
+  var c = counters.find(function(x){ return x.id===id; });
+  if (!c) return;
+  c.count = Math.max(0, c.count+delta);
+  saveCounters();
+  // Update only the number and kg, don't rebuild entire DOM
+  var card = document.querySelector('[data-cid="'+id+'"]');
+  if (card) {
+    card.querySelector('.counter-display').textContent = c.count;
+    card.querySelector('.counter-kg').textContent = (c.count*(c.weight||0))+' kg';
+  }
+  renderLiveSummary();
+}
+
+function renderLiveSummary() {
+  var el = document.getElementById('liveSummary');
+  if (!counters.length) { el.innerHTML=''; return; }
+  var total=0, rows='';
+  counters.forEach(function(c){
+    var kg = c.count*(c.weight||0);
+    total += kg;
+    rows += '<div class="summary-row">'+
+      '<span class="lbl"><span class="dot" style="background:'+c.color+'"></span>'+esc(c.name)+' × '+c.count+'</span>'+
+      '<span class="val">'+kg+' kg</span></div>';
+  });
+  el.innerHTML =
+    '<div class="live-summary-header"><h3>📦 Podsumowanie</h3>'+
+    '<button class="save-summary-btn" id="btnSaveSummary">💾 Zapisz</button></div>'+
+    rows+
+    '<div class="summary-total"><span class="lbl">Łącznie</span><span class="val">'+total+' kg</span></div>';
+  document.getElementById('btnSaveSummary').addEventListener('click', openSaveSummary);
+}
+
+// ---- SAVE SUMMARY ----
+function openSaveSummary() {
+  var d = new Date();
+  var dd = String(d.getDate()).padStart(2,'0');
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  document.getElementById('summaryName').value = dd+'.'+mm+' - ';
+  openModalEl('nameModal');
+  setTimeout(function(){ document.getElementById('summaryName').focus(); document.getElementById('summaryName').setSelectionRange(999,999); }, 150);
+}
+
+function doSaveSummary() {
+  var label = document.getElementById('summaryName').value.trim() || formatDate(Date.now());
+  var total = 0;
+  var items = counters.map(function(c){
+    var kg = c.count*(c.weight||0);
+    total += kg;
+    return {name:c.name, count:c.count, weight:c.weight, kg:kg, color:c.color};
+  });
+  records.unshift({ts: Date.now(), label: label, items: items, total: total});
+  saveRecords();
+  renderRecords();
+  closeAllModals();
+  toast('✅ Zapisano: '+label);
+}
+
+// ---- HISTORY ----
+function renderRecords() {
+  var el = document.getElementById('historyList');
+  if (!records.length) {
+    el.innerHTML = '<div class="history-empty">Brak zapisanych podsumowań.<br>Kliknij 💾 Zapisz na stronie Liczniki.</div>';
+    return;
+  }
+  el.innerHTML = '';
+  records.forEach(function(entry, idx) {
+    var card = document.createElement('div');
+    card.className = 'history-card';
+    var label = entry.label || formatDate(entry.ts);
+    var rows = entry.items.map(function(it){
+      return '<div class="history-row">'+
+        '<span style="display:flex;align-items:center;gap:6px">'+
+        '<span style="width:8px;height:8px;border-radius:2px;background:'+it.color+';display:inline-block"></span>'+
+        esc(it.name)+' × '+it.count+'</span>'+
+        '<span class="hval">'+it.kg+' kg</span></div>';
+    }).join('');
+
+    card.innerHTML =
+      '<div class="history-card-header">'+
+        '<div style="flex:1;min-width:0">'+
+          '<div class="hdate">'+esc(label)+
+            '<button class="edit-label-btn">✏️</button>'+
+          '</div>'+
+          '<div class="htime">📅 '+formatDate(entry.ts)+' &bull; 🕐 '+formatTime(entry.ts)+'</div>'+
+        '</div>'+
+        '<div class="htotal">'+entry.total+' kg</div>'+
+      '</div>'+
+      '<div class="history-card-body" id="hbody-'+idx+'">'+rows+
+        '<button class="history-del">🗑 Usuń ten zapis</button>'+
+      '</div>';
+
+    card.querySelector('.history-card-header').addEventListener('click', function(e){
+      if (e.target.closest('.edit-label-btn')) return;
+      document.getElementById('hbody-'+idx).classList.toggle('open');
+    });
+
+    card.querySelector('.edit-label-btn').addEventListener('click', function(e){
+      e.stopPropagation();
+      var newLabel = prompt('Zmień nazwę:', records[idx].label||'');
+      if (newLabel !== null && newLabel.trim()) {
+        records[idx].label = newLabel.trim();
+        saveRecords(); renderRecords();
+      }
+    });
+
+    card.querySelector('.history-del').addEventListener('click', function(e){
+      e.stopPropagation();
+      records.splice(idx, 1);
+      saveRecords(); renderRecords();
+      toast('Usunięto zapis');
+    });
+
+    el.appendChild(card);
+  });
+}
+
+// ---- COUNTER MODAL ----
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = 'Nowy licznik';
+  document.getElementById('editName').value = '';
+  document.getElementById('editWeight').value = '';
+  document.getElementById('btnDelete').style.display = 'none';
+  selectedColor = COLORS[0];
+  buildSwatches();
+  document.getElementById('dropdown').classList.remove('open');
+  openModalEl('editModal');
+}
+
+function openEdit(id) {
+  var c = counters.find(function(x){ return x.id===id; });
+  if (!c) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = 'Edytuj: '+c.name;
+  document.getElementById('editName').value = c.name;
+  document.getElementById('editWeight').value = c.weight||'';
+  document.getElementById('btnDelete').style.display = '';
+  selectedColor = c.color;
+  buildSwatches();
+  openModalEl('editModal');
+}
+
+function buildSwatches() {
+  var el = document.getElementById('colorSwatches');
+  el.innerHTML = '';
+  COLORS.forEach(function(col){
+    var sw = document.createElement('div');
+    sw.className = 'color-swatch'+(col===selectedColor?' selected':'');
+    sw.style.background = col;
+    sw.addEventListener('click', function(e){ e.stopPropagation(); selectedColor=col; buildSwatches(); });
+    el.appendChild(sw);
+  });
+}
+
+function doSave() {
+  var name = document.getElementById('editName').value.trim()||'Licznik';
+  var weight = parseInt(document.getElementById('editWeight').value)||0;
+  if (editingId !== null) {
+    var c = counters.find(function(x){ return x.id===editingId; });
+    c.name=name; c.color=selectedColor; c.weight=weight;
+    toast('Zaktualizowano');
+  } else {
+    counters.push({id:nextId++, name:name, count:0, color:selectedColor, weight:weight});
+    toast('Dodano licznik');
+  }
+  saveCounters(); render(); closeAllModals();
+}
+
+function doDelete() {
+  counters = counters.filter(function(x){ return x.id!==editingId; });
+  saveCounters(); render(); closeAllModals();
+  toast('Usunięto licznik');
+}
+
+function resetCounts() {
+  counters.forEach(function(c){ c.count=0; });
+  saveCounters(); render();
+  document.getElementById('dropdown').classList.remove('open');
+  toast('Wyzerowano wszystkie');
+}
+function resetWeights() {
+  counters.forEach(function(c){ if(DEFAULT_WEIGHTS[c.id]!==undefined) c.weight=DEFAULT_WEIGHTS[c.id]; });
+  saveCounters(); render();
+  document.getElementById('dropdown').classList.remove('open');
+  toast('Przywrócono wagi');
+}
+function deleteAll() {
+  counters=[];
+  saveCounters(); render();
+  document.getElementById('dropdown').classList.remove('open');
+  toast('Usunięto wszystkie liczniki');
+}
+
+// ---- TABS ----
+document.querySelectorAll('.tab-btn').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('.tab-btn').forEach(function(b){ b.classList.remove('active'); });
+    document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+    btn.classList.add('active');
+    document.getElementById('page-'+btn.dataset.tab).classList.add('active');
+    if (btn.dataset.tab==='history') renderRecords();
+  });
+});
+
+// ---- EVENTS ----
+document.getElementById('menuBtn').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('dropdown').classList.toggle('open'); });
+document.addEventListener('click', function(){ document.getElementById('dropdown').classList.remove('open'); });
+document.getElementById('dropdown').addEventListener('click', function(e){ e.stopPropagation(); });
+
+document.getElementById('btnResetCounts').addEventListener('click', resetCounts);
+document.getElementById('btnResetWeights').addEventListener('click', resetWeights);
+document.getElementById('btnAdd').addEventListener('click', openAdd);
+document.getElementById('btnCancel').addEventListener('click', closeAllModals);
+document.getElementById('btnDelete').addEventListener('click', doDelete);
+document.getElementById('btnSave').addEventListener('click', doSave);
+document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
+
+document.getElementById('btnNameCancel').addEventListener('click', closeAllModals);
+document.getElementById('btnNameSave').addEventListener('click', doSaveSummary);
+document.getElementById('summaryName').addEventListener('keydown', function(e){ if(e.key==='Enter') doSaveSummary(); });
+document.getElementById('nameModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
+
+// ---- INSTALL ----
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+});
+document.getElementById('btnInstall').addEventListener('click', function() {
+  document.getElementById('dropdown').classList.remove('open');
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(function(r) {
+      if (r.outcome === 'accepted') toast('✅ Zainstalowano!');
+      deferredInstallPrompt = null;
+    });
+  } else if (navigator.share) {
+    navigator.share({ title: 'Liczniki Skupu', url: window.location.href });
+  } else {
+    // Show overlay instructions
+    var ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:flex-end;justify-content:center;';
+    ov.innerHTML = '<div style="background:#1e1e1e;border-radius:20px 20px 0 0;padding:2rem 1.5rem 3rem;width:100%;max-width:480px;font-family:Barlow,sans-serif;">' +
+      '<div style="width:40px;height:4px;background:#444;border-radius:2px;margin:0 auto 1.5rem;"></div>' +
+      '<div style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:#f0ede8;">📲 Zainstaluj aplikację</div>' +
+      '<div style="color:#aaa;font-size:0.95rem;line-height:1.6;">' +
+        '<b style="color:#74c69d;">Chrome Android:</b><br>Menu ⋮ → "Dodaj do ekranu głównego"<br><br>' +
+        '<b style="color:#74c69d;">Safari iOS:</b><br>Przycisk Udostępnij □↑ → "Dodaj do ekranu głównego"' +
+      '</div>' +
+      '<button style="margin-top:1.5rem;width:100%;padding:0.9rem;background:#2d6a4f;color:#74c69d;border:none;border-radius:12px;font-size:1rem;font-weight:700;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;">OK</button>' +
+    '</div>';
+    ov.querySelector('button').addEventListener('click', function(){ document.body.removeChild(ov); });
+    ov.addEventListener('click', function(e){ if(e.target===ov) document.body.removeChild(ov); });
+    document.body.appendChild(ov);
+  }
+});
+
+render();
+</script>
+</body>
+</html>

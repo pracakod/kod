@@ -8,7 +8,6 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Liczniki">
 <meta name="theme-color" content="#0a0a0a">
-<link rel="manifest" href="data:application/json,{%22name%22:%22Liczniki%20Skupu%22,%22short_name%22:%22Liczniki%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%230a0a0a%22,%22theme_color%22:%22%230a0a0a%22,%22icons%22:[{%22src%22:%22data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232d6a4f'/><text y='.9em' font-size='80' x='10'>⚙️</text></svg>%22,%22sizes%22:%22any%22,%22type%22:%22image/svg+xml%22}]}">
 <title>Liczniki Skupu</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -20,18 +19,14 @@
   --red: #6b1f1f; --red-light: #ffaaaa;
 }
 body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-serif; min-height: 100vh; padding-bottom: 4rem; }
-
 .tabs { display: flex; position: sticky; top: 0; z-index: 100; background: var(--bg); border-bottom: 1px solid var(--border); }
 .tab-btn { flex: 1; background: none; border: none; color: var(--muted); font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; padding: 1rem 0.5rem; cursor: pointer; border-bottom: 2px solid transparent; transition: color 0.2s, border-color 0.2s; }
 .tab-btn.active { color: var(--text); border-bottom-color: var(--green-light); }
-
 .page { display: none; }
 .page.active { display: block; }
-
 .page-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1rem 0.5rem; }
 .page-header h2 { font-family: 'Barlow Condensed', sans-serif; font-weight: 900; font-size: 1.4rem; letter-spacing: 0.04em; text-transform: uppercase; }
 .icon-btn { background: none; border: none; color: var(--text); font-size: 1.5rem; cursor: pointer; padding: 0.4rem 0.6rem; border-radius: 8px; }
-
 .menu-wrap { position: relative; }
 .dropdown { display: none; position: absolute; right: 0; top: 110%; background: #2a2a2a; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 32px #0009; min-width: 230px; z-index: 300; }
 .dropdown.open { display: block; }
@@ -39,7 +34,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .dropdown button:last-child { border-bottom: none; }
 .dropdown button:active { background: #383838; }
 .dropdown button.danger { color: #ff6b6b; }
-
 .counters-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; padding: 0.75rem 1rem; }
 .counter-card { border-radius: 18px; padding: 0.85rem 0.75rem 0.7rem; display: flex; flex-direction: column; gap: 0.4rem; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
 .counter-name { font-family: 'Barlow Condensed', sans-serif; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; text-align: center; color: rgba(255,255,255,0.8); }
@@ -49,22 +43,19 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .counter-btns button:active { background: rgba(0,0,0,0.3); }
 .counter-divider { width: 1px; height: 22px; background: rgba(255,255,255,0.2); }
 .counter-kg { font-size: 0.68rem; color: rgba(255,255,255,0.4); text-align: center; }
-
-
-
 .live-summary { margin: 0 1rem 1rem; background: var(--surface); border-radius: 16px; padding: 1rem 1.1rem; border: 1px solid var(--border); }
 .live-summary-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.8rem; }
 .live-summary-header h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 900; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+.live-summary-header div { display: flex; gap: 0.5rem; }
 .save-summary-btn { background: var(--green); color: var(--green-light); border: none; border-radius: 8px; padding: 0.4rem 0.9rem; font-family: 'Barlow Condensed', sans-serif; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; cursor: pointer; }
 .summary-row { display: flex; justify-content: space-between; align-items: center; padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
 .summary-row:last-child { border-bottom: none; }
 .summary-row .lbl { font-size: 0.9rem; color: #bbb; display: flex; align-items: center; gap: 0.5rem; }
 .summary-row .dot { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
-.summary-row .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+.summary-row .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.1rem; font-weight: 700; }
 .summary-total { margin-top: 0.8rem; padding-top: 0.75rem; border-top: 2px solid #333; display: flex; justify-content: space-between; align-items: center; }
-.summary-total .lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; color: #fff; }
+.summary-total .lbl { font-family: 'Barlow Condensed', sans-serif; font-size: 1rem; font-weight: 700; text-transform: uppercase; }
 .summary-total .val { font-family: 'Barlow Condensed', sans-serif; font-size: 1.4rem; font-weight: 900; color: var(--green-light); }
-
 .history-list { padding: 0.5rem 1rem; display: flex; flex-direction: column; gap: 0.75rem; }
 .history-empty { text-align: center; color: var(--muted); padding: 3rem 1rem; font-size: 0.95rem; }
 .history-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
@@ -77,16 +68,17 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .history-row { display: flex; justify-content: space-between; padding: 0.3rem 0; font-size: 0.9rem; color: #bbb; border-bottom: 1px solid #222; }
 .history-row:last-child { border-bottom: none; }
 .hval { font-family: 'Barlow Condensed', sans-serif; font-weight: 700; color: var(--text); }
-.history-del { background: var(--red); color: var(--red-light); border: none; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.82rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; cursor: pointer; margin-top: 0.75rem; }
+.history-actions { display: flex; gap: 0.5rem; margin-top: 0.75rem; }
+.history-del { background: var(--red); color: var(--red-light); border: none; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.82rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; cursor: pointer; }
+.history-copy { background: #2a3a4a; color: #7ec8e3; border: none; border-radius: 6px; padding: 0.35rem 0.8rem; font-size: 0.82rem; font-family: 'Barlow Condensed', sans-serif; font-weight: 700; cursor: pointer; }
 .edit-label-btn { background: none; border: none; color: #666; font-size: 0.82rem; cursor: pointer; padding: 2px 5px; }
-
 .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: flex-end; justify-content: center; touch-action: none; overscroll-behavior: none; }
 .modal-overlay.open { display: flex; }
 .modal { background: #1e1e1e; border-radius: 20px 20px 0 0; padding: 1.5rem 1.5rem 2.5rem; width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 1rem; max-height: 90vh; overflow-y: auto; }
 .modal-handle { width: 40px; height: 4px; background: #444; border-radius: 2px; margin: 0 auto 0.25rem; }
 .modal h3 { font-family: 'Barlow Condensed', sans-serif; font-size: 1.2rem; font-weight: 900; text-transform: uppercase; }
 .modal label { font-size: 0.82rem; color: var(--muted); margin-bottom: 0.25rem; display: block; }
-.modal input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 10px; padding: 0.75rem 1rem; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 1rem; outline: none; margin-bottom: 0.25rem; }
+.modal input { width: 100%; background: #2a2a2a; border: 1px solid #3a3a3a; border-radius: 10px; padding: 0.75rem 1rem; color: var(--text); font-family: 'Barlow', sans-serif; font-size: 1rem; outline: none; }
 .modal input:focus { border-color: #555; }
 .color-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
 .color-swatch { width: 36px; height: 36px; border-radius: 8px; cursor: pointer; border: 3px solid transparent; }
@@ -96,7 +88,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
 .btn-cancel { background: #2a2a2a; color: var(--text); }
 .btn-save { background: var(--green); color: var(--green-light); }
 .btn-delete { background: var(--red); color: var(--red-light); }
-
 .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(90px); background: #333; color: #fff; padding: 0.7rem 1.4rem; border-radius: 30px; font-size: 0.9rem; z-index: 9999; transition: transform 0.3s; pointer-events: none; white-space: nowrap; }
 .toast.show { transform: translateX(-50%) translateY(0); }
 </style>
@@ -121,8 +112,20 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
     </div>
   </div>
   <div class="counters-grid" id="grid"></div>
-
-  <div class="live-summary" id="liveSummary"></div>
+  <div class="live-summary" id="liveSummary">
+    <div class="live-summary-header">
+      <h3>📦 Podsumowanie</h3>
+      <div>
+        <button class="save-summary-btn" id="btnCopyCurrent">📋</button>
+        <button class="save-summary-btn" id="btnSaveSummary">💾 Zapisz</button>
+      </div>
+    </div>
+    <div id="summaryRows"></div>
+    <div class="summary-total">
+      <span class="lbl">Łącznie</span>
+      <span class="val" id="summaryTotal">0 kg</span>
+    </div>
+  </div>
 </div>
 
 <div class="page" id="page-history">
@@ -161,7 +164,7 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
     <div class="modal-handle"></div>
     <h3>Nazwa zapisu</h3>
     <div>
-      <label>Podaj nazwę (np. Dostawa rano, Kurs #5)</label>
+      <label>Podaj nazwę</label>
       <input type="text" id="summaryName" placeholder="Np. Dostawa 28.02">
     </div>
     <div>
@@ -195,6 +198,8 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
   </div>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script>
 var COLORS = ['#7B3F2E','#4A7B8C','#C49A22','#2D6A4F','#5B3A6B','#6B3535','#3A5A3A','#2B4A6B','#6B5A2B','#555555'];
 var DEFAULT_WEIGHTS = {1:150, 2:195, 3:90, 4:135, 5:45};
@@ -219,6 +224,7 @@ function saveRecords() { localStorage.setItem(RECORDS_KEY, JSON.stringify(record
 
 function toast(msg) {
   var t = document.getElementById('toast');
+  if (!t) return;
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 2200);
@@ -237,13 +243,31 @@ function formatTime(ts) {
 
 function lockScroll() { document.body.style.overflow = 'hidden'; }
 function unlockScroll() { document.body.style.overflow = ''; }
-
 function openModalEl(id) { document.getElementById(id).classList.add('open'); lockScroll(); }
 function closeAllModals() {
-  document.getElementById('editModal').classList.remove('open');
-  document.getElementById('nameModal').classList.remove('open');
-  document.getElementById('editLabelModal').classList.remove('open');
+  ['editModal','nameModal','editLabelModal'].forEach(function(id){
+    var el = document.getElementById(id);
+    if (el) el.classList.remove('open');
+  });
   unlockScroll();
+}
+
+// ---- COPY ----
+function copyText(text) {
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1px;height:1px;';
+  document.body.appendChild(ta);
+  ta.focus();
+  ta.setSelectionRange(0, 99999);
+  var ok = false;
+  try { ok = document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (!ok && navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).catch(function(){});
+  }
+  toast('\u2705 Skopiowano!');
 }
 
 // ---- HOLD TO EDIT CARD ----
@@ -282,35 +306,32 @@ function attachRepeatBtn(btn, id, delta) {
     if (navigator.vibrate) navigator.vibrate(30);
     var card = document.querySelector('[data-cid="'+id+'"]');
     if (card) {
-      card.querySelector('.counter-display').textContent = c.count;
-      card.querySelector('.counter-kg').textContent = (c.count*(c.weight||0))+' kg';
+      var disp = card.querySelector('.counter-display');
+      var kgEl = card.querySelector('.counter-kg');
+      if (disp) disp.textContent = c.count;
+      if (kgEl) kgEl.textContent = (c.count*(c.weight||0))+' kg';
     }
+    updateSummary();
   }
   function start() {
     stopRepeat();
     tick();
     var rep = {timer: null, interval: null};
-    rep.timer = setTimeout(function(){
-      rep.interval = setInterval(tick, 110);
-    }, 400);
+    rep.timer = setTimeout(function(){ rep.interval = setInterval(tick, 110); }, 400);
     activeRepeat = rep;
   }
   function stop() {
-    if (activeRepeat) {
-      stopRepeat();
-      saveCounters();
-      renderLiveSummary();
-    }
+    if (activeRepeat) { stopRepeat(); saveCounters(); }
   }
   btn.addEventListener('touchstart', function(e){ e.preventDefault(); e.stopPropagation(); start(); }, {passive:false});
   btn.addEventListener('touchend', function(e){ e.preventDefault(); e.stopPropagation(); stop(); }, {passive:false});
-  btn.addEventListener('touchcancel', function(e){ stop(); });
+  btn.addEventListener('touchcancel', stop);
   btn.addEventListener('mousedown', function(e){ e.stopPropagation(); start(); });
   btn.addEventListener('mouseup', function(e){ e.stopPropagation(); stop(); });
-  btn.addEventListener('mouseleave', function(e){ if(activeRepeat) stop(); });
+  btn.addEventListener('mouseleave', function(){ if(activeRepeat) stop(); });
 }
-document.addEventListener('touchend', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); renderLiveSummary(); } });
-document.addEventListener('mouseup', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); renderLiveSummary(); } });
+document.addEventListener('touchend', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); } });
+document.addEventListener('mouseup', function(){ if(activeRepeat){ stopRepeat(); saveCounters(); } });
 
 // ---- RENDER ----
 function render() {
@@ -336,40 +357,24 @@ function render() {
     attachHoldEdit(card, (function(id){ return function(){ openEdit(id); }; })(c.id));
     grid.appendChild(card);
   });
-  renderLiveSummary();
+  updateSummary();
 }
 
-function change(id, delta) {
-  var c = counters.find(function(x){ return x.id===id; });
-  if (!c) return;
-  c.count = Math.max(0, c.count+delta);
-  saveCounters();
-  // Update only the number and kg, don't rebuild entire DOM
-  var card = document.querySelector('[data-cid="'+id+'"]');
-  if (card) {
-    card.querySelector('.counter-display').textContent = c.count;
-    card.querySelector('.counter-kg').textContent = (c.count*(c.weight||0))+' kg';
-  }
-  renderLiveSummary();
-}
-
-function renderLiveSummary() {
-  var el = document.getElementById('liveSummary');
-  if (!counters.length) { el.innerHTML=''; return; }
-  var total=0, rows='';
+// ---- SUMMARY (only updates rows, never rebuilds buttons) ----
+function updateSummary() {
+  var total = 0;
+  var rows = '';
   counters.forEach(function(c){
     var kg = c.count*(c.weight||0);
     total += kg;
     rows += '<div class="summary-row">'+
-      '<span class="lbl"><span class="dot" style="background:'+c.color+'"></span>'+esc(c.name)+' × '+c.count+'</span>'+
+      '<span class="lbl"><span class="dot" style="background:'+c.color+'"></span>'+esc(c.name)+' \xd7 '+c.count+'</span>'+
       '<span class="val">'+kg+' kg</span></div>';
   });
-  el.innerHTML =
-    '<div class="live-summary-header"><h3>📦 Podsumowanie</h3>'+
-    '<button class="save-summary-btn" id="btnSaveSummary">💾 Zapisz</button></div>'+
-    rows+
-    '<div class="summary-total"><span class="lbl">Łącznie</span><span class="val">'+total+' kg</span></div>';
-  document.getElementById('btnSaveSummary').addEventListener('click', openSaveSummary);
+  var rowsEl = document.getElementById('summaryRows');
+  var totalEl = document.getElementById('summaryTotal');
+  if (rowsEl) rowsEl.innerHTML = rows;
+  if (totalEl) totalEl.textContent = total+' kg';
 }
 
 // ---- SAVE SUMMARY ----
@@ -380,7 +385,10 @@ function openSaveSummary() {
   document.getElementById('summaryName').value = dd+'.'+mm+' - ';
   document.getElementById('summaryReg').value = '';
   openModalEl('nameModal');
-  setTimeout(function(){ document.getElementById('summaryName').focus(); document.getElementById('summaryName').setSelectionRange(999,999); }, 150);
+  setTimeout(function(){
+    var el = document.getElementById('summaryName');
+    if (el) { el.focus(); el.setSelectionRange(999,999); }
+  }, 150);
 }
 
 function doSaveSummary() {
@@ -396,7 +404,7 @@ function doSaveSummary() {
   saveRecords();
   renderRecords();
   closeAllModals();
-  toast('✅ Zapisano: '+label);
+  toast('\u2705 Zapisano: '+label);
 }
 
 // ---- HISTORY ----
@@ -415,7 +423,7 @@ function renderRecords() {
       return '<div class="history-row">'+
         '<span style="display:flex;align-items:center;gap:6px">'+
         '<span style="width:8px;height:8px;border-radius:2px;background:'+it.color+';display:inline-block"></span>'+
-        esc(it.name)+' × '+it.count+'</span>'+
+        esc(it.name)+' \xd7 '+it.count+'</span>'+
         '<span class="hval">'+it.kg+' kg</span></div>';
     }).join('');
 
@@ -430,30 +438,40 @@ function renderRecords() {
         '<div class="htotal">'+entry.total+' kg</div>'+
       '</div>'+
       '<div class="history-card-body" id="hbody-'+idx+'">'+rows+
-        '<button class="history-del">🗑 Usuń ten zapis</button>'+
+        '<div class="history-actions">'+
+          '<button class="history-copy">📋 Kopiuj ilości</button>'+
+          '<button class="history-del">🗑 Usuń</button>'+
+        '</div>'+
       '</div>';
 
     card.querySelector('.history-card-header').addEventListener('click', function(e){
       if (e.target.closest('.edit-label-btn')) return;
       document.getElementById('hbody-'+idx).classList.toggle('open');
     });
-
     card.querySelector('.edit-label-btn').addEventListener('click', function(e){
       e.stopPropagation();
       document.getElementById('editLabelInput').value = records[idx].label || '';
       document.getElementById('editLabelReg').value = records[idx].reg || '';
       document.getElementById('btnEditLabelSave').dataset.idx = idx;
       openModalEl('editLabelModal');
-      setTimeout(function(){ document.getElementById('editLabelInput').focus(); }, 150);
+      setTimeout(function(){ var el=document.getElementById('editLabelInput'); if(el) el.focus(); }, 150);
     });
-
+    card.querySelector('.history-copy').addEventListener('click', function(e){
+      e.stopPropagation();
+      var lines = [];
+      lines.push(label);
+      lines.push(formatDate(entry.ts)+' '+formatTime(entry.ts));
+      if (entry.reg) lines.push('Auto: '+entry.reg);
+      lines.push('');
+      entry.items.forEach(function(it){ lines.push(it.name+': '+it.count+' szt'); });
+      copyText(lines.join('\n'));
+    });
     card.querySelector('.history-del').addEventListener('click', function(e){
       e.stopPropagation();
       records.splice(idx, 1);
       saveRecords(); renderRecords();
       toast('Usunięto zapis');
     });
-
     el.appendChild(card);
   });
 }
@@ -470,7 +488,6 @@ function openAdd() {
   document.getElementById('dropdown').classList.remove('open');
   openModalEl('editModal');
 }
-
 function openEdit(id) {
   var c = counters.find(function(x){ return x.id===id; });
   if (!c) return;
@@ -483,7 +500,6 @@ function openEdit(id) {
   buildSwatches();
   openModalEl('editModal');
 }
-
 function buildSwatches() {
   var el = document.getElementById('colorSwatches');
   el.innerHTML = '';
@@ -495,7 +511,6 @@ function buildSwatches() {
     el.appendChild(sw);
   });
 }
-
 function doSave() {
   var name = document.getElementById('editName').value.trim()||'Licznik';
   var weight = parseInt(document.getElementById('editWeight').value)||0;
@@ -509,13 +524,11 @@ function doSave() {
   }
   saveCounters(); render(); closeAllModals();
 }
-
 function doDelete() {
   counters = counters.filter(function(x){ return x.id!==editingId; });
   saveCounters(); render(); closeAllModals();
   toast('Usunięto licznik');
 }
-
 function resetCounts() {
   counters.forEach(function(c){ c.count=0; });
   saveCounters(); render();
@@ -527,12 +540,6 @@ function resetWeights() {
   saveCounters(); render();
   document.getElementById('dropdown').classList.remove('open');
   toast('Przywrócono wagi');
-}
-function deleteAll() {
-  counters=[];
-  saveCounters(); render();
-  document.getElementById('dropdown').classList.remove('open');
-  toast('Usunięto wszystkie liczniki');
 }
 
 // ---- TABS ----
@@ -550,18 +557,19 @@ document.querySelectorAll('.tab-btn').forEach(function(btn){
 document.getElementById('menuBtn').addEventListener('click', function(e){ e.stopPropagation(); document.getElementById('dropdown').classList.toggle('open'); });
 document.addEventListener('click', function(){ document.getElementById('dropdown').classList.remove('open'); });
 document.getElementById('dropdown').addEventListener('click', function(e){ e.stopPropagation(); });
-
 document.getElementById('btnResetCounts').addEventListener('click', resetCounts);
 document.getElementById('btnResetWeights').addEventListener('click', resetWeights);
 document.getElementById('btnAdd').addEventListener('click', openAdd);
-document.getElementById('btnCancel').addEventListener('click', closeAllModals);
+document.getElementById('btnCancel').addEventListener('click', function(e){ e.stopPropagation(); closeAllModals(); });
 document.getElementById('btnDelete').addEventListener('click', doDelete);
 document.getElementById('btnSave').addEventListener('click', doSave);
 document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
-
-document.getElementById('btnEditLabelCancel').addEventListener('click', closeAllModals);
-document.getElementById('editLabelModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
-document.getElementById('btnEditLabelSave').addEventListener('click', function() {
+document.getElementById('btnNameCancel').addEventListener('click', function(e){ e.stopPropagation(); closeAllModals(); });
+document.getElementById('btnNameSave').addEventListener('click', doSaveSummary);
+document.getElementById('summaryName').addEventListener('keydown', function(e){ if(e.key==='Enter') doSaveSummary(); });
+document.getElementById('nameModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
+document.getElementById('btnEditLabelCancel').addEventListener('click', function(e){ e.stopPropagation(); closeAllModals(); });
+document.getElementById('btnEditLabelSave').addEventListener('click', function(){
   var idx = parseInt(this.dataset.idx);
   var newLabel = document.getElementById('editLabelInput').value.trim();
   var newReg = document.getElementById('editLabelReg').value.trim();
@@ -570,12 +578,13 @@ document.getElementById('btnEditLabelSave').addEventListener('click', function()
   saveRecords(); renderRecords(); closeAllModals();
   toast('Zaktualizowano');
 });
-document.getElementById('editLabelInput').addEventListener('keydown', function(e){
-  if (e.key==='Enter') document.getElementById('btnEditLabelSave').click();
+document.getElementById('editLabelInput').addEventListener('keydown', function(e){ if(e.key==='Enter') document.getElementById('btnEditLabelSave').click(); });
+document.getElementById('editLabelModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
+document.getElementById('btnSaveSummary').addEventListener('click', openSaveSummary);
+document.getElementById('btnCopyCurrent').addEventListener('click', function(){
+  var text = counters.map(function(c){ return c.name+': '+c.count+' szt'; }).join('\n');
+  copyText(text);
 });
-document.getElementById('btnNameSave').addEventListener('click', doSaveSummary);
-document.getElementById('summaryName').addEventListener('keydown', function(e){ if(e.key==='Enter') doSaveSummary(); });
-document.getElementById('nameModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
 
 render();
 </script>

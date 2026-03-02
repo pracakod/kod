@@ -117,7 +117,6 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
         <button id="btnResetCounts">🔄 Wyzeruj wszystkie</button>
         <button id="btnResetWeights">⚖️ Przywróć domyślne wagi</button>
         <button id="btnAdd">➕ Dodaj licznik</button>
-        <button id="btnInstall">📲 Zainstaluj aplikację</button>
       </div>
     </div>
   </div>
@@ -165,6 +164,10 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
       <label>Podaj nazwę (np. Dostawa rano, Kurs #5)</label>
       <input type="text" id="summaryName" placeholder="Np. Dostawa 28.02">
     </div>
+    <div>
+      <label>Rejestracja auta (opcjonalnie)</label>
+      <input type="text" id="summaryReg" placeholder="Np. WA 12345">
+    </div>
     <div class="modal-btns">
       <button class="btn-cancel" id="btnNameCancel">Anuluj</button>
       <button class="btn-save" id="btnNameSave">💾 Zapisz</button>
@@ -172,7 +175,25 @@ body { background: var(--bg); color: var(--text); font-family: 'Barlow', sans-se
   </div>
 </div>
 
-<div class="toast" id="toast"></div>
+<!-- EDIT LABEL MODAL -->
+<div class="modal-overlay" id="editLabelModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <h3>Zmień nazwę</h3>
+    <div>
+      <label>Nazwa zapisu</label>
+      <input type="text" id="editLabelInput" placeholder="Nazwa">
+    </div>
+    <div>
+      <label>Rejestracja (opcjonalnie)</label>
+      <input type="text" id="editLabelReg" placeholder="Np. WA 12345">
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" id="btnEditLabelCancel">Anuluj</button>
+      <button class="btn-save" id="btnEditLabelSave">Zapisz</button>
+    </div>
+  </div>
+</div>
 
 <script>
 var COLORS = ['#7B3F2E','#4A7B8C','#C49A22','#2D6A4F','#5B3A6B','#6B3535','#3A5A3A','#2B4A6B','#6B5A2B','#555555'];
@@ -221,6 +242,7 @@ function openModalEl(id) { document.getElementById(id).classList.add('open'); lo
 function closeAllModals() {
   document.getElementById('editModal').classList.remove('open');
   document.getElementById('nameModal').classList.remove('open');
+  document.getElementById('editLabelModal').classList.remove('open');
   unlockScroll();
 }
 
@@ -356,19 +378,21 @@ function openSaveSummary() {
   var dd = String(d.getDate()).padStart(2,'0');
   var mm = String(d.getMonth()+1).padStart(2,'0');
   document.getElementById('summaryName').value = dd+'.'+mm+' - ';
+  document.getElementById('summaryReg').value = '';
   openModalEl('nameModal');
   setTimeout(function(){ document.getElementById('summaryName').focus(); document.getElementById('summaryName').setSelectionRange(999,999); }, 150);
 }
 
 function doSaveSummary() {
   var label = document.getElementById('summaryName').value.trim() || formatDate(Date.now());
+  var reg = document.getElementById('summaryReg').value.trim();
   var total = 0;
   var items = counters.map(function(c){
     var kg = c.count*(c.weight||0);
     total += kg;
     return {name:c.name, count:c.count, weight:c.weight, kg:kg, color:c.color};
   });
-  records.unshift({ts: Date.now(), label: label, items: items, total: total});
+  records.unshift({ts: Date.now(), label: label, reg: reg, items: items, total: total});
   saveRecords();
   renderRecords();
   closeAllModals();
@@ -401,7 +425,7 @@ function renderRecords() {
           '<div class="hdate">'+esc(label)+
             '<button class="edit-label-btn">✏️</button>'+
           '</div>'+
-          '<div class="htime">📅 '+formatDate(entry.ts)+' &bull; 🕐 '+formatTime(entry.ts)+'</div>'+
+          '<div class="htime">📅 '+formatDate(entry.ts)+' &bull; 🕐 '+formatTime(entry.ts)+(entry.reg ? ' &bull; 🚗 '+esc(entry.reg) : '')+'</div>'+
         '</div>'+
         '<div class="htotal">'+entry.total+' kg</div>'+
       '</div>'+
@@ -416,11 +440,11 @@ function renderRecords() {
 
     card.querySelector('.edit-label-btn').addEventListener('click', function(e){
       e.stopPropagation();
-      var newLabel = prompt('Zmień nazwę:', records[idx].label||'');
-      if (newLabel !== null && newLabel.trim()) {
-        records[idx].label = newLabel.trim();
-        saveRecords(); renderRecords();
-      }
+      document.getElementById('editLabelInput').value = records[idx].label || '';
+      document.getElementById('editLabelReg').value = records[idx].reg || '';
+      document.getElementById('btnEditLabelSave').dataset.idx = idx;
+      openModalEl('editLabelModal');
+      setTimeout(function(){ document.getElementById('editLabelInput').focus(); }, 150);
     });
 
     card.querySelector('.history-del').addEventListener('click', function(e){
@@ -535,43 +559,23 @@ document.getElementById('btnDelete').addEventListener('click', doDelete);
 document.getElementById('btnSave').addEventListener('click', doSave);
 document.getElementById('editModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
 
-document.getElementById('btnNameCancel').addEventListener('click', closeAllModals);
+document.getElementById('btnEditLabelCancel').addEventListener('click', closeAllModals);
+document.getElementById('editLabelModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
+document.getElementById('btnEditLabelSave').addEventListener('click', function() {
+  var idx = parseInt(this.dataset.idx);
+  var newLabel = document.getElementById('editLabelInput').value.trim();
+  var newReg = document.getElementById('editLabelReg').value.trim();
+  if (newLabel) records[idx].label = newLabel;
+  records[idx].reg = newReg;
+  saveRecords(); renderRecords(); closeAllModals();
+  toast('Zaktualizowano');
+});
+document.getElementById('editLabelInput').addEventListener('keydown', function(e){
+  if (e.key==='Enter') document.getElementById('btnEditLabelSave').click();
+});
 document.getElementById('btnNameSave').addEventListener('click', doSaveSummary);
 document.getElementById('summaryName').addEventListener('keydown', function(e){ if(e.key==='Enter') doSaveSummary(); });
 document.getElementById('nameModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
-
-// ---- INSTALL ----
-var deferredInstallPrompt = null;
-window.addEventListener('beforeinstallprompt', function(e) {
-  e.preventDefault();
-  deferredInstallPrompt = e;
-});
-document.getElementById('btnInstall').addEventListener('click', function() {
-  document.getElementById('dropdown').classList.remove('open');
-  if (deferredInstallPrompt) {
-    deferredInstallPrompt.prompt();
-    deferredInstallPrompt.userChoice.then(function(r) {
-      if (r.outcome === 'accepted') toast('✅ Zainstalowano!');
-      deferredInstallPrompt = null;
-    });
-  } else {
-    // Show overlay instructions
-    var ov = document.createElement('div');
-    ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9000;display:flex;align-items:flex-end;justify-content:center;';
-    ov.innerHTML = '<div style="background:#1e1e1e;border-radius:20px 20px 0 0;padding:2rem 1.5rem 3rem;width:100%;max-width:480px;font-family:Barlow,sans-serif;">' +
-      '<div style="width:40px;height:4px;background:#444;border-radius:2px;margin:0 auto 1.5rem;"></div>' +
-      '<div style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;color:#f0ede8;">📲 Zainstaluj aplikację</div>' +
-      '<div style="color:#aaa;font-size:0.95rem;line-height:1.6;">' +
-        '<b style="color:#74c69d;">Chrome Android:</b><br>Menu ⋮ → "Dodaj do ekranu głównego"<br><br>' +
-        '<b style="color:#74c69d;">Safari iOS:</b><br>Przycisk Udostępnij □↑ → "Dodaj do ekranu głównego"' +
-      '</div>' +
-      '<button style="margin-top:1.5rem;width:100%;padding:0.9rem;background:#2d6a4f;color:#74c69d;border:none;border-radius:12px;font-size:1rem;font-weight:700;font-family:Barlow Condensed,sans-serif;text-transform:uppercase;letter-spacing:0.06em;cursor:pointer;">OK</button>' +
-    '</div>';
-    ov.querySelector('button').addEventListener('click', function(){ document.body.removeChild(ov); });
-    ov.addEventListener('click', function(e){ if(e.target===ov) document.body.removeChild(ov); });
-    document.body.appendChild(ov);
-  }
-});
 
 render();
 </script>

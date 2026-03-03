@@ -582,8 +582,17 @@ document.getElementById('editLabelInput').addEventListener('keydown', function(e
 document.getElementById('editLabelModal').addEventListener('click', function(e){ if(e.target===this) closeAllModals(); });
 document.getElementById('btnSaveSummary').addEventListener('click', openSaveSummary);
 document.getElementById('btnCopyCurrent').addEventListener('click', function(){
-  var text = counters.map(function(c){ return c.name+': '+c.count+' szt'; }).join('\n');
-  copyText(text);
+  var now = new Date();
+  var dd = String(now.getDate()).padStart(2,'0');
+  var mm = String(now.getMonth()+1).padStart(2,'0');
+  var yyyy = now.getFullYear();
+  var hh = String(now.getHours()).padStart(2,'0');
+  var min = String(now.getMinutes()).padStart(2,'0');
+  var lines = [];
+  lines.push(dd+'.'+mm+'.'+yyyy+' '+hh+':'+min);
+  lines.push('');
+  counters.forEach(function(c){ lines.push(c.name+': '+c.count+' szt'); });
+  copyText(lines.join('\n'));
 });
 
 render();

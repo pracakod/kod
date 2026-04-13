@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Kalendarz Dojazdów</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
+
+  :root {
+    --bg: #f0f2f5;
+    --card: #ffffff;
+    --text: #1a1d23;
+    --muted: #8890a0;
+    --border: #e4e8ef;
+    --radius: 16px;
+    --shadow: 0 2px 16px rgba(0,0,0,0.08);
+  }
+
+  body.dark {
+    --bg: #111318;
+    --card: #1e2128;
+    --text: #eef0f5;
+    --muted: #5a6070;
+    --border: #2a2e38;
+    --shadow: 0 2px 16px rgba(0,0,0,0.35);
+  }
+
+  body { transition: background 0.25s, color 0.25s; }
+  .header, .toolbar, .sheet, .stat-card, .tb-btn, .month-nav button { transition: background 0.25s, border-color 0.25s, color 0.25s; }
+
+  /* theme toggle button */
+  .theme-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+    transition: background 0.15s;
+    margin-right: 4px;
+  }
+  .theme-btn:active { background: var(--border); }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    padding-bottom: 32px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--card);
+    padding: 20px 20px 16px;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow);
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 4px;
+  }
+
+  .app-title {
+    font-size: 20px;
+    font-weight: 900;
+    letter-spacing: -0.5px;
+    color: var(--text);
+  }
+
+  .app-title span { color: #4a90d9; }
+
+  .settings-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: none;
+    background: var(--bg);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    transition: background 0.15s;
+  }
+  .settings-btn:active { background: var(--border); }
+
+  /* ── NAV MONTH ── */
+  .month-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px 0;
+  }
+
+  .month-nav button {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: var(--card);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    font-size: 18px;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.1s;
+  }
+  .month-nav button:active { transform: scale(0.92); }
+
+  .month-label {
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: -0.3px;
+    text-transform: capitalize;
+  }
+
+  /* ── CALENDAR ── */
+  .calendar-wrap {
+    padding: 12px 16px;
+  }
+
+  .weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    margin-bottom: 6px;
+  }
+
+  .weekdays span {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    padding: 4px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .days-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .day-cell {
+    aspect-ratio: 1;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.1s, box-shadow 0.1s;
+    border: 2px solid transparent;
+    background: var(--card);
+    min-height: 44px;
+  }
+
+  .day-cell:active { transform: scale(0.93); }
+
+  .day-cell.empty { background: transparent; pointer-events: none; }
+
+  .day-cell.today {
+    border-color: #4a90d9;
+  }
+
+  .day-cell .day-num {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1;
+    z-index: 1;
+  }
+
+  .day-cell .day-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    margin-top: 3px;
+    background: transparent;
+  }
+
+  /* colored states */
+  .day-cell[data-mode] .day-num { color: #fff; }
+  .day-cell[data-mode] .day-dot { display: none; }
+  .day-cell[data-mode="0"] { background: #e8edf5; } /* brak */
+  .day-cell[data-mode="0"] .day-num { color: var(--text); }
+
+  /* dynamic colors from JS */
+  .day-cell .mode-label {
+    font-size: 8px;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.9);
+    line-height: 1;
+    margin-top: 2px;
+  }
+
+  /* ── QUICK TOOLBAR ── */
+  .toolbar {
+    position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 10px 12px 20px;
+    z-index: 150;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  }
+
+  .toolbar-hint {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 8px;
+  }
+
+  .toolbar-modes {
+    display: flex;
+    gap: 7px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .toolbar-modes::-webkit-scrollbar { display: none; }
+
+  .tb-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    flex-shrink: 0;
+    min-width: 58px;
+    transition: transform 0.12s, border-color 0.12s;
+    background: var(--bg);
+    position: relative;
+  }
+  .tb-btn:active { transform: scale(0.92); }
+
+  .tb-btn.active {
+    border-color: var(--text);
+    background: var(--card);
+    box-shadow: var(--shadow);
+  }
+
+  .tb-btn .tb-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .tb-btn .tb-label {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--text);
+    text-align: center;
+    white-space: nowrap;
+    max-width: 60px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tb-btn.active .tb-label { color: var(--text); }
+
+  /* active checkmark */
+  .tb-btn.active::after {
+    content: '✓';
+    position: absolute;
+    top: -6px; right: -4px;
+    background: var(--text);
+    color: #fff;
+    font-size: 9px;
+    font-weight: 900;
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 16px;
+    text-align: center;
+  }
+
+  /* padding for fixed toolbar */
+  body { padding-bottom: 110px; }
+
+  /* ── BOTTOM SHEET / MODAL ── */
+  .overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+  }
+  .overlay.show { display: block; }
+
+  .sheet {
+    position: fixed;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 480px;
+    background: var(--card);
+    border-radius: 24px 24px 0 0;
+    padding: 12px 20px 36px;
+    z-index: 300;
+    transform: translateX(-50%) translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32,0.72,0,1);
+  }
+  .sheet.open { transform: translateX(-50%) translateY(0); }
+
+  .sheet-handle {
+    width: 40px; height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    margin: 0 auto 16px;
+  }
+
+  .sheet-title {
+    font-size: 17px;
+    font-weight: 800;
+    margin-bottom: 16px;
+    letter-spacing: -0.3px;
+  }
+
+  .mode-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .mode-btn {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .mode-btn:active { transform: scale(0.97); }
+  .mode-btn.selected { border-color: var(--text); background: var(--card); box-shadow: var(--shadow); }
+
+  .mode-btn-dot {
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .mode-btn-text { flex: 1; text-align: left; }
+  .mode-btn-text small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); margin-top: 1px; }
+
+  .close-sheet {
+    margin-top: 14px;
+    width: 100%;
+    padding: 14px;
+    border-radius: 14px;
+    border: none;
+    background: var(--text);
+    color: #fff;
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .close-sheet:active { opacity: 0.85; }
+
+  /* ── SETTINGS SHEET ── */
+  .settings-section { margin-bottom: 20px; }
+  .settings-section h3 { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; }
+
+  .mode-edit-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--bg);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+  }
+
+  .mode-edit-row input[type="text"] {
+    flex: 1;
+    border: none;
+    background: transparent;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    outline: none;
+  }
+
+  .mode-edit-row input[type="color"] {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--border);
+    padding: 2px;
+    cursor: pointer;
+    background: transparent;
+  }
+
+  .add-mode-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 2px dashed var(--border);
+    background: transparent;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--muted);
+    cursor: pointer;
+    transition: border-color 0.15s, color 0.15s;
+  }
+  .add-mode-btn:active { border-color: #4a90d9; color: #4a90d9; }
+
+  .del-btn {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: none;
+    background: #fee;
+    color: #e55;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+
+  /* ── STATS ── */
+  .stats-wrap {
+    padding: 0 16px 8px;
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .stats-wrap::-webkit-scrollbar { display: none; }
+
+  .stat-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 12px 14px;
+    min-width: 90px;
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .stat-card .stat-num {
+    font-size: 24px;
+    font-weight: 900;
+    line-height: 1;
+  }
+  .stat-card .stat-lbl {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-top: 4px;
+  }
+
+  /* ── TRANSITIONS ── */
+  .calendar-wrap { animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="app-title">Dojazdy <span>do pracy</span></div>
+    <div style="display:flex;gap:4px;align-items:center">
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button class="settings-btn" onclick="openSettings()">⚙️</button>
+    </div>
+  </div>
+</div>
+
+<div class="month-nav">
+  <button onclick="changeMonth(-1)">‹</button>
+  <div class="month-label" id="monthLabel"></div>
+  <button onclick="changeMonth(1)">›</button>
+</div>
+
+<div class="calendar-wrap">
+  <div class="weekdays">
+    <span>Pon</span><span>Wt</span><span>Śr</span><span>Czw</span><span>Pt</span><span>Sob</span><span>Nd</span>
+  </div>
+  <div class="days-grid" id="daysGrid"></div>
+</div>
+
+<div class="stats-wrap" id="statsWrap"></div>
+
+<!-- Day picker sheet (fallback long-press) -->
+<div class="overlay" id="overlay" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title" id="sheetTitle">Wybierz tryb</div>
+  <div class="mode-list" id="modeList"></div>
+  <button class="close-sheet" onclick="closeSheet()">Gotowe</button>
+</div>
+
+<!-- Quick toolbar -->
+<div class="toolbar">
+  <div class="toolbar-hint" id="toolbarHint">Wybierz tryb → kliknij dzień</div>
+  <div class="toolbar-modes" id="toolbarModes"></div>
+</div>
+
+<!-- Settings sheet -->
+<div class="overlay" id="overlaySettings" onclick="closeSettings()"></div>
+<div class="sheet" id="sheetSettings">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">⚙️ Ustawienia trybów</div>
+  <div class="settings-section">
+    <h3>Tryby dojazdów</h3>
+    <div id="modeEditList"></div>
+    <button class="add-mode-btn" onclick="addMode()">+ Dodaj tryb</button>
+  </div>
+  <button class="close-sheet" onclick="saveSettings()">Zapisz</button>
+</div>
+
+<script>
+// ── STATE ──
+const DEFAULT_MODES = [
+  { id: 0, label: 'Wyczyść', short: '✕', color: '#e8edf5', textDark: true },
+  { id: 1, label: 'Golf (ja)', short: 'Golf', color: '#4a90d9', icon: '🚗' },
+  { id: 2, label: 'Audi (kolega)', short: 'Audi', color: '#7a7a7a', icon: '🚙' },
+  { id: 3, label: 'Wolne', short: 'WOL', color: '#5bbf84', icon: '🌿' },
+  { id: 4, label: 'Praca zdalna', short: 'ZD', color: '#f5a623', icon: '🏠' },
+  { id: 5, label: 'Urlop', short: 'URP', color: '#e05c8a', icon: '✈️' },
+];
+
+let state = {
+  modes: JSON.parse(localStorage.getItem('cp_modes') || 'null') || DEFAULT_MODES,
+  days: JSON.parse(localStorage.getItem('cp_days') || '{}'),
+  year: new Date().getFullYear(),
+  month: new Date().getMonth(),
+  activeMode: null, // quick-paint selected mode
+};
+
+function save() {
+  localStorage.setItem('cp_modes', JSON.stringify(state.modes));
+  localStorage.setItem('cp_days', JSON.stringify(state.days));
+}
+
+function key(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+// ── RENDER ──
+function render() {
+  renderMonthLabel();
+  renderDays();
+  renderToolbar();
+  renderStats();
+}
+
+function renderMonthLabel() {
+  const d = new Date(state.year, state.month, 1);
+  document.getElementById('monthLabel').textContent =
+    d.toLocaleDateString('pl-PL', { month: 'long', year: 'numeric' });
+}
+
+function renderDays() {
+  const grid = document.getElementById('daysGrid');
+  grid.innerHTML = '';
+
+  const today = new Date();
+  const firstDay = new Date(state.year, state.month, 1);
+  let startOffset = (firstDay.getDay() + 6) % 7;
+  const totalDays = new Date(state.year, state.month + 1, 0).getDate();
+
+  for (let i = 0; i < startOffset; i++) {
+    const empty = document.createElement('div');
+    empty.className = 'day-cell empty';
+    grid.appendChild(empty);
+  }
+
+  for (let d = 1; d <= totalDays; d++) {
+    const k = key(state.year, state.month, d);
+    const modeId = state.days[k] ?? 0;
+    const mode = state.modes.find(m => m.id === modeId) || state.modes[0];
+    const isToday = today.getFullYear() === state.year && today.getMonth() === state.month && today.getDate() === d;
+
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday ? ' today' : '');
+    cell.dataset.mode = modeId;
+
+    if (modeId !== 0) {
+      cell.style.background = mode.color;
+      cell.style.boxShadow = `0 2px 8px ${mode.color}55`;
+    }
+
+    const num = document.createElement('div');
+    num.className = 'day-num';
+    num.textContent = d;
+    if (mode.textDark) num.style.color = '#555';
+    cell.appendChild(num);
+
+    if (modeId !== 0) {
+      const lbl = document.createElement('div');
+      lbl.className = 'mode-label';
+      lbl.textContent = mode.icon || mode.short || '';
+      cell.appendChild(lbl);
+    }
+
+    cell.addEventListener('click', () => handleDayClick(d));
+    grid.appendChild(cell);
+  }
+}
+
+function handleDayClick(day) {
+  if (state.activeMode === null) {
+    // no mode selected — open sheet fallback
+    openDaySheet(day);
+    return;
+  }
+  const k = key(state.year, state.month, day);
+  if (state.activeMode === 0) {
+    delete state.days[k];
+  } else {
+    state.days[k] = state.activeMode;
+  }
+  save();
+  renderDays();
+  renderStats();
+  // flash feedback
+  flashDay(day);
+}
+
+function flashDay(day) {
+  const cells = document.querySelectorAll('.day-cell:not(.empty)');
+  const offset = (new Date(state.year, state.month, 1).getDay() + 6) % 7;
+  const cell = cells[day - 1];
+  if (!cell) return;
+  cell.style.transform = 'scale(1.18)';
+  cell.style.transition = 'transform 0.12s';
+  setTimeout(() => { cell.style.transform = ''; }, 150);
+}
+
+function renderToolbar() {
+  const wrap = document.getElementById('toolbarModes');
+  const hint = document.getElementById('toolbarHint');
+  wrap.innerHTML = '';
+
+  if (state.activeMode === null) {
+    hint.textContent = 'Wybierz tryb → kliknij dzień';
+  } else {
+    const m = state.modes.find(x => x.id === state.activeMode);
+    hint.textContent = m ? `Malujesz: ${m.icon || ''} ${m.label}` : 'Wybierz tryb';
+  }
+
+  state.modes.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.className = 'tb-btn' + (state.activeMode === mode.id ? ' active' : '');
+    btn.innerHTML = `
+      <div class="tb-dot" style="background:${mode.color}; ${mode.textDark ? 'border:1.5px solid #ccc' : ''}">
+        <span style="display:flex;align-items:center;justify-content:center;height:100%;font-size:14px">${mode.icon || ''}</span>
+      </div>
+      <div class="tb-label">${mode.label}</div>
+    `;
+    btn.addEventListener('click', () => {
+      state.activeMode = (state.activeMode === mode.id) ? null : mode.id;
+      renderToolbar();
+    });
+    wrap.appendChild(btn);
+  });
+}
+
+function renderStats() {
+  const wrap = document.getElementById('statsWrap');
+  wrap.innerHTML = '';
+  const counts = {};
+  state.modes.forEach(m => { if (m.id !== 0) counts[m.id] = 0; });
+
+  const prefix = `${state.year}-${String(state.month+1).padStart(2,'0')}-`;
+  Object.entries(state.days).forEach(([k, v]) => {
+    if (k.startsWith(prefix) && v !== 0) counts[v] = (counts[v] || 0) + 1;
+  });
+
+  state.modes.filter(m => m.id !== 0).forEach(mode => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `
+      <div class="stat-num" style="color:${mode.color}">${counts[mode.id] || 0}</div>
+      <div class="stat-lbl">${mode.icon || ''} ${mode.short || mode.label}</div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+// ── MONTH NAV ──
+function changeMonth(delta) {
+  state.month += delta;
+  if (state.month > 11) { state.month = 0; state.year++; }
+  if (state.month < 0) { state.month = 11; state.year--; }
+  render();
+}
+
+// ── DAY SHEET (fallback gdy brak trybu) ──
+function openDaySheet(day) {
+  const k = key(state.year, state.month, day);
+  const currentMode = state.days[k] ?? 0;
+
+  const d = new Date(state.year, state.month, day);
+  document.getElementById('sheetTitle').textContent =
+    d.toLocaleDateString('pl-PL', { weekday: 'long', day: 'numeric', month: 'long' });
+
+  const list = document.getElementById('modeList');
+  list.innerHTML = '';
+
+  state.modes.forEach(mode => {
+    const btn = document.createElement('button');
+    btn.className = 'mode-btn' + (mode.id === currentMode ? ' selected' : '');
+    btn.innerHTML = `
+      <div class="mode-btn-dot" style="background:${mode.color}; ${mode.textDark ? 'border:1px solid #ccc' : ''}"></div>
+      <div class="mode-btn-text">${mode.icon ? mode.icon + ' ' : ''}${mode.label}</div>
+      ${mode.id === currentMode ? '<span>✓</span>' : ''}
+    `;
+    btn.addEventListener('click', () => {
+      if (mode.id === 0) delete state.days[k];
+      else state.days[k] = mode.id;
+      save();
+      render();
+      closeSheet();
+    });
+    list.appendChild(btn);
+  });
+
+  document.getElementById('overlay').classList.add('show');
+  setTimeout(() => document.getElementById('sheet').classList.add('open'), 10);
+}
+
+function closeSheet() {
+  document.getElementById('sheet').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ── SETTINGS ──
+function openSettings() {
+  renderModeEditList();
+  document.getElementById('overlaySettings').classList.add('show');
+  setTimeout(() => document.getElementById('sheetSettings').classList.add('open'), 10);
+}
+
+function closeSettings() {
+  document.getElementById('sheetSettings').classList.remove('open');
+  document.getElementById('overlaySettings').classList.remove('show');
+}
+
+function renderModeEditList() {
+  const list = document.getElementById('modeEditList');
+  list.innerHTML = '';
+  state.modes.filter(m => m.id !== 0).forEach(mode => {
+    const row = document.createElement('div');
+    row.className = 'mode-edit-row';
+    row.innerHTML = `
+      <input type="color" value="${mode.color}" data-id="${mode.id}" class="color-input">
+      <input type="text" value="${mode.icon || ''}" placeholder="ikona" style="max-width:40px; text-align:center" data-field="icon" data-id="${mode.id}">
+      <input type="text" value="${mode.label}" placeholder="Nazwa" data-field="label" data-id="${mode.id}">
+      <button class="del-btn" onclick="deleteMode(${mode.id})">×</button>
+    `;
+    list.appendChild(row);
+  });
+}
+
+function saveSettings() {
+  document.querySelectorAll('.color-input').forEach(el => {
+    const m = state.modes.find(x => x.id == el.dataset.id);
+    if (m) m.color = el.value;
+  });
+  document.querySelectorAll('[data-field]').forEach(el => {
+    const m = state.modes.find(x => x.id == el.dataset.id);
+    if (m) m[el.dataset.field] = el.value;
+  });
+  save();
+  closeSettings();
+  render();
+}
+
+function addMode() {
+  const maxId = Math.max(...state.modes.map(m => m.id)) + 1;
+  const colors = ['#9b59b6','#e74c3c','#1abc9c','#e67e22','#3498db'];
+  state.modes.push({ id: maxId, label: 'Nowy tryb', short: 'NEW', color: colors[maxId % colors.length], icon: '🚘' });
+  renderModeEditList();
+}
+
+function deleteMode(id) {
+  if (state.modes.length <= 2) return;
+  state.modes = state.modes.filter(m => m.id !== id);
+  Object.keys(state.days).forEach(k => { if (state.days[k] === id) delete state.days[k]; });
+  renderModeEditList();
+}
+
+// ── THEME ──
+function toggleTheme() {
+  const dark = document.body.classList.toggle('dark');
+  localStorage.setItem('cp_theme', dark ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = dark ? '☀️' : '🌙';
+}
+
+// apply saved theme
+(function() {
+  const saved = localStorage.getItem('cp_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (saved === 'dark' || (!saved && prefersDark)) {
+    document.body.classList.add('dark');
+    document.getElementById('themeBtn').textContent = '☀️';
+  }
+})();
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>

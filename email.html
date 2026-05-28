@@ -66,12 +66,47 @@
             color: #666;
             margin-top: 5px;
         }
+        
+        .status-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 15px;
+        }
         .status { 
             color: #666; 
             font-style: italic; 
             font-size: 14px;
-            text-align: center;
         }
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background: #dc3545;
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(220, 53, 69, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        
         .msg { 
             border: 1px solid #e0e0e0; 
             border-radius: 8px;
@@ -88,10 +123,9 @@
             line-height: 1.5;
         }
         
-        /* Sekcja wykrytego kodu */
         .code-detector {
-            background: #fff3cd;
-            border-bottom: 1px solid #ffeeba;
+            background: #e2f0fe;
+            border-bottom: 1px solid #b8daff;
             padding: 12px 15px;
             display: flex;
             justify-content: space-between;
@@ -101,19 +135,19 @@
             font-family: monospace;
             font-size: 20px;
             font-weight: bold;
-            color: #856404;
-            background: #ffeeba;
+            color: #004085;
+            background: #b8daff;
             padding: 4px 10px;
             border-radius: 4px;
             letter-spacing: 1px;
         }
         .btn-copy-code {
-            background: #ffc107;
-            color: #212529;
+            background: #007bff;
+            color: white;
             padding: 6px 12px;
             font-size: 13px;
         }
-        .btn-copy-code:hover { background: #e0a800; }
+        .btn-copy-code:hover { background: #0056b3; }
 
         .msg-body { 
             padding: 20px; 
@@ -131,7 +165,6 @@
             font-style: italic;
         }
         
-        /* Toast z powiadomieniem */
         .toast {
             position: fixed;
             bottom: 20px;
@@ -148,7 +181,6 @@
             z-index: 9999;
         }
 
-        /* Stopka z informacją o twórcy */
         footer {
             text-align: center;
             padding: 20px 0;
@@ -156,27 +188,43 @@
             font-size: 14px;
             color: #888;
             border-top: 1px solid #e0e0e0;
+            line-height: 1.6;
         }
-        footer strong {
-            color: #555;
+        footer strong { color: #555; }
+        .motto {
+            font-size: 12px;
+            color: #aaa;
+            font-style: italic;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
 
     <div class="main-content">
-        <h2 style="text-align: center;">Tymczasowy Mail Jednorazowy</h2>
+        <h2 style="text-align: center; margin-bottom: 5px;">🏗️ Tymczasowy Mail Jednorazowy</h2>
+        <p style="text-align: center; color: #666; margin-top: 0; font-size: 14px; font-style: italic;">
+            Szybkie konta, automatyczne kody. Egzamin na żurawie to teraz pestka! xd
+        </p>
         
+        <div id="warningBanner" class="warning-banner">
+            ⚠️ NIE ODŚWIEŻAJ TEJ STRONY! Wiadomości pojawią się tutaj same w czasie rzeczywistym. Odświeżenie skasuje tę skrzynkę.
+        </div>
+
         <div class="box" style="text-align: center;">
             <button onclick="initMailbox()">Generuj nowy adres</button>
             <div class="email-container">
                 <div id="emailAddress" class="email-display" onclick="copyEmailToClipboard()">Kliknij przycisk powyżej...</div>
                 <div id="copyTooltip" class="tooltip">Kliknij adres, aby go skopiować</div>
             </div>
-            <div id="status" class="status">Skrzynka nieaktywna.</div>
+            
+            <div class="status-container">
+                <div id="pulseDot" class="pulse-dot"></div>
+                <div id="status" class="status">Skrzynka nieaktywna.</div>
+            </div>
         </div>
 
-        <h3>Odebrane wiadomości (odświeżanie automatyczne co 5s):</h3>
+        <h3>Odebrane wiadomości:</h3>
         <div id="messages">
             <div class="box empty-box">Czekam na wygenerowanie skrzynki...</div>
         </div>
@@ -184,9 +232,9 @@
 
     <div id="toast" class="toast">Skopiowano do schowka!</div>
 
-    <!-- Stopka autorska -->
     <footer>
         Stworzone przez: <strong>DareG</strong> | Oparte na darmowym API Mail.tm
+        <div class="motto">Z tym narzędziem żaden udźwig i żaden wysięgnik Cię nie zaskoczy 🏗️💪</div>
     </footer>
 
     <script>
@@ -197,6 +245,13 @@
         let currentEmail = "";
 
         const randStr = () => Math.random().toString(36).substring(2, 12);
+
+        window.addEventListener('beforeunload', function (e) {
+            if (currentToken) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
 
         function showToast(text) {
             const toast = document.getElementById('toast');
@@ -232,6 +287,9 @@
             seenMessageIds.clear();
             currentEmail = "";
             
+            document.getElementById('warningBanner').style.display = 'none';
+            document.getElementById('pulseDot').style.display = 'none';
+            
             document.getElementById('status').innerText = "Szukam wolnej domeny...";
             document.getElementById('messages').innerHTML = '<div class="box empty-box">Generowanie nowej skrzynki...</div>';
             document.getElementById('copyTooltip').style.display = 'none';
@@ -260,7 +318,11 @@
 
                 document.getElementById('emailAddress').innerText = currentEmail;
                 document.getElementById('copyTooltip').style.display = 'block';
-                document.getElementById('status').innerText = "Skrzynka gotowa i aktywna. Sprawdzam pocztę co 5s.";
+                
+                document.getElementById('warningBanner').style.display = 'block';
+                document.getElementById('pulseDot').style.display = 'block';
+                
+                document.getElementById('status').innerText = "Nasłuchiwanie poczty aktywny (auto-odświeżanie)...";
                 document.getElementById('messages').innerHTML = '<div class="box empty-box">Skrzynka pusta. Wyślij maila, a pojawi się w kilka sekund...</div>';
 
                 checkMessages();

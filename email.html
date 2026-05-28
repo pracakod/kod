@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Błyskawiczny Mail Jednorazowy</title>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f4f4f9; color: #333; }
+        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
+        button:hover { background: #0056b3; }
+        .email-display { font-size: 20px; font-weight: bold; color: #28a745; margin: 15px 0; word-break: break-all; }
+        .msg { border-bottom: 1px solid #eee; padding: 10px 0; }
+        .msg-title { font-weight: bold; }
+        .msg-body { font-size: 14px; color: #555; white-space: pre-wrap; margin-top: 5px; }
+        .loader { color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <h2>Twój Tymczasowy Mail</h2>
+    
+    <div class="box">
+        <button onclick="initMailbox()">Stwórz nowy adres</button>
+        <div id="emailAddress" class="email-display">Kliknij przycisk, aby wygenerować...</div>
+        <div id="status" class="loader"></div>
+    </div>
+
+    <h3>Odebrane wiadomości (odświeżanie co 5s):</h3>
+    <div id="messages" class="box">
+        Brak wiadomości. Skrzynka pusta lub nieaktywna.
+    </div>
+
+    <script>
+        const API_URL = 'https://api.mail.tm';
+        let currentToken = null;
+        let intervalId = null;
+
+        // Funkcja pomocnicza do generowania losowych ciągów (na login i hasło)
+        const randStr = () => Math.random().toString(36).substring(2, 12);
+
+        async function initMailbox() {
+            // Czyszczenie starego interwału, jeśli istniał
+            if (intervalId) clearInterval(intervalId);
+            
+            document.getElementById('status').innerText = "Generowanie adresu...";
+            document.getElementById('messages').innerText = "Oczekiwanie na wiadomości...";
+
+            try {
+                // 1. Pobierz domenę
+                const domRes = await fetch(`${API_URL}/domains`);
+                const domData = await domRes.json();
+                const domain = domData['hydra:member'][0].domain;
+
+                // 2. Wygeneruj losowy email i hasło
+                const email = `${randStr()}@${domain}`;
+                const password = randStr(); 
+
+                // 3. Stwórz konto
+                await fetch(`${API_URL}/accounts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: email, password: password })
+                });
+
+                // 4. Pobierz token JWT
+                const tokRes = await fetch(`${API_URL}/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ address: email, password: password })
+                });
+                const tokData = await tokRes.json();
+                currentToken = tokData.token;
+
+                // Pokonaj adres użytkownikowi
+                document.getElementById('emailAddress').innerText = email;
+                document.getElementById('status').innerText = "Skrzynka aktywna. Sprawdzam pocztę...";
+
+                // 5. Zacznij sprawdzać wiadomości co 5 sekund
+                checkMessages();
+                intervalId = setInterval(checkMessages, 5000);
+
+            } catch (error) {
+                document.getElementById('status').innerText = "Błąd podczas tworzenia skrzynki.";
+                console.error(error);
+            }
+        }
+
+        async function checkMessages() {
+            if (!currentToken) return;
+
+            try {
+                const res = await fetch(`${API_URL}/messages`, {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${currentToken}` }
+                });
+                const data = await res.json();
+                const messages = data['hydra:member'];
+
+                const container = document.getElementById('messages');
+                
+                if (messages.length === 0) {
+                    container.innerText = "Skrzynka jest pusta. Czekam na maile...";
+                    return;
+                }
+
+                container.innerHTML = ''; // Czyszczenie listy
+                
+                // Wyświetl każdą wiadomość
+                messages.forEach(msg => {
+                    const div = document.createElement('div');
+                    div.className = 'msg';
+                    div.innerHTML = `
+                        <div class="msg-title">Od: ${msg.from.address} | Temat: ${msg.subject}</div>
+                        <div class="msg-body">${msg.intro || '[Brak treści podglądu]'}</div>
+                    `;
+                    container.appendChild(div);
+                });
+
+            } catch (error) {
+                console.error("Błąd pobierania maili:", error);
+            }
+        }
+    </script>
+</body>
+</html>

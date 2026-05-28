@@ -2,17 +2,84 @@
 <html lang="pl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Błyskawiczny Mail Jednorazowy</title>
     <style>
-        body { font-family: sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; background: #f4f4f9; color: #333; }
-        .box { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-size: 16px; }
-        button:hover { background: #0056b3; }
-        .email-display { font-size: 20px; font-weight: bold; color: #28a745; margin: 15px 0; word-break: break-all; }
-        .msg { border-bottom: 1px solid #eee; padding: 10px 0; }
-        .msg-title { font-weight: bold; }
-        .msg-body { font-size: 14px; color: #555; white-space: pre-wrap; margin-top: 5px; }
-        .loader { color: #666; font-style: italic; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+            max-width: 700px; 
+            margin: 40px auto; 
+            padding: 20px; 
+            background: #f4f7f6; 
+            color: #333; 
+        }
+        .box { 
+            background: white; 
+            padding: 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05); 
+            margin-bottom: 25px; 
+        }
+        button { 
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            padding: 12px 24px; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-size: 16px; 
+            font-weight: bold;
+            transition: background 0.2s;
+        }
+        button:hover { 
+            background: #0056b3; 
+        }
+        .email-display { 
+            font-size: 22px; 
+            font-weight: bold; 
+            color: #28a745; 
+            margin: 20px 0 10px 0; 
+            word-break: break-all; 
+            padding: 10px;
+            background: #e9f7ec;
+            border-radius: 6px;
+            border: 1px dashed #28a745;
+            text-align: center;
+        }
+        .status { 
+            color: #666; 
+            font-style: italic; 
+            font-size: 14px;
+        }
+        .msg { 
+            border: 1px solid #e0e0e0; 
+            border-radius: 8px;
+            margin-bottom: 20px; 
+            overflow: hidden;
+            background: #fff;
+        }
+        .msg-header { 
+            background: #f8f9fa; 
+            padding: 15px; 
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .msg-body { 
+            padding: 20px; 
+            overflow-x: auto;
+        }
+        .msg-body iframe {
+            width: 100%;
+            border: none;
+            min-height: 300px;
+        }
+        .empty-box {
+            text-align: center;
+            color: #888;
+            padding: 40px 20px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -20,49 +87,56 @@
     <h2>Twój Tymczasowy Mail</h2>
     
     <div class="box">
-        <button onclick="initMailbox()">Stwórz nowy adres</button>
-        <div id="emailAddress" class="email-display">Kliknij przycisk, aby wygenerować...</div>
-        <div id="status" class="loader"></div>
+        <button onclick="initMailbox()">Generuj nowy adres</button>
+        <div id="emailAddress" class="email-display">Kliknij przycisk powyżej...</div>
+        <div id="status" class="status">Skrzynka nieaktywna.</div>
     </div>
 
-    <h3>Odebrane wiadomości (odświeżanie co 5s):</h3>
-    <div id="messages" class="box">
-        Brak wiadomości. Skrzynka pusta lub nieaktywna.
+    <h3>Odebrane wiadomości (odświeżanie automatyczne co 5s):</h3>
+    <div id="messages">
+        <div class="box empty-box">Czekam na uruchomienie skrzynki...</div>
     </div>
 
     <script>
         const API_URL = 'https://api.mail.tm';
         let currentToken = null;
         let intervalId = null;
+        let seenMessageIds = new Set(); // Zapobiega ciągłemu przeładowywaniu tych samych maili
 
-        // Funkcja pomocnicza do generowania losowych ciągów (na login i hasło)
+        // Generator losowego ciągu znaków
         const randStr = () => Math.random().toString(36).substring(2, 12);
 
         async function initMailbox() {
-            // Czyszczenie starego interwału, jeśli istniał
+            // Reset interwału i widoku
             if (intervalId) clearInterval(intervalId);
+            seenMessageIds.clear();
             
-            document.getElementById('status').innerText = "Generowanie adresu...";
-            document.getElementById('messages').innerText = "Oczekiwanie na wiadomości...";
+            document.getElementById('status').innerText = "Łączenie z API i wybieranie domeny...";
+            document.getElementById('messages').innerHTML = '<div class="box empty-box">Generowanie nowej skrzynki...</div>';
 
             try {
-                // 1. Pobierz domenę
+                // 1. Pobierz aktualnie dostępną domenę
                 const domRes = await fetch(`${API_URL}/domains`);
                 const domData = await domRes.json();
+                if (!domData['hydra:member'] || domData['hydra:member'].length === 0) {
+                    throw new Error("Brak dostępnych domen w API.");
+                }
                 const domain = domData['hydra:member'][0].domain;
 
-                // 2. Wygeneruj losowy email i hasło
+                // 2. Wygeneruj losowe dane logowania
                 const email = `${randStr()}@${domain}`;
                 const password = randStr(); 
 
-                // 3. Stwórz konto
-                await fetch(`${API_URL}/accounts`, {
+                // 3. Zarejestruj konto
+                const createRes = await fetch(`${API_URL}/accounts`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ address: email, password: password })
                 });
+                
+                if (!createRes.ok) throw new Error("Nie udało się utworzyć konta (spróbuj ponownie).");
 
-                // 4. Pobierz token JWT
+                // 4. Pobierz token JWT do autoryzacji
                 const tokRes = await fetch(`${API_URL}/token`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -71,16 +145,18 @@
                 const tokData = await tokRes.json();
                 currentToken = tokData.token;
 
-                // Pokonaj adres użytkownikowi
+                // 5. Zaktualizuj UI dla użytkownika
                 document.getElementById('emailAddress').innerText = email;
-                document.getElementById('status').innerText = "Skrzynka aktywna. Sprawdzam pocztę...";
+                document.getElementById('status').innerText = "Skrzynka aktywna. Automatyczne sprawdzanie co 5 sekund...";
+                document.getElementById('messages').innerHTML = '<div class="box empty-box">Skrzynka pusta. Wyślij maila, pojawi się tutaj automatycznie...</div>';
 
-                // 5. Zacznij sprawdzać wiadomości co 5 sekund
+                // 6. Uruchom pętlę sprawdzania wiadomości
                 checkMessages();
                 intervalId = setInterval(checkMessages, 5000);
 
             } catch (error) {
-                document.getElementById('status').innerText = "Błąd podczas tworzenia skrzynki.";
+                document.getElementById('status').innerText = "Wystąpił błąd. Spróbuj kliknąć przycisk jeszcze raz.";
+                document.getElementById('messages').innerHTML = `<div class="box empty-box" style="color: red;">Błąd: ${error.message}</div>`;
                 console.error(error);
             }
         }
@@ -89,6 +165,7 @@
             if (!currentToken) return;
 
             try {
+                // Pobierz listę wiadomości
                 const res = await fetch(`${API_URL}/messages`, {
                     method: 'GET',
                     headers: { 'Authorization': `Bearer ${currentToken}` }
@@ -98,27 +175,63 @@
 
                 const container = document.getElementById('messages');
                 
-                if (messages.length === 0) {
-                    container.innerText = "Skrzynka jest pusta. Czekam na maile...";
-                    return;
+                if (!messages || messages.length === 0) {
+                    return; // Skrzynka pusta, czekamy dalej
                 }
 
-                container.innerHTML = ''; // Czyszczenie listy
-                
-                // Wyświetl każdą wiadomość
-                messages.forEach(msg => {
+                // Czyścimy komunikat o pustej skrzynce przy pierwszym mailu
+                if (container.querySelector('.empty-box')) {
+                    container.innerHTML = '';
+                }
+
+                // Iterujemy po wiadomościach od najnowszych
+                for (const msg of messages) {
+                    // Jeśli już pobraliśmy i wyświetliliśmy tego maila, pomiń go
+                    if (seenMessageIds.has(msg.id)) continue;
+                    
+                    seenMessageIds.add(msg.id);
+
+                    // Pobierz PEŁNĄ treść pojedynczej wiadomości (w tym kod HTML)
+                    const fullMsgRes = await fetch(`${API_URL}/messages/${msg.id}`, {
+                        method: 'GET',
+                        headers: { 'Authorization': `Bearer ${currentToken}` }
+                    });
+                    const fullMsg = await fullMsgRes.json();
+
+                    // Tworzenie elementu maila w UI
                     const div = document.createElement('div');
                     div.className = 'msg';
+                    
+                    // Bezpieczne wstrzykiwanie treści (HTML wyświetlamy w bezpiecznym iframe lub jako tekst)
+                    const contentHtml = fullMsg.html && fullMsg.html.length > 0 ? fullMsg.html[0] : fullMsg.text;
+
                     div.innerHTML = `
-                        <div class="msg-title">Od: ${msg.from.address} | Temat: ${msg.subject}</div>
-                        <div class="msg-body">${msg.intro || '[Brak treści podglądu]'}</div>
+                        <div class="msg-header">
+                            <strong>Od:</strong> ${msg.from.name || ''} &lt;${msg.from.address}&gt;<br>
+                            <strong>Temat:</strong> ${msg.subject || '(Brak tematu)'}<br>
+                            <strong>Data:</strong> ${new Date(msg.createdAt).toLocaleString()}
+                        </div>
+                        <div class="msg-body">
+                            <!-- Używamy srcdoc w iframe, aby style maila nie zepsuły wyglądu naszej strony -->
+                            <iframe srcdoc="${escapeHtml(contentHtml)}"></iframe>
+                        </div>
                     `;
-                    container.appendChild(div);
-                });
+                    
+                    // Wstaw najnowsze maile na samą górę listy
+                    container.insertBefore(div, container.firstChild);
+                }
 
             } catch (error) {
-                console.error("Błąd pobierania maili:", error);
+                console.error("Błąd podczas odpytywania o pocztę:", error);
             }
+        }
+
+        // Funkcja pomocnicza chroniąca przed uszkodzeniem kodu iframe
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
         }
     </script>
 </body>

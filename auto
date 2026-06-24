@@ -1,0 +1,1430 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Diagnostyka — VW Golf 1.9 TDI BLS 2009</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0f1117;
+      --bg2: #161b27;
+      --bg3: #1e2535;
+      --border: #2a3347;
+      --text: #e2e8f0;
+      --muted: #8892a4;
+      --accent: #3b82f6;
+      --accent2: #6366f1;
+      --green: #22c55e;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --orange: #f97316;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, #0f1117 0%, #1a2540 50%, #0f1117 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 2rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 30% 50%, rgba(59,130,246,0.12) 0%, transparent 60%),
+                  radial-gradient(ellipse at 70% 50%, rgba(99,102,241,0.08) 0%, transparent 60%);
+    }
+    .header-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .car-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(59,130,246,0.15);
+      border: 1px solid rgba(59,130,246,0.3);
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #93c5fd;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.5rem);
+      font-weight: 800;
+      background: linear-gradient(135deg, #e2e8f0, #93c5fd);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+    header p.subtitle {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-top: 1.8rem;
+    }
+    .stat-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.6rem 1.1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.1rem;
+    }
+    .stat-chip .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .stat-chip .value { font-size: 1rem; font-weight: 700; color: var(--text); }
+
+    /* ── LAYOUT ── */
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+      display: grid;
+      gap: 1.5rem;
+    }
+
+    /* ── SECTION ── */
+    section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 1.1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg3);
+    }
+    .section-icon {
+      font-size: 1.2rem;
+    }
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .section-body {
+      padding: 1.5rem;
+    }
+
+    /* ── STATUS BADGES ── */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-red    { background: rgba(239,68,68,0.15);  color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+    .badge-yellow { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .badge-green  { background: rgba(34,197,94,0.15);  color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+    .badge-blue   { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+    /* ── TABLE ── */
+    .diag-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    .diag-table thead th {
+      text-align: left;
+      padding: 0.6rem 1rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      background: var(--bg3);
+      border-bottom: 1px solid var(--border);
+    }
+    .diag-table tbody tr {
+      border-bottom: 1px solid rgba(42,51,71,0.6);
+      transition: background 0.15s;
+    }
+    .diag-table tbody tr:last-child { border-bottom: none; }
+    .diag-table tbody tr:hover { background: rgba(255,255,255,0.025); }
+    .diag-table td {
+      padding: 0.75rem 1rem;
+      vertical-align: middle;
+    }
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    /* ── FACT CARDS ── */
+    .fact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+    .fact-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.1rem 1.2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .fact-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      border-radius: 3px 0 0 3px;
+    }
+    .fact-card.confirmed::before  { background: var(--green); }
+    .fact-card.warning::before    { background: var(--yellow); }
+    .fact-card.danger::before     { background: var(--red); }
+    .fact-card.excluded::before   { background: var(--muted); }
+
+    .fact-card h3 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .fact-card p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── PRIORITY LIST ── */
+    .priority-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .priority-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 1rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+    }
+    .pnum {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .pnum-1 { background: rgba(239,68,68,0.2); color: #fca5a5; border: 1px solid rgba(239,68,68,0.4); }
+    .pnum-2 { background: rgba(245,158,11,0.2); color: #fcd34d; border: 1px solid rgba(245,158,11,0.4); }
+    .pnum-3 { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+    .pnum-4 { background: rgba(34,197,94,0.15); color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+
+    .priority-item h3 { font-size: 0.92rem; font-weight: 700; }
+    .priority-item p  { font-size: 0.81rem; color: var(--muted); margin-top: 0.2rem; }
+    .cost-chip {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #93c5fd;
+      background: rgba(59,130,246,0.1);
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 6px;
+      padding: 0.25rem 0.6rem;
+      white-space: nowrap;
+    }
+
+    /* ── VCDS BLOCK ── */
+    .vcds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+    .vcds-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .vcds-card .group {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 0.6rem;
+      font-weight: 600;
+    }
+    .vcds-card .param {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.35rem 0;
+      border-bottom: 1px solid rgba(42,51,71,0.5);
+      font-size: 0.82rem;
+    }
+    .vcds-card .param:last-child { border-bottom: none; }
+    .vcds-card .param .name { color: var(--muted); }
+    .vcds-card .param .val  { font-family: 'JetBrains Mono', monospace; font-weight: 600; font-size: 0.82rem; }
+    .val-ok     { color: #86efac; }
+    .val-warn   { color: #fcd34d; }
+    .val-bad    { color: #fca5a5; }
+    .val-neutral{ color: var(--text); }
+
+    /* ── CONCLUSION BOX ── */
+    .conclusion-box {
+      background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(249,115,22,0.06));
+      border: 1px solid rgba(239,68,68,0.25);
+      border-radius: 12px;
+      padding: 1.4rem 1.5rem;
+    }
+    .conclusion-box h3 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      margin-bottom: 0.75rem;
+      color: #fca5a5;
+    }
+    .conclusion-box p {
+      color: var(--text);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+
+    /* ── CHECKLIST ── */
+    .checklist {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.88rem;
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      background: var(--bg3);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .checklist li .icon { flex-shrink: 0; margin-top: 0.05rem; }
+    .check-done  { border-left: 3px solid var(--green); }
+    .check-todo  { border-left: 3px solid var(--yellow); }
+    .check-no    { border-left: 3px solid var(--muted); opacity: 0.6; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    /* ── TABS ── */
+    .tab-nav {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      display: flex;
+      gap: 0.5rem;
+      border-bottom: 2px solid var(--border);
+      background: var(--bg);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .tab-btn {
+      padding: 0.9rem 1.4rem;
+      background: none;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--muted);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin-bottom: -2px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active {
+      color: #93c5fd;
+      border-bottom-color: #3b82f6;
+    }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── PLAN NAPRAWY ── */
+    .plan-phase {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+    }
+    .plan-phase-header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .plan-phase-header.phase-1 { background: rgba(239,68,68,0.12); }
+    .plan-phase-header.phase-2 { background: rgba(245,158,11,0.12); }
+    .plan-phase-header.phase-3 { background: rgba(59,130,246,0.12); }
+    .plan-phase-header.phase-4 { background: rgba(34,197,94,0.12); }
+    .plan-phase-header h2 { font-size: 1rem; font-weight: 800; }
+    .phase-1 h2 { color: #fca5a5; }
+    .phase-2 h2 { color: #fcd34d; }
+    .phase-3 h2 { color: #93c5fd; }
+    .phase-4 h2 { color: #86efac; }
+    .plan-step {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid rgba(42,51,71,0.5);
+      transition: background 0.15s;
+    }
+    .plan-step:last-child { border-bottom: none; }
+    .plan-step:hover { background: rgba(255,255,255,0.02); }
+    .plan-step input[type=checkbox] {
+      width: 20px; height: 20px;
+      accent-color: #3b82f6;
+      cursor: pointer;
+      margin-top: 0.15rem;
+      flex-shrink: 0;
+    }
+    .plan-step .step-body h3 {
+      font-size: 0.92rem;
+      font-weight: 700;
+      margin-bottom: 0.3rem;
+    }
+    .plan-step .step-body p {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+    .plan-step .step-body code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.1rem 0.4rem;
+      color: #93c5fd;
+    }
+    .plan-step.done { opacity: 0.5; }
+    .plan-step.done .step-body h3 { text-decoration: line-through; }
+    .parts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .part-card {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+    .part-card .part-name { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.4rem; }
+    .part-card .part-detail { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+    .part-card .part-price { margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; color: #93c5fd; font-weight: 600; }
+    .morning-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .morning-step {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem 1.2rem;
+      display: grid;
+      grid-template-columns: 40px 1fr;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+    .step-num {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: rgba(59,130,246,0.2);
+      border: 1px solid rgba(59,130,246,0.4);
+      color: #93c5fd;
+      font-weight: 800;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .morning-step h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.3rem; }
+    .morning-step p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+    .vcds-cmd {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.5rem 0.75rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78rem;
+      color: #86efac;
+      margin-top: 0.5rem;
+      display: block;
+    }
+    .result-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+    .result-ok, .result-bad {
+      padding: 0.4rem 0.7rem;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+    .result-ok  { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #86efac; }
+    .result-bad { background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      .priority-item { grid-template-columns: auto 1fr; }
+      .cost-chip { display: none; }
+      .stats-row { gap: 0.6rem; }
+      .result-box { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header>
+  <div class="header-inner">
+    <div class="car-badge">🔧 Dokumentacja diagnostyczna</div>
+    <h1>VW Golf V — 1.9 TDI BLS</h1>
+    <p class="subtitle">Analiza usterki DPF / Czujnik G450 / Elektryka — opracowana z VCDS</p>
+    <div class="stats-row">
+      <div class="stat-chip"><span class="label">Rok produkcji</span><span class="value">2009</span></div>
+      <div class="stat-chip"><span class="label">Silnik</span><span class="value">1.9 TDI BLS</span></div>
+      <div class="stat-chip"><span class="label">Przebieg</span><span class="value">370 000 km</span></div>
+      <div class="stat-chip"><span class="label">ECU Label</span><span class="value mono">03G-906-021-BLS.CLB</span></div>
+      <div class="stat-chip"><span class="label">VCDS</span><span class="value">24.7 / 25.3</span></div>
+      <div class="stat-chip"><span class="label">DPF</span><span class="value">Oryginalny</span></div>
+    </div>
+  </div>
+</header>
+
+<!-- ═══ TAB NAV ═══ -->
+<nav class="tab-nav">
+  <button class="tab-btn active" onclick="switchTab('diagnostyka', this)">📊 Diagnostyka</button>
+  <button class="tab-btn" onclick="switchTab('plan', this)">🔧 Plan naprawy</button>
+</nav>
+
+<!-- ═══ TAB: DIAGNOSTYKA ═══ -->
+<div id="tab-diagnostyka" class="tab-content active">
+<main>
+
+  <!-- ═══ DANE VCDS ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">📊</span>
+      <h2>Dane z VCDS — Bloki pomiarowe</h2>
+    </div>
+    <div class="section-body">
+      <div class="vcds-grid">
+
+        <div class="vcds-card">
+          <div class="group">Gr. 001 — Injection Quantity</div>
+          <div class="param"><span class="name">Engine Speed</span><span class="val val-ok">777 /min</span></div>
+          <div class="param"><span class="name">Injection Quantity</span><span class="val val-warn">4.4 mg/suw</span></div>
+          <div class="param"><span class="name">Injection Duration</span><span class="val val-neutral">7.7 KW</span></div>
+          <div class="param"><span class="name">Coolant Temp</span><span class="val val-ok">61.2 °C</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 004 — Unit Injector</div>
+          <div class="param"><span class="name">Engine Speed</span><span class="val val-ok">777 /min</span></div>
+          <div class="param"><span class="name">Injection Start</span><span class="val val-ok">1.2 *PGMP</span></div>
+          <div class="param"><span class="name">Injection Duration</span><span class="val val-ok">7.7 KW</span></div>
+          <div class="param"><span class="name">Torsion Value (po)</span><span class="val val-ok">0.0 KW ✓</span></div>
+          <div class="param"><span class="name">Torsion Value (przed)</span><span class="val val-bad">−3.9 KW ✗</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 005 — Start Conditions</div>
+          <div class="param"><span class="name">Start Inj. Quantity</span><span class="val val-ok">9.6 mg/suw</span></div>
+          <div class="param"><span class="name">Start Synchronisation</span><span class="val val-ok">48.0</span></div>
+          <div class="param"><span class="name">Coolant Temp</span><span class="val val-ok">58.5 °C</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 067 — DPF Exhaust Gas I</div>
+          <div class="param"><span class="name">Temp przed turbo</span><span class="val val-ok">42.0 °C</span></div>
+          <div class="param"><span class="name">Temp w DPF</span><span class="val val-ok">42.0 °C</span></div>
+          <div class="param"><span class="name">Press. Difference DPF</span><span class="val val-warn">15.30 mbar</span></div>
+          <div class="param"><span class="name">Press. Diff. Offset ⚠️</span><span class="val val-bad">7.65 mbar</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 068 — DPF Exhaust Gas II</div>
+          <div class="param"><span class="name">DPF Load Coefficient</span><span class="val val-warn">44.2 %</span></div>
+          <div class="param"><span class="name">DPF Carbon Mass</span><span class="val val-warn">10.0</span></div>
+          <div class="param"><span class="name">Carbon Mass Learned</span><span class="val val-neutral">0.0 %</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 073 — Particle Filter Data</div>
+          <div class="param"><span class="name">Consumption since Regen</span><span class="val val-ok">2.4 l</span></div>
+          <div class="param"><span class="name">Distance since Regen</span><span class="val val-ok">50 km</span></div>
+          <div class="param"><span class="name">Time since Regen</span><span class="val val-ok">60.0 min</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 067 — Offset G450 (PROBLEM) ⚠️</div>
+          <div class="param"><span class="name">Press. Difference (po ad.)</span><span class="val val-ok">0.00 mbar</span></div>
+          <div class="param"><span class="name">Offset PRZED adaptacją</span><span class="val val-warn">7.65 mbar</span></div>
+          <div class="param"><span class="name">Offset PO adaptacji 🔴</span><span class="val val-bad">22.95 mbar ↑ skoczył!</span></div>
+          <div class="param"><span class="name">Adaptacja 30605</span><span class="val val-bad">ODRZUCONA / błędna</span></div>
+        </div>
+
+        <div class="vcds-card">
+          <div class="group">Gr. 020 — Injection Limit (ABS)</div>
+          <div class="param"><span class="name">Engine Torque</span><span class="val val-ok">26.8 Nm</span></div>
+          <div class="param"><span class="name">ASR Limitation</span><span class="val val-warn">1270.0 Nm</span></div>
+          <div class="param"><span class="name">MSR Limitation</span><span class="val val-warn">−1280.0 Nm</span></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ BOOST + EGR LIVE DATA ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">🔥</span>
+      <h2>Dane dynamiczne — Boost (Gr.011) i EGR (Gr.003) z wideo 18.06.2026</h2>
+    </div>
+    <div class="section-body">
+      <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Pomiar przy jeździe — zarejestrowany w VCDS. Analiza 4 klatek wideo.</p>
+      <table class="diag-table">
+        <thead>
+          <tr>
+            <th>Obroty</th>
+            <th>Boost Spec (mbar)</th>
+            <th>Boost Actual (mbar)</th>
+            <th>Różnica</th>
+            <th>EGR Spec (mg/suw)</th>
+            <th>EGR Actual (mg/suw)</th>
+            <th>Ocena</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="mono">777 /min (jałowy)</td>
+            <td class="mono">1050.6</td>
+            <td class="mono val-ok">999.6</td>
+            <td class="mono val-ok">−51</td>
+            <td class="mono">220.0</td>
+            <td class="mono val-ok">215.0</td>
+            <td><span class="badge badge-green">OK</span></td>
+          </tr>
+          <tr>
+            <td class="mono">~2163 /min</td>
+            <td class="mono">1142.4</td>
+            <td class="mono val-bad">1020.0</td>
+            <td class="mono val-bad">−122 ↓</td>
+            <td class="mono">235.0</td>
+            <td class="mono val-ok">240.0</td>
+            <td><span class="badge badge-red">Underboost!</span></td>
+          </tr>
+          <tr>
+            <td class="mono">~2772 /min</td>
+            <td class="mono">1193.4</td>
+            <td class="mono val-ok">1183.2</td>
+            <td class="mono val-ok">−10</td>
+            <td class="mono">380.0</td>
+            <td class="mono val-warn">420.0</td>
+            <td><span class="badge badge-yellow">EGR+40 ↑</span></td>
+          </tr>
+          <tr>
+            <td class="mono">~3108 /min</td>
+            <td class="mono">1193.4</td>
+            <td class="mono val-bad">1377.0</td>
+            <td class="mono val-bad">+184 ↑</td>
+            <td class="mono">340.0</td>
+            <td class="mono val-bad">425.0</td>
+            <td><span class="badge badge-red">Overboost + EGR+85!</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <br/>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:1rem;">
+          <p style="color:#fca5a5;font-weight:700;margin-bottom:0.4rem;">🔴 VGT — łopatki zacięte</p>
+          <p style="font-size:0.84rem;color:var(--text);">Underboost przy ~2100 obr. (−122 mbar) → moc przychodzi późno. Overboost przy 3100 obr. (+184 mbar) → łopatki nie reagują na polecenie ECU. Świst turbo przy wyższych obrotach = turbo pracuje za ciężko.</p>
+        </div>
+        <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:10px;padding:1rem;">
+          <p style="color:#fca5a5;font-weight:700;margin-bottom:0.4rem;">🔴 EGR — stuck open (zatkany koksem)</p>
+          <p style="font-size:0.84rem;color:var(--text);">EGR dostarcza za dużo spalin przy wyższych obciążeniach (+25% przy 3100 obr.). Potwierdzone wizualnie — zawór zakoksowany, przepustnica zablokowana w pozycji otwartej. Olej z PCV przyspieszył zatkanie.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PEWNE FAKTY ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">✅</span>
+      <h2>Potwierdzone fakty — 100% pewne</h2>
+    </div>
+    <div class="section-body">
+      <div class="fact-grid">
+
+        <div class="fact-card danger">
+          <h3>🔴 Offset G450 zablokowany</h3>
+          <p>Wartość 22.95 mbar nie spada do zera mimo wyłączonego silnika. Adaptacja VCDS (blok 30605) odrzucona — ECU widzi fałszywy sygnał non-stop.</p>
+        </div>
+
+        <div class="fact-card confirmed">
+          <h3>✅ Nowy czujnik = ten sam błąd</h3>
+          <p>Mechanik wymienił G450 na nowy — nowy czujnik pokazywał identyczne 22.95 mbar. To wyklucza czujnik jako przyczynę. Problem jest w okablowaniu lub rurkach.</p>
+        </div>
+
+        <div class="fact-card confirmed">
+          <h3>✅ Plecionka wydechowa — szczelna</h3>
+          <p>Tłumikarz sprawdził fizycznie. Plecionka jest w 100% cała i szczelna. To nie jest źródło fałszywego odczytu DPF.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 Bezpiecznik S4 (5A) — wybucha</h3>
+          <p>Podczas fizycznego szarpania plecionki przez tłumikarza wywalił bezpiecznik nr 4 (5A) w kabinie. Bezpośredni dowód uszkodzonego kabla przy wydechu.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 Ciągłe, częste regeneracje DPF</h3>
+          <p>ECU "myśli" że DPF stale jest pełny (przez błędny offset 22.95 mbar) i ciągle wymusza regenerację. Auto kopci. To bezpośredni skutek błędu G450.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 Offset SKOCZYŁ po adaptacji (7.65 → 22.95)</h3>
+          <p>Przed adaptacją offset wynosił 7.65 mbar. Po próbie adaptacji VCDS (blok 30605) zamiast spaść do 0 — skoczył do 22.95 mbar. ECU "nauczył się" błędnego sygnału jako nowe zero. Potwierdza fałszywy sygnał elektryczny z okablowania lub zatkane rurki.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 Spaliny czuć w kabinie na światłach</h3>
+          <p>Przy postoju na światłach kierowca czuje zapach spalin wewnątrz auta. Sugeruje nieszczelność w układzie wydechowym przed kabiną (kolektor, turbo, DPF). Potencjalne niebezpieczeństwo CO. Jeździć z uchylonym oknem do naprawy.</p>
+        </div>
+
+        <div class="fact-card warning">
+          <h3>⚠️ Ciężki rozruch na gorąco</h3>
+          <p>Po rozgrzaniu silnika — potrzeba ~3 kręceń zanim odpali. Brak dymu. Najbardziej prawdopodobna przyczyna: zakoksowany EGR (nie domyka się na gorąco = utrata kompresji). Możliwe też: lekki wyciek zwrotny wtryskiwaczy.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 Rurka odmowy (PCV) odłączona przez 2 miesiące</h3>
+          <p>Wentylacja skrzyni korbowej nie była podłączona przez ok. 2 miesiące. Mgła olejowa trafiała bezpośrednio do wlotu turbo i intercoolera. Olej w intercoolerze potwierdzony wizualnie. Skutek: 2× szybsze ładowanie DPF (olej pali się w cylindrach), zanieczyszczony EGR i kolektor ssący. Rurka jest już prawidłowo wpięta.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 EGR zakoksowany — stuck open (VCDS + wizualnie)</h3>
+          <p>Zawór EGR pokryty grubą warstwą czarnego koksu + oleju. Przepustnica zablokowana w pozycji częściowo otwartej. VCDS potwierdza: EGR Actual przekracza EGR Spec o +85 mg/suw przy 3100 obr. (25% za dużo). Przyczyna: ciężki rozruch na gorąco, więcej sadzy, szybkie ładowanie DPF.</p>
+        </div>
+
+        <div class="fact-card danger">
+          <h3>🔴 VGT łopatki — underboost niskie obr., overboost wysokie obr.</h3>
+          <p>Przy ~2163 obr.: Boost actual 1020 vs spec 1142 mbar (−122 mbar). Przy ~3108 obr.: actual 1377 vs spec 1193 mbar (+184 mbar overboost). Łopatki VGT zacięte — nie reagują poprawnie na polecenia N75. Świst turbo przy przyspieszaniu = turbo pracuje za ciężko.</p>
+        </div>
+
+        <div class="fact-card warning">
+          <h3>⚠️ Intercooler zaolejony</h3>
+          <p>Potwierdzony olej wewnątrz intercoolera — skutek 2 miesięcy pracy bez rurki PCV. Zaolejony intercooler = gorętsze powietrze doładowania = mniejsza gęstość = mniej tlenu = mniejsza moc i więcej sadzy do DPF.</p>
+        </div>
+
+        <div class="fact-card confirmed">
+          <h3>✅ Korekta wałka rozrządu wykonana</h3>
+          <p>Torsion Value był −3.9 KW (przed korektą). Po adaptacji VCDS skorygowane do 0.0 KW. Injection Start: 1.2 *PGMP (poprawne).</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CO WYKLUCZONE ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">❌</span>
+      <h2>Co zostało wykluczone</h2>
+    </div>
+    <div class="section-body">
+      <ul class="checklist">
+        <li class="check-no"><span class="icon">❌</span><div><strong>Uszkodzony czujnik G450</strong> — nowy sensor dał identyczne wartości, więc sensor nie jest winny</div></li>
+        <li class="check-no"><span class="icon">❌</span><div><strong>Nieszczelna plecionka wydechowa</strong> — sprawdzona fizycznie przez tłumikarza, szczelna 100%</div></li>
+        <li class="check-no"><span class="icon">❌</span><div><strong>Problem z oprogramowaniem ECU</strong> — adaptacja działa prawidłowo, jest tylko odrzucana bo ECU widzi zły sygnał</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══ DIAGNOZA ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">🎯</span>
+      <h2>Diagnoza główna</h2>
+    </div>
+    <div class="section-body">
+      <div class="conclusion-box">
+        <h3>⚡ Uszkodzona mechanicznie wiązka kablowa czujnika G450</h3>
+        <p>
+          Kabel elektryczny czujnika różnicy ciśnień DPF (G450) biegnie wzdłuż wydechu / DPF od czujnika (montaż przy ścianie ogniowej, na górze)
+          w dół do obudowy DPF i turbosprężarki. W okolicach plecionki wydechowej lub DPF/turbo kabel uległ uszkodzeniu termicznemu lub
+          mechanicznemu (przetarcie przez drgania). Uszkodzony kabel powoduje ciągły, fałszywy sygnał do ECU → ECU nie może wyzerować offsetu
+          → ciągłe wypalanie DPF. Kiedy tłumikarz poruszył plecionkę — kabel zwarcił → wybucht bezpiecznik S4.
+        </p>
+      </div>
+      <br/>
+      <table class="diag-table">
+        <thead>
+          <tr>
+            <th>Hipoteza</th>
+            <th>Prawdopodobieństwo</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Przetarty/spalony kabel G450 przy wydechu</td>
+            <td class="mono val-bad">~85%</td>
+            <td><span class="badge badge-yellow">Do weryfikacji</span></td>
+          </tr>
+          <tr>
+            <td>Zatkane rurki impulsowe G450 (koks)</td>
+            <td class="mono val-warn">~60%</td>
+            <td><span class="badge badge-yellow">Do weryfikacji</span></td>
+          </tr>
+          <tr>
+            <td>Nieszczelność kolektora/turbo → spaliny w kabinie</td>
+            <td class="mono val-bad">~75%</td>
+            <td><span class="badge badge-yellow">Do weryfikacji</span></td>
+          </tr>
+          <tr>
+            <td>EGR zatkany → ciężki rozruch na gorąco</td>
+            <td class="mono val-warn">~70%</td>
+            <td><span class="badge badge-yellow">Do weryfikacji</span></td>
+          </tr>
+          <tr>
+            <td>DPF fizycznie zużyty (370k km)</td>
+            <td class="mono val-warn">~70%</td>
+            <td><span class="badge badge-yellow">Do weryfikacji po naprawie G450</span></td>
+          </tr>
+          <tr>
+            <td>Czujnik G450 uszkodzony</td>
+            <td class="mono val-neutral">0%</td>
+            <td><span class="badge badge-green">Wykluczone</span></td>
+          </tr>
+          <tr>
+            <td>Nieszczelna plecionka wydechowa</td>
+            <td class="mono val-neutral">0%</td>
+            <td><span class="badge badge-green">Wykluczone</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ PLAN DZIAŁANIA ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">🗺️</span>
+      <h2>Plan działania — priorytety</h2>
+    </div>
+    <div class="section-body">
+      <div class="priority-list">
+
+        <div class="priority-item">
+          <div class="pnum pnum-1">1</div>
+          <div>
+            <h3>🔴 Sprawdź poziom oleju — TERAZ przed jazdą</h3>
+            <p>Na zimnym silniku. Jeśli olej powyżej MAX → rozcieńczenie paliwem od ciągłych regen → wymiana oleju + filtra natychmiast. Ryzyko uszkodzenia silnika.</p>
+          </div>
+          <span class="cost-chip">0–200 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-1">2</div>
+          <div>
+            <h3>🔴 Wizualna inspekcja + naprawa kabla G450</h3>
+            <p>Prześledzić wiązkę od czujnika wzdłuż trasy do DPF/turbo. Szukać: stopionej izolacji, przetarć, przypalonych miejsc. Naprawa/lutowanie kabla. Test: odłączyć rurki od czujnika → sprawdzić Gr.067 w VCDS czy Press.Diff = 0.00.</p>
+          </div>
+          <span class="cost-chip">50–200 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-1">3</div>
+          <div>
+            <h3>🔴 Inspekcja kolektora wydechowego / turbo — spaliny w kabinie!</h3>
+            <p>Spaliny czuć w kabinie na światłach = nieszczelność wydechu przed kabiną. Sprawdzić (zimny silnik, odpalony): kolektor wydechowy, połączenie kolektor–turbo, wyjście turbo do DPF. Słuchać syczenia. Ryzyko CO dla kierowcy — jeździć z uchylonym oknem!</p>
+          </div>
+          <span class="cost-chip">0–500 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-2">4</div>
+          <div>
+            <h3>🟡 Drożność rurek impulsowych G450</h3>
+            <p>Odłączyć obie rurki od czujnika OSOBNO (czujnik elektrycznie podłączony). Sprawdzić w VCDS Gr.067 — jeśli Press.Diff spada do 0.00 → rurki zatkane. Dmuchać sprężarką lub przepchać drutem.</p>
+          </div>
+          <span class="cost-chip">0–80 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-2">5</div>
+          <div>
+            <h3>🟡 Pomiar napięć na wtyczce G450 (multimetr)</h3>
+            <p>Pin 1 (masa) → &lt;1Ω do karoserii. Pin 2 (sygnał, zapłon WŁ) → ~2.5V DC. Pin 3 (zasilanie, zapłon WŁ) → 4.5–5.2V DC. Odchylenia = uszkodzony kabel.</p>
+          </div>
+          <span class="cost-chip">0 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-2">6</div>
+          <div>
+            <h3>🟡 Ponowna adaptacja G450 — blok 30605</h3>
+            <p>Po naprawie kabla/rurek — silnik zimny, wyłączony, obie rurki podłączone. Wykonać adaptację. Offset powinien spaść do 0.0 mbar (nie skoczyć jak poprzednio).</p>
+          </div>
+          <span class="cost-chip">0 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-3">7</div>
+          <div>
+            <h3>🟡 Skan kodów błędów VCDS — wszystkie sterowniki</h3>
+            <p>01-Silnik → kody P2452–P2455 (G450), P0401/P0403 (EGR), P2002 (DPF). Spisać wszystkie DTC i przesłać do analizy.</p>
+          </div>
+          <span class="cost-chip">0 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-3">8</div>
+          <div>
+            <h3>🟡 Czyszczenie lub wymiana EGR</h3>
+            <p>Ciężki rozruch na gorąco (3 kręcenia, brak dymu) = EGR nie domyka się = utrata kompresji. Zdjąć, wyczyścić lub wymienić zawór EGR.</p>
+          </div>
+          <span class="cost-chip">100–400 zł</span>
+        </div>
+
+        <div class="priority-item">
+          <div class="pnum pnum-4">9</div>
+          <div>
+            <h3>🟢 Ocena stanu DPF (dopiero po naprawie G450)</h3>
+            <p>Dopiero po zerowym offsetcie ocenić rzeczywisty stan DPF. Norma przy 80 km/h: Press.Diff &lt;25 mbar. Jeśli wyższe → DPF faktycznie zatkany → czyszczenie ultradźwiękowe lub wymiana.</p>
+          </div>
+          <span class="cost-chip">400–4000 zł</span>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ POMIARY DO ZROBIENIA ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">🔬</span>
+      <h2>Lista kontrolna — co jeszcze sprawdzić</h2>
+    </div>
+    <div class="section-body">
+      <ul class="checklist">
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Sprawdzić poziom oleju</strong> — PILNE! Na zimnym silniku. Powyżej MAX = paliwo w oleju = wymiana natychmiast</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Wizualna inspekcja kabla G450</strong> — prześledzić trasę od czujnika do DPF/turbo, szukać uszkodzeń termicznych i przetarć</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Inspekcja kolektora wydechowego / turbo</strong> — spaliny w kabinie! Sprawdzić syczenie przy zimnym silniku. Ryzyko CO</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Test rurek G450 z VCDS</strong> — odłączyć rurki od czujnika, sprawdzić Gr.067 czy Press.Diff = 0.00 (każda rurka osobno)</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Pomiar multimetrem na wtyczce G450</strong> — napięcia na pinach 1, 2, 3 przy zapłonie WŁ</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Skan błędów VCDS wszystkich sterowników</strong> — kody P2452–P2455 (G450), EGR, DPF</div></li>
+        <li class="check-todo"><span class="icon">⏳</span><div><strong>Ponowna adaptacja G450 (blok 30605)</strong> — po naprawie kabla/rurek, zimny silnik, offset powinien = 0.0 (nie skoczyć)</div></li>
+        <li class="check-done"><span class="icon">✅</span><div><strong>Korekta wałka rozrządu</strong> — WYKONANA. Torsion Value = 0.0 KW. Injection Start = 1.2 *PGMP</div></li>
+        <li class="check-done"><span class="icon">✅</span><div><strong>Plecionka wydechowa sprawdzona</strong> — SZCZELNA. Potwierdzone przez tłumikarza</div></li>
+        <li class="check-done"><span class="icon">✅</span><div><strong>Duże prace serwisowe 3 lata temu</strong> — wtryski regenerowane, wałek wymieniony, głowica regenerowana, DPF czyszczony</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ═══ HISTORIA SERWISOWA ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">📋</span>
+      <h2>Historia serwisowa pojazdu</h2>
+    </div>
+    <div class="section-body">
+      <table class="diag-table">
+        <thead>
+          <tr><th>~Kiedy</th><th>Co wykonano</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>3 lata temu</td>
+            <td>Regeneracja wtryskiwaczy (pompowtryskiwacze PD)</td>
+            <td><span class="badge badge-green">OK</span></td>
+          </tr>
+          <tr>
+            <td>3 lata temu</td>
+            <td>Wymiana wałka rozrządu</td>
+            <td><span class="badge badge-green">OK</span></td>
+          </tr>
+          <tr>
+            <td>3 lata temu</td>
+            <td>Regeneracja głowicy silnika</td>
+            <td><span class="badge badge-green">OK</span></td>
+          </tr>
+          <tr>
+            <td>3 lata temu</td>
+            <td>Czyszczenie chemiczne DPF (DPF Cleaner)</td>
+            <td><span class="badge badge-yellow">Wymaga weryfikacji stanu</span></td>
+          </tr>
+          <tr>
+            <td>Niedawno</td>
+            <td>Korekta wałka rozrządu VCDS → 0.0 KW</td>
+            <td><span class="badge badge-green">Wykonane</span></td>
+          </tr>
+          <tr>
+            <td>Niedawno</td>
+            <td>Wymiana czujnika G450 (przez poprzedniego mechanika)</td>
+            <td><span class="badge badge-red">Nieskuteczne — problem w kablu</span></td>
+          </tr>
+          <tr>
+            <td>Niedawno</td>
+            <td>Adaptacja G450 blok 30605 — offset skoczył 7.65 → 22.95 mbar</td>
+            <td><span class="badge badge-red">Błędna — ECU nauczył się złego zera</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ KOSZTORYS ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">💰</span>
+      <h2>Szacunkowy kosztorys naprawy</h2>
+    </div>
+    <div class="section-body">
+      <table class="diag-table">
+        <thead>
+          <tr><th>Naprawa</th><th>Koszt szacunkowy</th><th>Priorytet</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Naprawa/spawanie kabla G450</td>
+            <td class="mono">50–200 zł</td>
+            <td><span class="badge badge-red">Pilne</span></td>
+          </tr>
+          <tr>
+            <td>Wymiana oleju + filtra (jeśli rozcieńczony)</td>
+            <td class="mono">100–200 zł</td>
+            <td><span class="badge badge-red">Pilne</span></td>
+          </tr>
+          <tr>
+            <td>Nowe rurki impulsowe G450</td>
+            <td class="mono">20–80 zł</td>
+            <td><span class="badge badge-yellow">Średni</span></td>
+          </tr>
+          <tr>
+            <td>Czyszczenie EGR</td>
+            <td class="mono">100–250 zł</td>
+            <td><span class="badge badge-yellow">Średni</span></td>
+          </tr>
+          <tr>
+            <td>Wymiana EGR (jeśli nienaprawialny)</td>
+            <td class="mono">300–600 zł</td>
+            <td><span class="badge badge-yellow">Średni</span></td>
+          </tr>
+          <tr>
+            <td>Czyszczenie ultradźwiękowe DPF</td>
+            <td class="mono">400–800 zł</td>
+            <td><span class="badge badge-green">Niska (po diagnozie)</span></td>
+          </tr>
+          <tr>
+            <td>Nowy DPF zamiennik (Bosal/Denso)</td>
+            <td class="mono">800–1500 zł</td>
+            <td><span class="badge badge-green">Niska (po diagnozie)</span></td>
+          </tr>
+          <tr>
+            <td>Nowy DPF OEM (VW)</td>
+            <td class="mono">2000–4000 zł</td>
+            <td><span class="badge badge-green">Ostateczność</span></td>
+          </tr>
+        </tbody>
+      </table>
+      <br/>
+      <div style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.2); border-radius: 10px; padding: 1rem 1.2rem;">
+        <p style="color: #86efac; font-weight: 700; margin-bottom: 0.3rem;">💡 Rekomendacja</p>
+        <p style="color: var(--text); font-size: 0.88rem;">
+          Przed zakupem DPF (drogi!) koniecznie napraw najpierw kabel G450 i wyzeruj offset. Dopiero wtedy ocenisz prawdziwy stan DPF
+          na podstawie prawidłowych odczytów. Koszt naprawy kabla to ~100–200 zł vs. 2000–4000 zł za nowy DPF.
+        </p>
+      </div>
+    </div>
+  </section>
+
+</main>
+</div><!-- /tab-diagnostyka -->
+
+<!-- ═══ TAB: PLAN NAPRAWY ═══ -->
+<div id="tab-plan" class="tab-content">
+<main>
+
+  <!-- ═══ JUTRO RANO ═══ -->
+  <section>
+    <div class="section-header" style="background:rgba(59,130,246,0.12);">
+      <span class="section-icon">☀️</span>
+      <h2 style="color:#93c5fd;">Plan na jutro rano — diagnostyka (30 min, 0 zł)</h2>
+    </div>
+    <div class="section-body">
+      <div class="morning-steps">
+
+        <div class="morning-step">
+          <div class="step-num">1</div>
+          <div>
+            <h3>🪢 Poziom oleju na zimnym silniku</h3>
+            <p>Wyciągnij bagnet, wytrzyj, włóż z powrotem, wyciągnij i odczytaj. Silnik MUSI być zimny (minimum 4h po wyłączeniu).</p>
+            <div class="result-box">
+              <div class="result-ok">✅ Między MIN–MAX → jedz, naprawiaj</div>
+              <div class="result-bad">🔴 Powyżej MAX → STOP — wymiana oleju przed jazdą!</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="morning-step">
+          <div class="step-num">2</div>
+          <div>
+            <h3>💻 Pełny Auto-Skan VCDS (wszystkie sterowniki)</h3>
+            <p>Podłącz VCDS, zapal zapłon (silnik nie musi pracować). Kliknij "Skanuj pojazd".</p>
+            <code>VCDS → Skanuj pojazd (Auto-Scan) → Zaczekaj → Zapisz/zdjęcie</code>
+            <p style="margin-top:0.5rem;">Szukaj: <strong>P2452, P2453, P2454, P2455</strong> (G450), <strong>P0401, P0403</strong> (EGR), <strong>P2002</strong> (DPF), <strong>P0299</strong> (underboost VGT)</p>
+          </div>
+        </div>
+
+        <div class="morning-step">
+          <div class="step-num">3</div>
+          <div>
+            <h3>🔌 Test rurek G450 — kluczowy test!</h3>
+            <p>Silnik WYŁĄCZONY, zapłon WŁ. Odłącz OBE rurki od czujnika G450 (zostaw wtyczkę elektryczną podłączoną).</p>
+            <code>VCDS → 01-Silnik → Bloki pomiarowe → Gr. 067 → obsęrwuj Press. Difference</code>
+            <div class="result-box">
+              <div class="result-ok">✅ Spada do 0.00 mbar → rurki zatkane — główna przyczyna!</div>
+              <div class="result-bad">🔴 Nadal fałszywa wartość → kabel elektryczny uszkodzony</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="morning-step">
+          <div class="step-num">4</div>
+          <div>
+            <h3>🔦 Wzrokowa inspekcja kabla G450</h3>
+            <p>Latarka + zajrzyj wzdłuż przebiegu kabla od czujnika (góra, przy ścianie ogniowej) w dół do DPF. Szczególnie obszar w pobliżu turbo i plecionki. Szukaj: <strong>stopionych, czarnych, pękniętych</strong> miejsc na kablu.</p>
+          </div>
+        </div>
+
+        <div class="morning-step">
+          <div class="step-num">5</div>
+          <div>
+            <h3>🔋 Pomiar multimetrem na wtyczce G450</h3>
+            <p>Wtyczka podłączona, zapłon WŁ. Sondą multimetru przyłóż na piny przez boczną stronę wtyczki.</p>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:0.75rem;margin-top:0.5rem;">
+              <div style="display:grid;grid-template-columns:60px 1fr 1fr;gap:0.4rem;font-size:0.82rem;">
+                <span style="color:var(--muted);font-weight:600;">Pin</span><span style="color:var(--muted);font-weight:600;">Pomiar</span><span style="color:var(--muted);font-weight:600;">Norma</span>
+                <span class="mono">Pin 1</span><span>Masa → karoseria (Ω)</span><span class="val-ok mono">&lt; 1Ω</span>
+                <span class="mono">Pin 2</span><span>Napięcie (DC)</span><span class="val-ok mono">~2.5V</span>
+                <span class="mono">Pin 3</span><span>Zasilanie (DC)</span><span class="val-ok mono">4.5–5.2V</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="morning-step">
+          <div class="step-num">6</div>
+          <div>
+            <h3>👂 Test syczenia — kolektor wydechowy</h3>
+            <p>Zimny silnik, odpal. Przykłój dłoń (ostrożnie!) lub użyj kartki papieru blisko połączeń kolektora wydechowego i turbo. Słuchaj syczenia/szumu w rytmie pracy silnika → nieszczelność = spaliny do kabiny.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ PLAN NAPRAW ═══ -->
+
+  <div class="plan-phase">
+    <div class="plan-phase-header phase-1">
+      <span style="font-size:1.3rem;">🔴</span>
+      <h2>FAZA 1 — Pilne (zrób najpierw)</h2>
+    </div>
+
+    <div class="plan-step" id="step-olej">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Sprawdź poziom oleju</h3>
+        <p>Bagnet na zimno. Jeśli powyżej MAX → wymiana oleju + filtra natychmiast. Rozcienienie paliwem od ciągłych regeneracji DPF.</p>
+      </div>
+      <span class="cost-chip">0–200 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-egr">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Zdjąć i wyczyścić zawór EGR</h3>
+        <p>EGR zakoksowany (potwierdzone wizualnie i VCDS). Zdemontować, namoczyć w środku EGR cleaner minimum 2h, wyczyścić szczotką mosiężną. Jeśli przepustnica nie rusza się swobodnie → wymiana zaworu. Wymienić uszczelki (Elring/Reinz).</p>
+        <p style="margin-top:0.4rem;"><strong>Części:</strong> środek do czyszczenia EGR, uszczelki EGR (2 szt.)</p>
+      </div>
+      <span class="cost-chip">50–500 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-kabel">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Inspekcja + naprawa kabla G450</h3>
+        <p>Wzrokowe sprawdzenie przebiegu kabla od czujnika do DPF/turbo. Szukać stopionej izolacji i przetarć. Pomiar multimetrem (piny 1-2-3). Jeśli uszkodzony → spawanie/wymiana odcinka kabla.</p>
+      </div>
+      <span class="cost-chip">0–200 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-intercooler">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Czyszczenie intercoolera z oleju</h3>
+        <p>Zdemontować intercooler. Płukać olejem silnikowym, następnie środkiem czyszczącym, osuszać sprężonym powietrzem. Olej z 2 miesięcy odłączonej rurki PCV musi być usunięty.</p>
+      </div>
+      <span class="cost-chip">150–300 zł</span>
+    </div>
+
+  </div>
+
+  <div class="plan-phase">
+    <div class="plan-phase-header phase-2">
+      <span style="font-size:1.3rem;">🟡</span>
+      <h2>FAZA 2 — Po naprawie kabla / EGR</h2>
+    </div>
+
+    <div class="plan-step" id="step-rurki">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Test i czyszczenie rurek impulsowych G450</h3>
+        <p>Odłączyć obie rurki od czujnika OSOBNO. Dmuchać ustami lub sprężarką. Jeśli zatkana → przechać drutem lub wymienić. Sprawdzić w VCDS Gr.067 z rurkami odłączonymi (Press.Diff powinno = 0.00).</p>
+      </div>
+      <span class="cost-chip">0–80 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-adaptacja">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Adaptacja G450 — blok 30605</h3>
+        <p>Silnik zimny, wyłączony, obie rurki podłączone. VCDS → 01-Silnik → Nastawy → blok 30605 → wykonaj adaptację. Offset powinien <strong>spaść do 0.0 mbar</strong> (nie skoczyć jak wcześniej). Jeśli się zeruje → sukces!</p>
+      </div>
+      <span class="cost-chip">0 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-nieszczelnosc">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Znaleźć i uszczelnić nieszczelność wydechu (spaliny w kabinie)</h3>
+        <p>Zimny silnik odpalony → słuchać syczenia przy kolektorze/turbo. Sprawdzić uszczelkę kolektor–turbo, połączenie turbo–DPF. Jeśli nieszczelność → wymiana uszczelek kanału wydechowego.</p>
+      </div>
+      <span class="cost-chip">50–400 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-vgt">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Czyszczenie łopatek VGT turbosprężarki</h3>
+        <p>Metoda WD-40: przy rozgrzanym silniku na biegu jałowym wstrzynąć WD-40 do wlotu turbo (30-sekundowe serie). Lub zdjąć różnicę ciśnień i wyczyścić mechanicznie. Lub serwis turbiny (czyszczenie ultradźwiękowe). Cel: równa odpowiedź boost actual = spec w całym zakresie obrotów.</p>
+        <p style="margin-top:0.4rem;"><strong>Sprawdzić w VCDS Gr.011:</strong> Boost actual = Boost spec na wszystkich obrotach.</p>
+      </div>
+      <span class="cost-chip">0–500 zł</span>
+    </div>
+
+  </div>
+
+  <div class="plan-phase">
+    <div class="plan-phase-header phase-3">
+      <span style="font-size:1.3rem;">🔵</span>
+      <h2>FAZA 3 — Ocena DPF (dopiero po fazach 1+2)</h2>
+    </div>
+
+    <div class="plan-step" id="step-dpf-check">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Pomiar ciśnienia DPF po naprawie G450</h3>
+        <p>VCDS Gr.067 podczas jazdy ~80 km/h. Norma: Press. Difference &lt;25 mbar. Jeśli powyżej → DPF faktycznie zatkany. Jeśli poniżej → DPF OK — był tylko błędny sygnał G450!</p>
+        <div class="result-box">
+          <div class="result-ok">✅ &lt;25 mbar → DPF OK, oszczędziłeś 2000–4000 zł!</div>
+          <div class="result-bad">🔴 &gt;25 mbar → DPF zatkany, rozważ czyszczenie lub wymianę</div>
+        </div>
+      </div>
+      <span class="cost-chip">0 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-dpf-clean">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>(Jeśli trzeba) Czyszczenie ultradźwiękowe DPF</h3>
+        <p>Tania–skuteczna alternatywa dla wymiany DPF. Zdjąć filtr, oddać do specjalistycznej firmy. Czystość odzyskiwana w ~80%. Wydałne przy zapyłeniu bez przepalenia ceramiki.</p>
+      </div>
+      <span class="cost-chip">400–800 zł</span>
+    </div>
+
+  </div>
+
+  <div class="plan-phase">
+    <div class="plan-phase-header phase-4">
+      <span style="font-size:1.3rem;">🟢</span>
+      <h2>FAZA 4 — Opcjonalne / później</h2>
+    </div>
+
+    <div class="plan-step" id="step-olej2">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Wymiana oleju + filtra po naprawach</h3>
+        <p>Po wszystkich naprawach — świeży olej usuwa pozostałości paliwa i zanieczyszczeń. Użyć oleju 5W-30 lub 5W-40 zgodnego ze specyfikacją VAG 507.00.</p>
+      </div>
+      <span class="cost-chip">150–250 zł</span>
+    </div>
+
+    <div class="plan-step" id="step-kolektor">
+      <input type="checkbox" onchange="toggleDone(this)">
+      <div class="step-body">
+        <h3>Czyszczenie kolektora ssącego od środka</h3>
+        <p>Kolektor ssacy może być pokryty koksem z EGR + olejem z PCV. Przy zdjętym EGR — dostęp do kolektora — wyczyścić dostępne miejsce szmata + środek czyszczący.</p>
+      </div>
+      <span class="cost-chip">0–100 zł</span>
+    </div>
+
+  </div>
+
+  <!-- ═══ LISTA CZESĆCI ═══ -->
+  <section>
+    <div class="section-header">
+      <span class="section-icon">🛎️</span>
+      <h2>Lista części do kupienia</h2>
+    </div>
+    <div class="section-body">
+      <div class="parts-grid">
+
+        <div class="part-card">
+          <div class="part-name">🔴 Uszczelki EGR (komplet)</div>
+          <div class="part-detail">Do kolektora ssącego i chłodnicy EGR. Marki: Elring, Reinz, Victor Reinz. Szukaj: "uszczelka EGR 1.9 TDI BLS Golf V 2009"</div>
+          <div class="part-price">15–40 zł</div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-name">🔴 środek do czyszczenia EGR</div>
+          <div class="part-detail">Liqui Moly EGR Cleaner, Wynns EGR Cleaner lub podobny. Spray + płyn do moczenia. Kupić w sklepie motoryzacyjnym.</div>
+          <div class="part-price">30–60 zł</div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-name">🟡 Zawór EGR (jeśli nienaprawialny)</div>
+          <div class="part-detail">Pierburg lub Wahler (zamiennik). Nie kupuj najtańszego chińskiego. Sprawdź numer VW: 03G 131 501 M lub pochodne dla BLS.</div>
+          <div class="part-price">200–500 zł</div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-name">🟡 Olej silnikowy 5W-30/5W-40</div>
+          <div class="part-detail">Spec. VAG 507.00 lub 505.01 (dla DPF!). 4-5 litrów. Marki: Castrol Edge, Mobil 1, Motul. NIE kupuj oleju bez specyfikacji VW 507.00.</div>
+          <div class="part-price">80–150 zł</div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-name">🟡 Filtr oleju</div>
+          <div class="part-detail">Mann-Filter HU 726/2 x lub Mahle OC 295 — dla 1.9 TDI BLS. Przy wymianie oleju zawsze filtr też.</div>
+          <div class="part-price">15–30 zł</div>
+        </div>
+
+        <div class="part-card">
+          <div class="part-name">🟢 Uszczelki kolektora/turbo (ew.)</div>
+          <div class="part-detail">Jeśli nieszczelność wydechu potwierdzona. Uszczelka turbo → DPF lub kolektor → turbo. Sprawdzić numer części po demontażu.</div>
+          <div class="part-price">20–60 zł</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</main>
+</div><!-- /tab-plan -->
+
+<footer>
+  <p>VW Golf 1.9 TDI BLS — Dokumentacja diagnostyczna &bull; Opracowano z VCDS 24.7/25.3 &bull; 2026</p>
+  <p style="margin-top: 0.4rem; opacity: 0.5;">Ten dokument jest pomocą diagnostyczną — nie zastępuje profesjonalnego przeglądu serwisowego.</p>
+</footer>
+
+<script>
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabId).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+function toggleDone(checkbox) {
+  const step = checkbox.closest('.plan-step');
+  step.classList.toggle('done', checkbox.checked);
+  saveProgress();
+}
+
+function saveProgress() {
+  const state = {};
+  document.querySelectorAll('.plan-step').forEach(step => {
+    if (step.id) state[step.id] = step.querySelector('input').checked;
+  });
+  try { localStorage.setItem('golf_bls_plan', JSON.stringify(state)); } catch(e) {}
+}
+
+function loadProgress() {
+  try {
+    const state = JSON.parse(localStorage.getItem('golf_bls_plan') || '{}');
+    document.querySelectorAll('.plan-step').forEach(step => {
+      if (step.id && state[step.id]) {
+        step.querySelector('input').checked = true;
+        step.classList.add('done');
+      }
+    });
+  } catch(e) {}
+}
+
+loadProgress();
+</script>
+
+</body>
+</html>
